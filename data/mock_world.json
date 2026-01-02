@@ -1,0 +1,125 @@
+{
+  "work_items": [
+    {
+      "id": "work_item_001",
+      "title": "Design Authentication System",
+      "description": "Design OAuth2 authentication flow",
+      "status": "completed",
+      "estimated_days": 3.0,
+      "assigned_to": ["resource_001"],
+      "dependencies": [],
+      "milestone_id": "milestone_001"
+    },
+    {
+      "id": "work_item_002",
+      "title": "Implement Authentication Backend",
+      "description": "Implement OAuth2 server endpoints",
+      "status": "in_progress",
+      "estimated_days": 5.0,
+      "assigned_to": ["resource_001", "resource_002"],
+      "dependencies": ["work_item_001"],
+      "milestone_id": "milestone_001"
+    },
+    {
+      "id": "work_item_003",
+      "title": "Implement Authentication Frontend",
+      "description": "Build login UI components",
+      "status": "in_progress",
+      "estimated_days": 4.0,
+      "assigned_to": ["resource_003"],
+      "dependencies": ["work_item_002"],
+      "milestone_id": "milestone_001"
+    },
+    {
+      "id": "work_item_004",
+      "title": "Database Schema Design",
+      "description": "Design database schema for user data",
+      "status": "completed",
+      "estimated_days": 2.0,
+      "assigned_to": ["resource_002"],
+      "dependencies": [],
+      "milestone_id": "milestone_001"
+    },
+    {
+      "id": "work_item_005",
+      "title": "Implement User API",
+      "description": "Build REST API for user management",
+      "status": "not_started",
+      "estimated_days": 6.0,
+      "assigned_to": ["resource_001"],
+      "dependencies": ["work_item_004"],
+      "milestone_id": "milestone_002"
+    },
+    {
+      "id": "work_item_006",
+      "title": "Implement Dashboard UI",
+      "description": "Build main dashboard interface",
+      "status": "not_started",
+      "estimated_days": 8.0,
+      "assigned_to": ["resource_003"],
+      "dependencies": ["work_item_005"],
+      "milestone_id": "milestone_002"
+    }
+  ],
+  "milestones": [
+    {
+      "id": "milestone_001",
+      "name": "Authentication MVP",
+      "description": "Complete authentication system",
+      "target_date": "2024-02-15T00:00:00Z",
+      "work_items": ["work_item_001", "work_item_002", "work_item_003"],
+      "status": "pending"
+    },
+    {
+      "id": "milestone_002",
+      "name": "User Management",
+      "description": "Complete user management features",
+      "target_date": "2024-03-01T00:00:00Z",
+      "work_items": ["work_item_004", "work_item_005", "work_item_006"],
+      "status": "pending"
+    }
+  ],
+  "dependencies": [
+    {
+      "from_id": "work_item_002",
+      "to_id": "work_item_001",
+      "type": "finish_to_start"
+    },
+    {
+      "from_id": "work_item_003",
+      "to_id": "work_item_002",
+      "type": "finish_to_start"
+    },
+    {
+      "from_id": "work_item_005",
+      "to_id": "work_item_004",
+      "type": "finish_to_start"
+    },
+    {
+      "from_id": "work_item_006",
+      "to_id": "work_item_005",
+      "type": "finish_to_start"
+    }
+  ],
+  "resources": [
+    {
+      "id": "resource_001",
+      "name": "Senior Backend Engineer",
+      "type": "engineer",
+      "capacity": 1.0
+    },
+    {
+      "id": "resource_002",
+      "name": "Backend Engineer",
+      "type": "engineer",
+      "capacity": 1.0
+    },
+    {
+      "id": "resource_003",
+      "name": "Frontend Engineer",
+      "type": "engineer",
+      "capacity": 1.0
+    }
+  ]
+}
+
