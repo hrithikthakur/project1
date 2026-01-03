@@ -4,12 +4,15 @@
       "id": "work_item_001",
       "title": "Design Authentication System",
       "description": "Design OAuth2 authentication flow",
-      "status": "completed",
+      "status": "blocked",
       "estimated_days": 3.0,
+      "actual_days": null,
       "assigned_to": [
         "actor_002"
       ],
       "dependencies": [],
+      "start_date": null,
+      "end_date": null,
       "milestone_id": "milestone_001"
     },
     {
@@ -668,6 +671,44 @@
         "work_item_005"
       ],
       "detected_at": "2026-01-03T23:05:54.299578",
+      "mitigated_at": null
+    },
+    {
+      "id": "risk_auto_blocked_milestone_001",
+      "title": "Blocked Dependencies in Authentication MVP",
+      "description": "1 work item(s) blocked, impacting milestone delivery",
+      "severity": "medium",
+      "status": "active",
+      "probability": 0.7,
+      "impact": {
+        "delay_days": 2,
+        "affected_milestone": "milestone_001",
+        "blocked_items": [
+          "work_item_001"
+        ]
+      },
+      "affected_items": [
+        "work_item_001"
+      ],
+      "detected_at": "2026-01-03T23:27:51.423910",
+      "mitigated_at": null
+    },
+    {
+      "id": "risk_auto_long_blocked",
+      "title": "Extended Blocked Time",
+      "description": "2 work items blocked, potentially causing delays",
+      "severity": "high",
+      "status": "active",
+      "probability": 0.8,
+      "impact": {
+        "delay_days": 6,
+        "cascading_delays": true
+      },
+      "affected_items": [
+        "work_item_001",
+        "work_item_005"
+      ],
+      "detected_at": "2026-01-03T23:27:51.423975",
       "mitigated_at": null
     }
   ]

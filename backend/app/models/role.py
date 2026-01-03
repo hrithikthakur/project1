@@ -26,7 +26,7 @@ class Role(BaseModel):
     Instead, use roles to express permissions.
     """
     id: str
-    name: RoleName
+    name: str
     description: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.now)
 

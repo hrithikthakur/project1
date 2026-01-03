@@ -27,7 +27,7 @@ export default function RolesView() {
   const [showActorRoleForm, setShowActorRoleForm] = useState(false);
   const [editingRole, setEditingRole] = useState<Role | null>(null);
   const [roleFormData, setRoleFormData] = useState<Partial<Role>>({
-    name: 'VIEWER',
+    name: '',
     description: '',
   });
   const [actorRoleFormData, setActorRoleFormData] = useState<Partial<ActorRole>>({
@@ -63,7 +63,7 @@ export default function RolesView() {
   function handleNewRole() {
     setEditingRole(null);
     setRoleFormData({
-      name: 'VIEWER',
+      name: '',
       description: '',
     });
     setShowRoleForm(true);
@@ -191,16 +191,13 @@ export default function RolesView() {
             <form onSubmit={handleRoleSubmit}>
               <div className="form-group">
                 <label>Role Name *</label>
-                <select
+                <input
+                  type="text"
                   value={roleFormData.name}
                   onChange={(e) => setRoleFormData({ ...roleFormData, name: e.target.value as any })}
+                  placeholder="Enter role name"
                   required
-                >
-                  <option value="ADMIN">ADMIN</option>
-                  <option value="EDITOR">EDITOR</option>
-                  <option value="VIEWER">VIEWER</option>
-                  <option value="APPROVER">APPROVER</option>
-                </select>
+                />
               </div>
               <div className="form-group">
                 <label>Description</label>

@@ -9,8 +9,9 @@ if [ -z "$VIRTUAL_ENV" ]; then
 fi
 
 echo "🚀 Starting FastAPI server..."
-echo "📍 API will be available at: http://localhost:8000"
-echo "📚 API docs will be available at: http://localhost:8000/docs"
+echo "📍 Local access: http://localhost:8000"
+echo "📍 Network access: http://$(ipconfig getifaddr en0 2>/dev/null || hostname -I | awk '{print $1}' 2>/dev/null || echo '[your-ip]'):8000"
+echo "📚 API docs: http://localhost:8000/docs"
 echo ""
 echo "Press Ctrl+C to stop the server"
 echo ""
