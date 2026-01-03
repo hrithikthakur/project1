@@ -15,6 +15,7 @@ class RiskSeverity(str, Enum):
 class RiskStatus(str, Enum):
     """Risk status"""
     ACTIVE = "active"
+    MITIGATING = "mitigating"  # Risk is being actively mitigated
     MITIGATED = "mitigated"
     RESOLVED = "resolved"
     ACCEPTED = "accepted"
@@ -32,6 +33,18 @@ class Risk(BaseModel):
     affected_items: List[str]  # IDs of affected work items/milestones
     detected_at: datetime
     mitigated_at: Optional[datetime] = None
+    
+    # Acceptance fields (for ACCEPTED status)
+    accepted_at: Optional[datetime] = None
+    accepted_by: Optional[str] = None  # Actor ID who approved acceptance
+    acceptance_boundary: Optional[dict] = None  # Boundary condition (date, threshold, event)
+    next_date: Optional[datetime] = None  # Next review date
+    
+    # Mitigation fields (for MITIGATING status)
+    mitigation_started_at: Optional[datetime] = None
+    mitigation_decision: Optional[str] = None  # Decision ID
+    mitigation_action: Optional[str] = None
+    mitigation_due_date: Optional[datetime] = None
     
     class Config:
         json_schema_extra = {

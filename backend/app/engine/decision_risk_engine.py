@@ -362,6 +362,49 @@ class Rule2_AcceptRiskDecisionApproved(Rule):
         if not risk:
             return commands
         
+        # Get approver (who made the decision)
+        # In production, get from decision ownership or auth context
+        owner_id = self._get_risk_owner(risk, state)
+        
+        # Parse acceptance boundary
+        acceptance_until = decision.get("acceptance_until")
+        threshold = decision.get("threshold")
+        escalation_trigger = decision.get("escalation_trigger")
+        
+        # Build acceptance_boundary dict
+        acceptance_boundary = {}
+        boundary_date = None
+        
+        if acceptance_until:
+            # Convert to date if it's a string
+            if isinstance(acceptance_until, str):
+                try:
+                    boundary_date = datetime.fromisoformat(acceptance_until.replace('Z', '+00:00')).date()
+                except:
+                    boundary_date = date.today() + timedelta(days=30)
+            else:
+                boundary_date = acceptance_until
+            acceptance_boundary["type"] = "date"
+            acceptance_boundary["date"] = boundary_date.isoformat()
+        
+        if threshold:
+            acceptance_boundary["type"] = "threshold"
+            acceptance_boundary["threshold"] = threshold
+        
+        if escalation_trigger:
+            acceptance_boundary["type"] = "event"
+            acceptance_boundary["trigger"] = escalation_trigger
+        
+        # Calculate next_date: min(boundary_date, now + 7 days)
+        review_interval_days = 7
+        default_review_date = date.today() + timedelta(days=review_interval_days)
+        
+        if boundary_date:
+            next_review_date = min(boundary_date, default_review_date)
+        else:
+            # No boundary date, use default review interval
+            next_review_date = default_review_date
+        
         # Step 1: Transition Risk.status → ACCEPTED
         commands.append(Command(
             command_id=f"cmd_{event.event_id}_accept_risk",
@@ -372,39 +415,28 @@ class Rule2_AcceptRiskDecisionApproved(Rule):
             payload={
                 "status": "accepted",
                 "accepted_at": datetime.now().isoformat(),
-                "accepted_by_decision": event.decision_id,
+                "accepted_by": owner_id,  # Approver actor ID
+                "acceptance_boundary": acceptance_boundary,
+                "next_date": next_review_date.isoformat(),
             }
         ))
         
-        # Step 2 & 3: Set next_date to acceptance_until
-        acceptance_until = decision.get("acceptance_until")
-        if acceptance_until:
-            # Convert to date if it's a string
-            if isinstance(acceptance_until, str):
-                try:
-                    acceptance_date = datetime.fromisoformat(acceptance_until.replace('Z', '+00:00')).date()
-                except:
-                    acceptance_date = date.today() + timedelta(days=30)
-            else:
-                acceptance_date = acceptance_until
-            
-            # Determine owner
-            owner_id = self._get_risk_owner(risk, state)
-            
-            commands.append(Command(
-                command_id=f"cmd_{event.event_id}_set_next_date_acceptance",
-                command_type=CommandType.SET_NEXT_DATE,
-                target_id=owner_id,
-                reason=f"Accepted risk must be reviewed by {acceptance_date}",
-                rule_name=self.name,
-                payload={
-                    "owner_id": owner_id,
-                    "entity_type": "risk",
-                    "entity_id": risk_id,
-                    "next_date": acceptance_date.isoformat(),
-                    "suppress_escalation_until": acceptance_date.isoformat(),
-                }
-            ))
+        # Step 2: Update ownership with next_date and escalation suppression
+        commands.append(Command(
+            command_id=f"cmd_{event.event_id}_set_next_date_acceptance",
+            command_type=CommandType.SET_NEXT_DATE,
+            target_id=owner_id,
+            reason=f"Accepted risk must be reviewed by {next_review_date}",
+            rule_name=self.name,
+            payload={
+                "owner_id": owner_id,
+                "entity_type": "risk",
+                "entity_id": risk_id,
+                "next_date": next_review_date.isoformat(),
+                "suppress_escalation_until": acceptance_boundary.get("date") or next_review_date.isoformat(),
+                "escalation_mode": "quiet_monitoring",  # Monitor quietly, no noisy alerts
+            }
+        ))
         
         return commands
     

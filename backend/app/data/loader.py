@@ -120,3 +120,21 @@ def get_risks() -> list:
     world = load_mock_world()
     return world.get("risks", [])
 
+
+def get_issues() -> list:
+    """Get all issues from mock world"""
+    world = load_mock_world()
+    return world.get("issues", [])
+
+
+def save_issues(issues: list):
+    """Save issues back to mock world"""
+    data_dir = Path(__file__).parent.parent.parent.parent / "data"
+    data_file = data_dir / "mock_world.json"
+    
+    world = load_mock_world()
+    world["issues"] = issues
+    
+    with open(data_file, 'w') as f:
+        json.dump(world, f, indent=2)
+

@@ -266,6 +266,42 @@ export default function DecisionsView() {
         await updateOwnership(currentOwnership.id, endedOwnership);
       }
       
+      // 🔥 TRIGGER DECISION-RISK ENGINE if decision was approved
+      if (decisionData.status === 'approved' && (decisionData.decision_type === 'accept_risk' || decisionData.decision_type === 'mitigate_risk')) {
+        try {
+          console.log(`🎯 Triggering Decision-Risk Engine for decision ${decisionId}`);
+          const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? '/api' : 'http://localhost:8000/api');
+          const response = await fetch(`${API_BASE_URL}/decision-risk-engine/events/decision-approved?decision_id=${decisionId}`, {
+            method: 'POST',
+          });
+          
+          if (!response.ok) {
+            console.error('Failed to trigger Decision-Risk Engine:', response.statusText);
+            alert('⚠️ Decision approved, but engine processing failed. Check console for details.');
+          } else {
+            const result = await response.json();
+            console.log(`✅ Decision-Risk Engine processed: ${result.commands_issued} commands issued`);
+            
+            // Show user-friendly message
+            let message = `✅ Decision approved and processed!\n\n`;
+            message += `${result.commands_issued} action(s) triggered by Decision-Risk Engine.\n\n`;
+            
+            if (decisionData.decision_type === 'accept_risk') {
+              message += `🔵 Risk has been marked as ACCEPTED.\n`;
+              message += `Navigate to the Risks tab and refresh to see the updated risk status with acceptance details.`;
+            } else if (decisionData.decision_type === 'mitigate_risk') {
+              message += `🛠️ Risk has been marked as MITIGATING.\n`;
+              message += `Navigate to the Risks tab and refresh to see the mitigation plan.`;
+            }
+            
+            alert(message);
+          }
+        } catch (engineError) {
+          console.error('Error triggering Decision-Risk Engine:', engineError);
+          // Don't fail the whole operation if engine call fails
+        }
+      }
+      
       setShowForm(false);
       loadDecisions();
     } catch (error: any) {

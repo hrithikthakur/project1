@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .api import forecast, decisions, risks, metadata, work_items, actors, ownership, roles, risk_detection, decision_risk_events
+from .api import forecast, decisions, risks, metadata, work_items, actors, ownership, roles, risk_detection, decision_risk_events, issues
 
 app = FastAPI(
     title="Decision Risk Engine",
@@ -27,6 +27,7 @@ app.include_router(work_items.router, prefix="/api", tags=["work_items"])
 app.include_router(actors.router, prefix="/api", tags=["actors"])
 app.include_router(ownership.router, prefix="/api", tags=["ownership"])
 app.include_router(roles.router, prefix="/api", tags=["roles"])
+app.include_router(issues.router, prefix="/api", tags=["issues"])
 app.include_router(decision_risk_events.router, tags=["decision-risk-engine"])
 
 
@@ -40,6 +41,7 @@ async def root():
             "forecast": "/api/forecast",
             "decisions": "/api/decisions",
             "risks": "/api/risks",
+            "issues": "/api/issues",
             "decision_risk_engine": "/api/decision-risk-engine"
         }
     }

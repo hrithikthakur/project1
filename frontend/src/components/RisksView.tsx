@@ -142,6 +142,7 @@ export default function RisksView() {
   function getStatusColor(status: string) {
     const colors: Record<string, string> = {
       active: '#e74c3c',
+      mitigating: '#3498db',  // Blue for actively mitigating
       mitigated: '#f39c12',
       resolved: '#27ae60',
       accepted: '#95a5a6',
@@ -217,6 +218,7 @@ export default function RisksView() {
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                   >
                     <option value="active">Active</option>
+                    <option value="mitigating">Mitigating</option>
                     <option value="mitigated">Mitigated</option>
                     <option value="resolved">Resolved</option>
                     <option value="accepted">Accepted</option>
@@ -396,7 +398,110 @@ export default function RisksView() {
             </div>
             <div className="card-body">
               <p className="card-description">{risk.description}</p>
-              <div className="card-meta">
+              
+              {/* Acceptance Information */}
+              {risk.status === 'accepted' && (risk as any).accepted_at && (
+                <div style={{
+                  marginTop: '1rem',
+                  padding: '1rem',
+                  backgroundColor: '#f8f9fa',
+                  borderLeft: '4px solid #95a5a6',
+                  borderRadius: '4px',
+                }}>
+                  <div style={{ 
+                    fontSize: '0.875rem', 
+                    fontWeight: 'bold', 
+                    color: '#5a6c7d',
+                    marginBottom: '0.5rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                  }}>
+                    <span>✓</span>
+                    <span>Risk Accepted</span>
+                  </div>
+                  <div style={{ fontSize: '0.8125rem', color: '#6c757d' }}>
+                    <div style={{ marginBottom: '0.25rem' }}>
+                      <strong>Accepted on:</strong> {new Date((risk as any).accepted_at).toLocaleDateString()} at {new Date((risk as any).accepted_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                    {(risk as any).accepted_by && (
+                      <div style={{ marginBottom: '0.25rem' }}>
+                        <strong>Accepted by:</strong> {(risk as any).accepted_by}
+                      </div>
+                    )}
+                    {(risk as any).next_date && (
+                      <div style={{ marginBottom: '0.25rem' }}>
+                        <strong>Next review:</strong> {new Date((risk as any).next_date).toLocaleDateString()}
+                      </div>
+                    )}
+                    {(risk as any).acceptance_boundary && (
+                      <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid #dee2e6' }}>
+                        <strong>Boundary:</strong>{' '}
+                        {(risk as any).acceptance_boundary.type === 'date' && (
+                          <span>Until {new Date((risk as any).acceptance_boundary.date).toLocaleDateString()}</span>
+                        )}
+                        {(risk as any).acceptance_boundary.type === 'threshold' && (
+                          <span>Threshold: {(risk as any).acceptance_boundary.threshold}</span>
+                        )}
+                        {(risk as any).acceptance_boundary.type === 'event' && (
+                          <span>Event: {(risk as any).acceptance_boundary.trigger}</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{
+                    marginTop: '0.75rem',
+                    padding: '0.5rem',
+                    backgroundColor: '#e7f3ff',
+                    borderRadius: '4px',
+                    fontSize: '0.75rem',
+                    color: '#004085',
+                  }}>
+                    <strong>🔕 Quiet Monitoring:</strong> Escalations suppressed. Monitoring for boundary breach or next review date.
+                  </div>
+                </div>
+              )}
+              
+              {/* Mitigation Information */}
+              {risk.status === 'mitigating' && (risk as any).mitigation_started_at && (
+                <div style={{
+                  marginTop: '1rem',
+                  padding: '1rem',
+                  backgroundColor: '#e3f2fd',
+                  borderLeft: '4px solid #3498db',
+                  borderRadius: '4px',
+                }}>
+                  <div style={{ 
+                    fontSize: '0.875rem', 
+                    fontWeight: 'bold', 
+                    color: '#1565c0',
+                    marginBottom: '0.5rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                  }}>
+                    <span>🛠️</span>
+                    <span>Mitigation In Progress</span>
+                  </div>
+                  <div style={{ fontSize: '0.8125rem', color: '#1976d2' }}>
+                    {(risk as any).mitigation_action && (
+                      <div style={{ marginBottom: '0.5rem' }}>
+                        <strong>Action:</strong> {(risk as any).mitigation_action}
+                      </div>
+                    )}
+                    <div style={{ marginBottom: '0.25rem' }}>
+                      <strong>Started:</strong> {new Date((risk as any).mitigation_started_at).toLocaleDateString()}
+                    </div>
+                    {(risk as any).mitigation_due_date && (
+                      <div>
+                        <strong>Due:</strong> {new Date((risk as any).mitigation_due_date).toLocaleDateString()}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              
+              <div className="card-meta" style={{ marginTop: '1rem' }}>
                 <div className="meta-item">
                   <span className="meta-label">Probability:</span>
                   <span className="meta-value">{(risk.probability * 100).toFixed(0)}%</span>

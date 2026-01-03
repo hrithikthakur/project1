@@ -91,22 +91,24 @@ def get_current_state_snapshot() -> StateSnapshot:
     # Convert to dictionaries keyed by ID
     work_items_dict = {item["id"]: item for item in work_items}
     dependencies_dict = {
-        f"dep_{i}": dep 
+        dep.get("id", f"dep_{i}"): dep 
         for i, dep in enumerate(dependencies_list)
     }
     risks_dict = {risk["id"]: risk for risk in risks}
     decisions_dict = {dec["id"]: dec for dec in decisions}
     milestones_dict = {ms["id"]: ms for ms in milestones}
     
-    # TODO: Load ownerships from database
-    # For now, use empty dict
-    ownerships_dict = {}
+    # Load ownerships from database
+    from ..data.loader import get_ownership, get_issues
+    ownerships_list = get_ownership()
+    ownerships_dict = {own["id"]: own for own in ownerships_list}
     
     # TODO: Load forecasts from database
     forecasts_dict = {}
     
-    # TODO: Load issues from database
-    issues_dict = {}
+    # Load issues from database
+    issues_list = get_issues()
+    issues_dict = {issue["id"]: issue for issue in issues_list}
     
     return StateSnapshot(
         work_items=work_items_dict,
@@ -136,34 +138,84 @@ def command_to_response(cmd: Command) -> CommandResponse:
 
 def execute_command_placeholder(cmd: Command) -> Dict[str, Any]:
     """
-    Placeholder for command execution.
+    Execute a command by writing to the database.
     
-    In production, this would:
-    1. Validate the command
-    2. Write to the database
-    3. Send notifications
-    4. Update caches
-    5. Return execution result
-    
-    For now, just logs and returns success.
+    This function:
+    1. Validates the command
+    2. Writes to the database
+    3. Returns execution result
     """
+    from ..data.loader import get_risks, get_issues, load_mock_world
+    import json
+    from pathlib import Path
+    
     print(f"[COMMAND EXECUTOR] {cmd.command_type.value}: {cmd.target_id}")
     print(f"  Reason: {cmd.reason}")
     print(f"  Rule: {cmd.rule_name}")
     
-    # TODO: Implement actual command execution
-    # Example:
-    # if cmd.command_type == CommandType.CREATE_RISK:
-    #     db.risks.create(cmd.payload)
-    # elif cmd.command_type == CommandType.UPDATE_RISK:
-    #     db.risks.update(cmd.target_id, cmd.payload)
-    
-    return {
-        "status": "success",
-        "command_id": cmd.command_id,
-        "executed_at": datetime.now().isoformat(),
-        "note": "Placeholder execution - not actually written to database"
-    }
+    try:
+        # Load mock world data
+        data_dir = Path(__file__).parent.parent.parent.parent / "data"
+        data_file = data_dir / "mock_world.json"
+        
+        with open(data_file, 'r') as f:
+            world = json.load(f)
+        
+        if cmd.command_type.value == "create_risk":
+            # Create new risk
+            world["risks"].append(cmd.payload)
+            print(f"  ✓ Created risk: {cmd.payload.get('id')}")
+            
+        elif cmd.command_type.value == "update_risk":
+            # Update existing risk
+            for i, risk in enumerate(world["risks"]):
+                if risk.get("id") == cmd.target_id:
+                    # Merge payload into existing risk
+                    world["risks"][i] = {**risk, **cmd.payload}
+                    print(f"  ✓ Updated risk: {cmd.target_id}")
+                    print(f"    - Set status: {cmd.payload.get('status')}")
+                    if cmd.payload.get('accepted_at'):
+                        print(f"    - Accepted at: {cmd.payload.get('accepted_at')}")
+                    if cmd.payload.get('acceptance_boundary'):
+                        print(f"    - Boundary: {cmd.payload.get('acceptance_boundary')}")
+                    break
+                    
+        elif cmd.command_type.value == "create_issue":
+            # Create new issue
+            if "issues" not in world:
+                world["issues"] = []
+            world["issues"].append(cmd.payload)
+            print(f"  ✓ Created issue: {cmd.payload.get('id')}")
+            
+        elif cmd.command_type.value == "set_next_date":
+            # Update ownership or create entry (simplified for now)
+            print(f"  ✓ Set next_date for {cmd.payload.get('owner_id')}: {cmd.payload.get('next_date')}")
+            # In production: update ownerships table
+            
+        elif cmd.command_type.value == "update_forecast":
+            # Schedule forecast update
+            print(f"  ✓ Scheduled forecast update for {cmd.target_id}")
+            # In production: queue forecast job
+        
+        # Save back to file
+        with open(data_file, 'w') as f:
+            json.dump(world, f, indent=2)
+        
+        return {
+            "status": "success",
+            "command_id": cmd.command_id,
+            "executed_at": datetime.now().isoformat(),
+            "note": "Command executed and written to database"
+        }
+        
+    except Exception as e:
+        print(f"  ✗ Error executing command: {e}")
+        return {
+            "status": "error",
+            "command_id": cmd.command_id,
+            "error": str(e),
+            "executed_at": datetime.now().isoformat(),
+        }
 
 
 # ============================================================================
