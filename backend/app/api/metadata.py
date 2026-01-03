@@ -52,7 +52,9 @@ async def create_milestone(milestone: Milestone):
     if any(m.get("id") == milestone.id for m in milestones):
         raise HTTPException(status_code=400, detail=f"Milestone with ID {milestone.id} already exists")
     
-    milestones.append(milestone.model_dump())
+    # Convert to dict with mode='json' to properly serialize dates
+    milestone_dict = milestone.model_dump(mode='json')
+    milestones.append(milestone_dict)
     world["milestones"] = milestones
     _save_mock_world(world)
     
@@ -71,7 +73,8 @@ async def update_milestone(milestone_id: str, milestone: Milestone):
     found = False
     for i, m in enumerate(milestones):
         if m.get("id") == milestone_id:
-            milestones[i] = milestone.model_dump()
+            # Convert to dict with mode='json' to properly serialize dates
+            milestones[i] = milestone.model_dump(mode='json')
             found = True
             break
     

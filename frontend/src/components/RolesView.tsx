@@ -10,15 +10,18 @@ import {
   createActorRole,
   deleteActorRole,
   listActors,
+  listMilestones,
   Role,
   ActorRole,
   Actor,
+  Milestone,
 } from '../api';
 
 export default function RolesView() {
   const [roles, setRoles] = useState<Role[]>([]);
   const [actorRoles, setActorRoles] = useState<ActorRole[]>([]);
   const [actors, setActors] = useState<Actor[]>([]);
+  const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [loading, setLoading] = useState(true);
   const [showRoleForm, setShowRoleForm] = useState(false);
   const [showActorRoleForm, setShowActorRoleForm] = useState(false);
@@ -40,14 +43,16 @@ export default function RolesView() {
 
   async function loadData() {
     try {
-      const [rolesData, actorRolesData, actorsData] = await Promise.all([
+      const [rolesData, actorRolesData, actorsData, milestonesData] = await Promise.all([
         listRoles(),
         listActorRoles(),
         listActors(),
+        listMilestones(),
       ]);
       setRoles(rolesData);
       setActorRoles(actorRolesData);
       setActors(actorsData);
+      setMilestones(milestonesData);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -139,6 +144,26 @@ export default function RolesView() {
 
   function getRoleName(roleId: string) {
     return roles.find((r) => r.id === roleId)?.name || roleId;
+  }
+
+  function getScopeName(scopeType: string, scopeId?: string) {
+    if (!scopeId) return '-';
+    
+    if (scopeType === 'MILESTONE') {
+      return milestones.find((m) => m.id === scopeId)?.name || scopeId;
+    } else if (scopeType === 'TEAM') {
+      return actors.find((a) => a.id === scopeId && a.type === 'TEAM')?.display_name || scopeId;
+    }
+    return scopeId;
+  }
+
+  function getAvailableScopeObjects() {
+    if (actorRoleFormData.scope_type === 'MILESTONE') {
+      return milestones.map(m => ({ id: m.id, name: m.name }));
+    } else if (actorRoleFormData.scope_type === 'TEAM') {
+      return actors.filter(a => a.type === 'TEAM').map(t => ({ id: t.id, name: t.display_name }));
+    }
+    return [];
   }
 
   if (loading) {
@@ -237,23 +262,38 @@ export default function RolesView() {
                 <label>Scope Type *</label>
                 <select
                   value={actorRoleFormData.scope_type}
-                  onChange={(e) => setActorRoleFormData({ ...actorRoleFormData, scope_type: e.target.value as any })}
+                  onChange={(e) => setActorRoleFormData({ ...actorRoleFormData, scope_type: e.target.value as any, scope_id: '' })}
                   required
                 >
-                  <option value="GLOBAL">Global</option>
-                  <option value="MILESTONE">Milestone</option>
-                  <option value="TEAM">Team</option>
+                  <option value="GLOBAL">Global (All Objects)</option>
+                  <option value="MILESTONE">Milestone (Specific Milestone)</option>
+                  <option value="TEAM">Team (Specific Team)</option>
                 </select>
               </div>
               {actorRoleFormData.scope_type !== 'GLOBAL' && (
                 <div className="form-group">
-                  <label>Scope ID</label>
-                  <input
-                    type="text"
+                  <label>
+                    {actorRoleFormData.scope_type === 'MILESTONE' && 'Select Milestone'}
+                    {actorRoleFormData.scope_type === 'TEAM' && 'Select Team'}
+                  </label>
+                  <select
                     value={actorRoleFormData.scope_id}
                     onChange={(e) => setActorRoleFormData({ ...actorRoleFormData, scope_id: e.target.value })}
-                    placeholder="e.g., milestone_001"
-                  />
+                  >
+                    <option value="">
+                      Select {actorRoleFormData.scope_type === 'MILESTONE' ? 'milestone' : 'team'}...
+                    </option>
+                    {getAvailableScopeObjects().map((obj) => (
+                      <option key={obj.id} value={obj.id}>
+                        {obj.name}
+                      </option>
+                    ))}
+                  </select>
+                  {getAvailableScopeObjects().length === 0 && (
+                    <small style={{ color: '#ef4444', fontSize: '0.85em', marginTop: '4px', display: 'block' }}>
+                      No {actorRoleFormData.scope_type === 'MILESTONE' ? 'milestones' : 'teams'} available
+                    </small>
+                  )}
                 </div>
               )}
               <div className="form-actions">
@@ -308,9 +348,19 @@ export default function RolesView() {
                 {actorRoles.map((ar, index) => (
                   <tr key={index}>
                     <td>{getActorName(ar.actor_id)}</td>
-                    <td>{getRoleName(ar.role_id)}</td>
+                    <td>
+                      <span className="badge" style={{ 
+                        backgroundColor: 
+                          ar.role_id.includes('admin') || getRoleName(ar.role_id) === 'ADMIN' ? '#e74c3c' :
+                          ar.role_id.includes('editor') || getRoleName(ar.role_id) === 'EDITOR' ? '#3498db' :
+                          ar.role_id.includes('approver') || getRoleName(ar.role_id) === 'APPROVER' ? '#f39c12' :
+                          '#95a5a6'
+                      }}>
+                        {getRoleName(ar.role_id)}
+                      </span>
+                    </td>
                     <td>{ar.scope_type}</td>
-                    <td>{ar.scope_id || '-'}</td>
+                    <td>{getScopeName(ar.scope_type, ar.scope_id)}</td>
                     <td>
                       <button className="btn-icon btn-danger" onClick={() => handleDeleteActorRole(ar)}>
                         🗑️

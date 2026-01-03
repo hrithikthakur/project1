@@ -20,7 +20,15 @@ def _save_mock_world(data: dict):
 @router.get("/roles", response_model=List[Role])
 async def list_roles():
     """List all roles"""
-    return get_roles()
+    roles_data = get_roles()
+    # Convert dictionaries to Pydantic models
+    result = []
+    for role in roles_data:
+        if isinstance(role, dict):
+            result.append(Role(**role))
+        else:
+            result.append(role)
+    return result
 
 
 @router.get("/roles/{role_id}", response_model=Role)
@@ -43,7 +51,9 @@ async def create_role(role: Role):
     if any(r.get("id") == role.id for r in roles):
         raise HTTPException(status_code=400, detail=f"Role with ID {role.id} already exists")
     
-    roles.append(role.model_dump())
+    # Convert to dict with mode='json' to properly serialize dates
+    role_dict = role.model_dump(mode='json')
+    roles.append(role_dict)
     world["roles"] = roles
     _save_mock_world(world)
     
@@ -62,7 +72,8 @@ async def update_role(role_id: str, role: Role):
     found = False
     for i, r in enumerate(roles):
         if r.get("id") == role_id:
-            roles[i] = role.model_dump()
+            # Convert to dict with mode='json' to properly serialize dates
+            roles[i] = role.model_dump(mode='json')
             found = True
             break
     
@@ -97,7 +108,15 @@ async def delete_role(role_id: str):
 @router.get("/actor_roles", response_model=List[ActorRole])
 async def list_actor_roles():
     """List all actor role assignments"""
-    return get_actor_roles()
+    actor_roles_data = get_actor_roles()
+    # Convert dictionaries to Pydantic models
+    result = []
+    for actor_role in actor_roles_data:
+        if isinstance(actor_role, dict):
+            result.append(ActorRole(**actor_role))
+        else:
+            result.append(actor_role)
+    return result
 
 
 @router.get("/actor_roles/actor/{actor_id}", response_model=List[ActorRole])
@@ -121,7 +140,9 @@ async def create_actor_role(actor_role: ActorRole):
            for ar in actor_roles):
         raise HTTPException(status_code=400, detail="Actor role assignment already exists")
     
-    actor_roles.append(actor_role.model_dump())
+    # Convert to dict with mode='json' to properly serialize dates
+    actor_role_dict = actor_role.model_dump(mode='json')
+    actor_roles.append(actor_role_dict)
     world["actor_roles"] = actor_roles
     _save_mock_world(world)
     
