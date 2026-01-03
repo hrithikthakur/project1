@@ -1,0 +1,240 @@
+import { useState, useEffect } from 'react';
+import {
+  listActors,
+  getActor,
+  createActor,
+  updateActor,
+  deleteActor,
+  Actor,
+} from '../api';
+
+export default function ActorsView() {
+  const [actors, setActors] = useState<Actor[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editingActor, setEditingActor] = useState<Actor | null>(null);
+  const [formData, setFormData] = useState<Partial<Actor>>({
+    type: 'USER',
+    display_name: '',
+    title: '',
+    email: '',
+    is_active: true,
+  });
+
+  useEffect(() => {
+    loadActors();
+  }, []);
+
+  async function loadActors() {
+    try {
+      const data = await listActors();
+      setActors(data);
+    } catch (error) {
+      console.error('Error loading actors:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleEdit(actor: Actor) {
+    setEditingActor(actor);
+    setFormData(actor);
+    setShowForm(true);
+  }
+
+  function handleNew() {
+    setEditingActor(null);
+    setFormData({
+      type: 'USER',
+      display_name: '',
+      title: '',
+      email: '',
+      is_active: true,
+    });
+    setShowForm(true);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    try {
+      if (editingActor) {
+        await updateActor(editingActor.id, formData as Actor);
+      } else {
+        const newActor: Actor = {
+          id: `actor_${Date.now()}`,
+          ...formData,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        } as Actor;
+        await createActor(newActor);
+      }
+      setShowForm(false);
+      loadActors();
+    } catch (error) {
+      console.error('Error saving actor:', error);
+      alert('Error saving actor');
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm('Are you sure you want to delete this actor?')) return;
+    try {
+      await deleteActor(id);
+      loadActors();
+    } catch (error) {
+      console.error('Error deleting actor:', error);
+      alert('Error deleting actor');
+    }
+  }
+
+  if (loading) {
+    return <div className="view-loading">Loading actors...</div>;
+  }
+
+  const users = actors.filter((a) => a.type === 'USER');
+  const teams = actors.filter((a) => a.type === 'TEAM');
+
+  return (
+    <div className="view-container">
+      <div className="view-header">
+        <h2>Actors</h2>
+        <button className="btn-primary" onClick={handleNew}>
+          + New Actor
+        </button>
+      </div>
+
+      {showForm && (
+        <div className="modal-overlay" onClick={() => setShowForm(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>{editingActor ? 'Edit Actor' : 'New Actor'}</h3>
+            <form onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label>Type *</label>
+                <select
+                  value={formData.type}
+                  onChange={(e) => setFormData({ ...formData, type: e.target.value as 'USER' | 'TEAM' })}
+                  required
+                >
+                  <option value="USER">User</option>
+                  <option value="TEAM">Team</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Display Name *</label>
+                <input
+                  type="text"
+                  value={formData.display_name}
+                  onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
+                  required
+                />
+              </div>
+              {formData.type === 'USER' && (
+                <>
+                  <div className="form-group">
+                    <label>Title</label>
+                    <input
+                      type="text"
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Email</label>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    />
+                  </div>
+                </>
+              )}
+              <div className="form-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={formData.is_active}
+                    onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                  />
+                  Active
+                </label>
+              </div>
+              <div className="form-actions">
+                <button type="submit" className="btn-primary">
+                  {editingActor ? 'Update' : 'Create'}
+                </button>
+                <button type="button" className="btn-secondary" onClick={() => setShowForm(false)}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <div className="actors-sections">
+        <div className="actors-section">
+          <h3>Users ({users.length})</h3>
+          <div className="cards-grid">
+            {users.map((actor) => (
+              <div key={actor.id} className="card">
+                <div className="card-header">
+                  <h3>{actor.display_name}</h3>
+                  {actor.is_active ? (
+                    <span className="status-badge status-active">Active</span>
+                  ) : (
+                    <span className="status-badge status-inactive">Inactive</span>
+                  )}
+                </div>
+                <div className="card-body">
+                  {actor.title && <p className="card-meta-text">{actor.title}</p>}
+                  {actor.email && <p className="card-meta-text">{actor.email}</p>}
+                </div>
+                <div className="card-actions">
+                  <button className="btn-icon" onClick={() => handleEdit(actor)}>
+                    ✏️ Edit
+                  </button>
+                  <button className="btn-icon btn-danger" onClick={() => handleDelete(actor.id)}>
+                    🗑️ Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="actors-section">
+          <h3>Teams ({teams.length})</h3>
+          <div className="cards-grid">
+            {teams.map((actor) => (
+              <div key={actor.id} className="card">
+                <div className="card-header">
+                  <h3>{actor.display_name}</h3>
+                  {actor.is_active ? (
+                    <span className="status-badge status-active">Active</span>
+                  ) : (
+                    <span className="status-badge status-inactive">Inactive</span>
+                  )}
+                </div>
+                <div className="card-actions">
+                  <button className="btn-icon" onClick={() => handleEdit(actor)}>
+                    ✏️ Edit
+                  </button>
+                  <button className="btn-icon btn-danger" onClick={() => handleDelete(actor.id)}>
+                    🗑️ Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {actors.length === 0 && (
+        <div className="empty-state">
+          <p>No actors found. Create your first actor!</p>
+        </div>
+      )}
+    </div>
+  );
+}
+

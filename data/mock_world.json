@@ -4,10 +4,15 @@
       "id": "work_item_001",
       "title": "Design Authentication System",
       "description": "Design OAuth2 authentication flow",
-      "status": "completed",
+      "status": "blocked",
       "estimated_days": 3.0,
-      "assigned_to": ["resource_001"],
+      "actual_days": null,
+      "assigned_to": [
+        "actor_002"
+      ],
       "dependencies": [],
+      "start_date": null,
+      "end_date": null,
       "milestone_id": "milestone_001"
     },
     {
@@ -16,8 +21,13 @@
       "description": "Implement OAuth2 server endpoints",
       "status": "in_progress",
       "estimated_days": 5.0,
-      "assigned_to": ["resource_001", "resource_002"],
-      "dependencies": ["work_item_001"],
+      "assigned_to": [
+        "actor_002",
+        "actor_003"
+      ],
+      "dependencies": [
+        "work_item_001"
+      ],
       "milestone_id": "milestone_001"
     },
     {
@@ -26,8 +36,12 @@
       "description": "Build login UI components",
       "status": "in_progress",
       "estimated_days": 4.0,
-      "assigned_to": ["resource_003"],
-      "dependencies": ["work_item_002"],
+      "assigned_to": [
+        "actor_004"
+      ],
+      "dependencies": [
+        "work_item_002"
+      ],
       "milestone_id": "milestone_001"
     },
     {
@@ -36,7 +50,9 @@
       "description": "Design database schema for user data",
       "status": "completed",
       "estimated_days": 2.0,
-      "assigned_to": ["resource_002"],
+      "assigned_to": [
+        "actor_003"
+      ],
       "dependencies": [],
       "milestone_id": "milestone_001"
     },
@@ -46,8 +62,12 @@
       "description": "Build REST API for user management",
       "status": "not_started",
       "estimated_days": 6.0,
-      "assigned_to": ["resource_001"],
-      "dependencies": ["work_item_004"],
+      "assigned_to": [
+        "actor_002"
+      ],
+      "dependencies": [
+        "work_item_004"
+      ],
       "milestone_id": "milestone_002"
     },
     {
@@ -56,9 +76,97 @@
       "description": "Build main dashboard interface",
       "status": "not_started",
       "estimated_days": 8.0,
-      "assigned_to": ["resource_003"],
-      "dependencies": ["work_item_005"],
+      "assigned_to": [
+        "actor_004"
+      ],
+      "dependencies": [
+        "work_item_005"
+      ],
       "milestone_id": "milestone_002"
+    },
+    {
+      "id": "work_item_007",
+      "title": "Design Payment System",
+      "description": "Design payment processing architecture",
+      "status": "not_started",
+      "estimated_days": 5.0,
+      "assigned_to": [
+        "actor_002"
+      ],
+      "dependencies": [],
+      "milestone_id": "milestone_003"
+    },
+    {
+      "id": "work_item_008",
+      "title": "Implement Payment API",
+      "description": "Build payment processing endpoints",
+      "status": "not_started",
+      "estimated_days": 7.0,
+      "assigned_to": [
+        "actor_002",
+        "actor_003"
+      ],
+      "dependencies": [
+        "work_item_007"
+      ],
+      "milestone_id": "milestone_003"
+    },
+    {
+      "id": "work_item_009",
+      "title": "Build Payment UI",
+      "description": "Create payment form components",
+      "status": "blocked",
+      "estimated_days": 6.0,
+      "actual_days": null,
+      "assigned_to": [
+        "actor_004"
+      ],
+      "dependencies": [
+        "work_item_008"
+      ],
+      "start_date": null,
+      "end_date": null,
+      "milestone_id": "milestone_003"
+    },
+    {
+      "id": "work_item_010",
+      "title": "Design Analytics Dashboard",
+      "description": "Design analytics and reporting system",
+      "status": "not_started",
+      "estimated_days": 4.0,
+      "assigned_to": [
+        "actor_003"
+      ],
+      "dependencies": [],
+      "milestone_id": "milestone_004"
+    },
+    {
+      "id": "work_item_011",
+      "title": "Implement Analytics Backend",
+      "description": "Build analytics data collection API",
+      "status": "not_started",
+      "estimated_days": 9.0,
+      "assigned_to": [
+        "actor_002"
+      ],
+      "dependencies": [
+        "work_item_010"
+      ],
+      "milestone_id": "milestone_004"
+    },
+    {
+      "id": "work_item_012",
+      "title": "Build Analytics Dashboard UI",
+      "description": "Create analytics visualization components",
+      "status": "not_started",
+      "estimated_days": 10.0,
+      "assigned_to": [
+        "actor_004"
+      ],
+      "dependencies": [
+        "work_item_011"
+      ],
+      "milestone_id": "milestone_004"
     }
   ],
   "milestones": [
@@ -67,7 +175,11 @@
       "name": "Authentication MVP",
       "description": "Complete authentication system",
       "target_date": "2024-02-15T00:00:00Z",
-      "work_items": ["work_item_001", "work_item_002", "work_item_003"],
+      "work_items": [
+        "work_item_001",
+        "work_item_002",
+        "work_item_003"
+      ],
       "status": "pending"
     },
     {
@@ -75,7 +187,35 @@
       "name": "User Management",
       "description": "Complete user management features",
       "target_date": "2024-03-01T00:00:00Z",
-      "work_items": ["work_item_004", "work_item_005", "work_item_006"],
+      "work_items": [
+        "work_item_004",
+        "work_item_005",
+        "work_item_006"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "milestone_003",
+      "name": "Payment System",
+      "description": "Complete payment processing system",
+      "target_date": "2024-03-20T00:00:00Z",
+      "work_items": [
+        "work_item_007",
+        "work_item_008",
+        "work_item_009"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "milestone_004",
+      "name": "Analytics Dashboard",
+      "description": "Complete analytics and reporting features",
+      "target_date": "2024-04-15T00:00:00Z",
+      "work_items": [
+        "work_item_010",
+        "work_item_011",
+        "work_item_012"
+      ],
       "status": "pending"
     }
   ],
@@ -99,27 +239,191 @@
       "from_id": "work_item_006",
       "to_id": "work_item_005",
       "type": "finish_to_start"
+    },
+    {
+      "from_id": "work_item_008",
+      "to_id": "work_item_007",
+      "type": "finish_to_start"
+    },
+    {
+      "from_id": "work_item_009",
+      "to_id": "work_item_008",
+      "type": "finish_to_start"
+    },
+    {
+      "from_id": "work_item_011",
+      "to_id": "work_item_010",
+      "type": "finish_to_start"
+    },
+    {
+      "from_id": "work_item_012",
+      "to_id": "work_item_011",
+      "type": "finish_to_start"
     }
   ],
-  "resources": [
+  "actors": [
     {
-      "id": "resource_001",
-      "name": "Senior Backend Engineer",
-      "type": "engineer",
-      "capacity": 1.0
+      "id": "actor_001",
+      "type": "USER",
+      "display_name": "Alice Smith",
+      "title": "Engineering Manager",
+      "email": "alice@example.com",
+      "external_ref": null,
+      "is_active": true,
+      "created_at": "2024-01-01T10:00:00Z",
+      "updated_at": "2024-01-01T10:00:00Z"
     },
     {
-      "id": "resource_002",
-      "name": "Backend Engineer",
-      "type": "engineer",
-      "capacity": 1.0
+      "id": "actor_002",
+      "type": "USER",
+      "display_name": "Bob Johnson",
+      "title": "Senior Backend Engineer",
+      "email": "bob@example.com",
+      "external_ref": null,
+      "is_active": true,
+      "created_at": "2024-01-01T10:00:00Z",
+      "updated_at": "2024-01-01T10:00:00Z"
     },
     {
-      "id": "resource_003",
-      "name": "Frontend Engineer",
-      "type": "engineer",
-      "capacity": 1.0
+      "id": "actor_003",
+      "type": "USER",
+      "display_name": "Carol Williams",
+      "title": "Backend Engineer",
+      "email": "carol@example.com",
+      "external_ref": null,
+      "is_active": true,
+      "created_at": "2024-01-01T10:00:00Z",
+      "updated_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": "actor_004",
+      "type": "USER",
+      "display_name": "David Brown",
+      "title": "Frontend Engineer",
+      "email": "david@example.com",
+      "external_ref": null,
+      "is_active": true,
+      "created_at": "2024-01-01T10:00:00Z",
+      "updated_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": "actor_005",
+      "type": "TEAM",
+      "display_name": "Platform Team",
+      "title": null,
+      "email": null,
+      "external_ref": null,
+      "is_active": true,
+      "created_at": "2024-01-01T10:00:00Z",
+      "updated_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": "actor_006",
+      "type": "TEAM",
+      "display_name": "Backend Team",
+      "title": null,
+      "email": null,
+      "external_ref": null,
+      "is_active": true,
+      "created_at": "2024-01-01T10:00:00Z",
+      "updated_at": "2024-01-01T10:00:00Z"
     }
-  ]
-}
-
+  ],
+  "ownership": [
+    {
+      "id": "ownership_1767475672509",
+      "object_type": "decision",
+      "object_id": "dec_1767475672496",
+      "owner_actor_id": "actor_001",
+      "assigned_at": "2026-01-03T21:27:52.509000+00:00",
+      "ended_at": null,
+      "assigned_by_actor_id": null,
+      "reason": null
+    },
+    {
+      "id": "ownership_1767475693028",
+      "object_type": "decision",
+      "object_id": "dec_1767475693013",
+      "owner_actor_id": "actor_002",
+      "assigned_at": "2026-01-03T21:28:13.028000+00:00",
+      "ended_at": null,
+      "assigned_by_actor_id": null,
+      "reason": null
+    },
+    {
+      "id": "ownership_1767475708176",
+      "object_type": "decision",
+      "object_id": "dec_1767475708162",
+      "owner_actor_id": "actor_004",
+      "assigned_at": "2026-01-03T21:28:28.176000+00:00",
+      "ended_at": null,
+      "assigned_by_actor_id": null,
+      "reason": null
+    },
+    {
+      "id": "ownership_1767475879045",
+      "object_type": "decision",
+      "object_id": "dec_1767475879031",
+      "owner_actor_id": "actor_003",
+      "assigned_at": "2026-01-03T21:31:19.045000+00:00",
+      "ended_at": null,
+      "assigned_by_actor_id": null,
+      "reason": null
+    },
+    {
+      "id": "ownership_1767476020317",
+      "object_type": "decision",
+      "object_id": "dec_1767476020300",
+      "owner_actor_id": "actor_004",
+      "assigned_at": "2026-01-03T21:33:40.317000+00:00",
+      "ended_at": null,
+      "assigned_by_actor_id": null,
+      "reason": null
+    },
+    {
+      "id": "ownership_1767476040461",
+      "object_type": "decision",
+      "object_id": "dec_1767476040445",
+      "owner_actor_id": "actor_004",
+      "assigned_at": "2026-01-03T21:34:00.461000+00:00",
+      "ended_at": null,
+      "assigned_by_actor_id": null,
+      "reason": null
+    },
+    {
+      "id": "ownership_1767476414168",
+      "object_type": "decision",
+      "object_id": "dec_1767476414133",
+      "owner_actor_id": "actor_003",
+      "assigned_at": "2026-01-03T21:40:14.168000+00:00",
+      "ended_at": null,
+      "assigned_by_actor_id": null,
+      "reason": null
+    },
+    {
+      "id": "ownership_1767476676568",
+      "object_type": "work_item",
+      "object_id": "work_item_006",
+      "owner_actor_id": "actor_005",
+      "assigned_at": "2026-01-03T21:44:36.568000+00:00",
+      "ended_at": null,
+      "assigned_by_actor_id": null,
+      "reason": ""
+    },
+    {
+      "id": "ownership_1767476927954",
+      "object_type": "risk",
+      "object_id": "risk_001",
+      "owner_actor_id": "actor_001",
+      "assigned_at": "2026-01-03T21:48:47.954000+00:00",
+      "ended_at": null,
+      "assigned_by_actor_id": null,
+      "reason": ""
+    }
+  ],
+  "roles": [
+    {
+      "id": "role_1767476952623",
+      "name": "ADMIN",
+      "description": "",
+      "created_at": 

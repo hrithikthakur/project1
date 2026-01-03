@@ -1,26 +1,179 @@
 from fastapi import APIRouter, HTTPException
 from typing import List
-from ..models.decision import Decision
+from ..models.decision import Decision, DecisionType
 from ..engine.graph import DependencyGraph
 from ..engine.ripple import RippleEffectEngine
-from ..engine.decision_effects import get_decision_effects
+from ..data.loader import get_decisions, load_mock_world
+import json
+from pathlib import Path
 
 router = APIRouter()
+
+
+def _save_mock_world(data: dict):
+    """Save updated data back to mock_world.json"""
+    data_dir = Path(__file__).parent.parent.parent.parent / "data"
+    data_file = data_dir / "mock_world.json"
+    with open(data_file, 'w') as f:
+        json.dump(data, f, indent=2)
 
 
 @router.post("/decisions", response_model=Decision)
 async def create_decision(decision: Decision):
     """Create a new decision"""
-    # In a real system, this would persist to a database
-    # For now, just validate and return
+    world = load_mock_world()
+    decisions = world.get("decisions", [])
+    
+    # Check if ID already exists
+    if any(d.get("id") == decision.id for d in decisions):
+        raise HTTPException(status_code=400, detail=f"Decision with ID {decision.id} already exists")
+    
+    # Convert to dict with mode='json' to properly serialize dates
+    decision_dict = decision.model_dump(mode='json')
+    decisions.append(decision_dict)
+    world["decisions"] = decisions
+    _save_mock_world(world)
+    
     return decision
 
 
 @router.get("/decisions", response_model=List[Decision])
 async def list_decisions():
     """List all decisions"""
-    # In a real system, this would fetch from database
-    return []
+    return get_decisions()
+
+
+@router.get("/decisions/{decision_id}", response_model=Decision)
+async def get_decision(decision_id: str):
+    """Get a specific decision by ID"""
+    decisions = get_decisions()
+    for decision in decisions:
+        if decision.get("id") == decision_id:
+            return decision
+    raise HTTPException(status_code=404, detail=f"Decision {decision_id} not found")
+
+
+@router.put("/decisions/{decision_id}", response_model=Decision)
+async def update_decision(decision_id: str, decision: Decision):
+    """Update an existing decision"""
+    if decision.id != decision_id:
+        raise HTTPException(status_code=400, detail="Decision ID mismatch")
+    
+    world = load_mock_world()
+    decisions = world.get("decisions", [])
+    
+    found = False
+    for i, d in enumerate(decisions):
+        if d.get("id") == decision_id:
+            # Convert to dict with mode='json' to properly serialize dates
+            decisions[i] = decision.model_dump(mode='json')
+            found = True
+            break
+    
+    if not found:
+        raise HTTPException(status_code=404, detail=f"Decision {decision_id} not found")
+    
+    world["decisions"] = decisions
+    _save_mock_world(world)
+    
+    return decision
+
+
+@router.delete("/decisions/{decision_id}")
+async def delete_decision(decision_id: str):
+    """Delete a decision"""
+    world = load_mock_world()
+    decisions = world.get("decisions", [])
+    
+    original_count = len(decisions)
+    decisions = [d for d in decisions if d.get("id") != decision_id]
+    
+    if len(decisions) == original_count:
+        raise HTTPException(status_code=404, detail=f"Decision {decision_id} not found")
+    
+    world["decisions"] = decisions
+    _save_mock_world(world)
+    
+    return {"message": f"Decision {decision_id} deleted successfully"}
+
+
+def _convert_decision_to_legacy_format(decision: Decision) -> dict:
+    """
+    Convert Decision model with typed fields to legacy format for ripple engine.
+    This is a temporary adapter until ripple engine is updated.
+    Note: milestone_name is used for reference, but ripple engine still uses IDs internally.
+    """
+    # Extract target_id and effects based on decision type and subtype
+    # For now, use milestone_name as placeholder - ripple engine may need ID lookup
+    target_id = decision.milestone_name  # Using name as placeholder
+    effects = {}
+    
+    if decision.decision_type == DecisionType.CHANGE_SCOPE:
+        # For scope changes, target affected items
+        if decision.add_item_ids:
+            target_id = decision.add_item_ids[0] if decision.add_item_ids else decision.milestone_name
+        elif decision.remove_item_ids:
+            target_id = decision.remove_item_ids[0] if decision.remove_item_ids else decision.milestone_name
+        
+        # Calculate scope change effect
+        if decision.subtype == "ADD":
+            # Adding items increases scope
+            effects["scope_change"] = 0.1  # Rough estimate
+        elif decision.subtype == "REMOVE":
+            # Removing items decreases scope
+            effects["scope_change"] = -0.1
+        elif decision.subtype == "SWAP":
+            # Swapping is roughly neutral
+            effects["scope_change"] = 0.0
+        
+        if decision.effort_delta_days is not None:
+            effects["delay_days"] = decision.effort_delta_days
+    
+    elif decision.decision_type == DecisionType.CHANGE_SCHEDULE:
+        if decision.subtype == "MOVE_TARGET_DATE" and decision.new_target_date:
+            # Calculate delay based on date change
+            # This is simplified - would need current target date to calculate properly
+            effects["delay_days"] = 0  # Placeholder
+        elif decision.subtype == "CHANGE_CONFIDENCE_LEVEL":
+            # Changing confidence level doesn't directly affect velocity
+            effects["velocity_multiplier"] = 1.0
+    
+    elif decision.decision_type == DecisionType.CHANGE_CAPACITY:
+        target_id = decision.team_id or decision.milestone_name
+        delta_fte = decision.delta_fte or 0.0
+        
+        # Convert FTE change to velocity multiplier
+        # Rough approximation: 1 FTE = 20% velocity change
+        effects["velocity_multiplier"] = 1.0 + (delta_fte * 0.2)
+    
+    elif decision.decision_type == DecisionType.CHANGE_PRIORITY:
+        # Priority changes affect which items get attention first
+        # This is more about ordering than direct effects
+        if decision.item_ids:
+            target_id = decision.item_ids[0]
+        effects["velocity_multiplier"] = 1.0  # No direct velocity change
+    
+    elif decision.decision_type == DecisionType.ACCEPT_RISK:
+        # Accepting risk doesn't change velocity, just acknowledges it
+        target_id = decision.risk_id or decision.milestone_name
+        effects["velocity_multiplier"] = 1.0
+    
+    elif decision.decision_type == DecisionType.MITIGATE_RISK:
+        target_id = decision.risk_id or decision.issue_id or decision.milestone_name
+        
+        # Mitigation actions can improve velocity
+        impact_delta = decision.expected_impact_days_delta or 0.0
+        if impact_delta < 0:  # Negative delta means improvement
+            # Convert days saved to velocity multiplier (rough approximation)
+            effects["velocity_multiplier"] = 1.1  # Placeholder
+        else:
+            effects["velocity_multiplier"] = 1.0
+    
+    return {
+        "decision_type": decision.decision_type.value,
+        "target_id": target_id,
+        "effects": effects
+    }
 
 
 @router.post("/decisions/analyze")
@@ -33,12 +186,8 @@ async def analyze_decision_impact(decision: Decision):
         graph = DependencyGraph()
         ripple_engine = RippleEffectEngine(graph)
         
-        # Convert decision to dict format
-        decision_dict = {
-            "decision_type": decision.decision_type,
-            "target_id": decision.target_id,
-            "effects": decision.effects or {}
-        }
+        # Convert new Decision model to legacy format for ripple engine
+        decision_dict = _convert_decision_to_legacy_format(decision)
         
         # Apply decision
         effects = ripple_engine.apply_decisions([decision_dict])
@@ -55,7 +204,7 @@ async def analyze_decision_impact(decision: Decision):
             })
         
         return {
-            "decision": decision.dict(),
+            "decision": decision.model_dump(),
             "affected_items": affected_items
         }
     

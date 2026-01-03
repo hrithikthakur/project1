@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .api import forecast, decisions, risks
+from .api import forecast, decisions, risks, metadata, work_items, actors, ownership, roles, risk_detection
 
 app = FastAPI(
     title="Decision Risk Engine",
@@ -21,6 +21,12 @@ app.add_middleware(
 app.include_router(forecast.router, prefix="/api", tags=["forecast"])
 app.include_router(decisions.router, prefix="/api", tags=["decisions"])
 app.include_router(risks.router, prefix="/api", tags=["risks"])
+app.include_router(risk_detection.router, prefix="/api", tags=["risk_detection"])
+app.include_router(metadata.router, prefix="/api", tags=["metadata"])
+app.include_router(work_items.router, prefix="/api", tags=["work_items"])
+app.include_router(actors.router, prefix="/api", tags=["actors"])
+app.include_router(ownership.router, prefix="/api", tags=["ownership"])
+app.include_router(roles.router, prefix="/api", tags=["roles"])
 
 
 @app.get("/")

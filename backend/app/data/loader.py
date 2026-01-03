@@ -15,7 +15,12 @@ def load_mock_world() -> Dict[str, Any]:
             "work_items": [],
             "milestones": [],
             "dependencies": [],
-            "resources": []
+            "actors": [],
+            "ownership": [],
+            "roles": [],
+            "actor_roles": [],
+            "decisions": [],
+            "risks": []
         }
     
     with open(data_file, 'r') as f:
@@ -41,7 +46,77 @@ def get_dependencies() -> list:
 
 
 def get_resources() -> list:
-    """Get all resources from mock world"""
+    """
+    DEPRECATED: Use get_actors() instead.
+    Get all actors as resources (for backward compatibility).
+    Returns simplified format matching old resource structure.
+    """
+    actors = get_actors()
+    # Convert actors to old resource format for backward compatibility
+    return [
+        {
+            "id": actor["id"],
+            "name": actor["display_name"],
+            "type": "engineer" if actor["type"] == "USER" else "team",
+            "capacity": 1.0
+        }
+        for actor in actors
+        if actor.get("is_active", True)
+    ]
+
+
+def get_actors() -> list:
+    """Get all actors from mock world"""
     world = load_mock_world()
-    return world.get("resources", [])
+    return world.get("actors", [])
+
+
+def get_ownership() -> list:
+    """Get all ownership records from mock world"""
+    world = load_mock_world()
+    return world.get("ownership", [])
+
+
+def get_roles() -> list:
+    """Get all roles from mock world"""
+    world = load_mock_world()
+    return world.get("roles", [])
+
+
+def get_actor_roles() -> list:
+    """Get all actor role assignments from mock world"""
+    world = load_mock_world()
+    return world.get("actor_roles", [])
+
+
+def get_active_ownership(object_type: str, object_id: str) -> dict:
+    """Get the active ownership record for a specific object"""
+    ownership_records = get_ownership()
+    for ownership in ownership_records:
+        if (ownership.get("object_type") == object_type and 
+            ownership.get("object_id") == object_id and 
+            ownership.get("ended_at") is None):
+            return ownership
+    return None
+
+
+def get_actor_by_id(actor_id: str) -> dict:
+    """Get an actor by ID"""
+    actors = get_actors()
+    for actor in actors:
+        if actor.get("id") == actor_id:
+            return actor
+    return None
+
+
+def get_decisions() -> list:
+    """Get all decisions from mock world"""
+    world = load_mock_world()
+    return world.get("decisions", [])
+
+
+def get_risks() -> list:
+    """Get all risks from mock world"""
+    world = load_mock_world()
+    return world.get("risks", [])
 

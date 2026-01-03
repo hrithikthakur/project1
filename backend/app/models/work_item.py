@@ -20,7 +20,7 @@ class WorkItem(BaseModel):
     status: WorkItemStatus
     estimated_days: float
     actual_days: Optional[float] = None
-    assigned_to: List[str]  # Resource IDs
+    assigned_to: List[str]  # Actor IDs (users or teams)
     dependencies: List[str]  # IDs of dependent work items
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
@@ -34,7 +34,7 @@ class WorkItem(BaseModel):
                 "description": "Add OAuth2 authentication",
                 "status": "in_progress",
                 "estimated_days": 5.0,
-                "assigned_to": ["resource_001", "resource_002"],
+                "assigned_to": ["actor_001", "actor_002"],
                 "dependencies": [],
                 "milestone_id": "milestone_001"
             }
