@@ -248,7 +248,10 @@ export default function RisksView() {
         <div 
           className="stat-card"
           onClick={() => handleFilterClick(null)}
-          style={{ cursor: 'pointer' }}
+          style={{ 
+            cursor: 'pointer',
+            border: statusFilter === null ? '3px solid #3498db' : undefined
+          }}
         >
           <div className="stat-icon">⚠️</div>
           <div className="stat-content">
@@ -257,20 +260,13 @@ export default function RisksView() {
           </div>
         </div>
         <div 
-          className="stat-card"
-          onClick={() => handleFilterClick('closed')}
-          style={{ cursor: 'pointer', borderColor: '#27ae60' }}
-        >
-          <div className="stat-icon">✅</div>
-          <div className="stat-content">
-            <h3>{stats.closed}</h3>
-            <p>Closed</p>
-          </div>
-        </div>
-        <div 
           className="stat-card" 
           onClick={() => handleFilterClick('materialised')}
-          style={{ borderColor: '#ef4444', cursor: 'pointer' }}
+          style={{ 
+            borderColor: '#ef4444', 
+            cursor: 'pointer',
+            borderWidth: statusFilter === 'materialised' ? '3px' : '1px'
+          }}
         >
           <div className="stat-icon">🚨</div>
           <div className="stat-content">
@@ -281,7 +277,10 @@ export default function RisksView() {
         <div 
           className="stat-card"
           onClick={() => handleFilterClick('mitigating')}
-          style={{ cursor: 'pointer' }}
+          style={{ 
+            cursor: 'pointer',
+            border: statusFilter === 'mitigating' ? '3px solid #3498db' : undefined
+          }}
         >
           <div className="stat-icon">🛠️</div>
           <div className="stat-content">
@@ -292,12 +291,30 @@ export default function RisksView() {
         <div 
           className="stat-card"
           onClick={() => handleFilterClick('accepted')}
-          style={{ cursor: 'pointer' }}
+          style={{ 
+            cursor: 'pointer',
+            border: statusFilter === 'accepted' ? '3px solid #95a5a6' : undefined
+          }}
         >
           <div className="stat-icon">🤝</div>
           <div className="stat-content">
             <h3>{stats.accepted}</h3>
             <p>Accepted</p>
+          </div>
+        </div>
+        <div 
+          className="stat-card"
+          onClick={() => handleFilterClick('closed')}
+          style={{ 
+            cursor: 'pointer', 
+            borderColor: '#27ae60',
+            borderWidth: statusFilter === 'closed' ? '3px' : '1px'
+          }}
+        >
+          <div className="stat-icon">✅</div>
+          <div className="stat-content">
+            <h3>{stats.closed}</h3>
+            <p>Closed</p>
           </div>
         </div>
       </div>

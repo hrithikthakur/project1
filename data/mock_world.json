@@ -4,7 +4,7 @@
       "id": "work_item_001",
       "title": "Design Authentication System",
       "description": "Design OAuth2 authentication flow",
-      "status": "in_progress",
+      "status": "blocked",
       "estimated_days": 3.0,
       "actual_days": null,
       "assigned_to": [
@@ -20,7 +20,7 @@
       "id": "work_item_002",
       "title": "Implement Authentication Backend",
       "description": "Implement OAuth2 server endpoints",
-      "status": "in_progress",
+      "status": "blocked",
       "estimated_days": 5.0,
       "actual_days": null,
       "assigned_to": [
@@ -57,7 +57,7 @@
       "id": "work_item_004",
       "title": "Database Schema Design",
       "description": "Design database schema for user data",
-      "status": "completed",
+      "status": "blocked",
       "estimated_days": 2.0,
       "actual_days": null,
       "assigned_to": [
@@ -73,7 +73,7 @@
       "id": "work_item_005",
       "title": "Implement User API",
       "description": "Build REST API for user management",
-      "status": "in_progress",
+      "status": "completed",
       "estimated_days": 6.0,
       "actual_days": null,
       "assigned_to": [
@@ -109,7 +109,7 @@
       "id": "work_item_007",
       "title": "Design Payment System",
       "description": "Design payment processing architecture",
-      "status": "not_started",
+      "status": "blocked",
       "estimated_days": 5.0,
       "actual_days": null,
       "assigned_to": [
@@ -547,6 +547,16 @@
       "ended_at": null,
       "assigned_by_actor_id": null,
       "reason": null
+    },
+    {
+      "id": "ownership_1767547918483",
+      "object_type": "risk",
+      "object_id": "risk_from_blocked_work_item_004",
+      "owner_actor_id": "actor_002",
+      "assigned_at": "2026-01-04T17:31:58.483000Z",
+      "ended_at": null,
+      "assigned_by_actor_id": null,
+      "reason": ""
     }
   ],
   "roles": [
@@ -1261,9 +1271,9 @@
     {
       "id": "risk_from_blocked_work_item_001",
       "title": "Blocked Dependency: Design Authentication System",
-      "description": "'Design Authentication System' is BLOCKED. 1 dependent item(s) affected: Implement Authentication Backend [AUTO-RESOLVED: All blocking items resolved]",
+      "description": "'Design Authentication System' is BLOCKED. 1 dependent item(s) affected: Implement Authentication Backend",
       "severity": "medium",
-      "status": "closed",
+      "status": "materialised",
       "probability": 1.0,
       "impact": {
         "delay_days": 3,
@@ -1274,9 +1284,11 @@
         "cascading_delays": true
       },
       "milestone_id": "milestone_001",
-      "affected_items": [],
-      "detected_at": "2026-01-04T17:13:44.210506",
-      "mitigated_at": "2026-01-04T17:14:07.673001",
+      "affected_items": [
+        "work_item_002"
+      ],
+      "detected_at": "2026-01-04T17:33:51.824087",
+      "mitigated_at": "2026-01-04T17:32:51.146456",
       "accepted_at": null,
       "accepted_by": null,
       "acceptance_boundary": null,
@@ -1289,9 +1301,9 @@
     {
       "id": "risk_from_blocked_work_item_004",
       "title": "Blocked Dependency: Database Schema Design",
-      "description": "'Database Schema Design' is BLOCKED. 1 dependent item(s) affected: Implement User API [AUTO-RESOLVED: work_item_004 is no longer blocked]",
+      "description": "'Database Schema Design' is BLOCKED. 1 dependent item(s) affected: Implement User API",
       "severity": "medium",
-      "status": "closed",
+      "status": "materialised",
       "probability": 1.0,
       "impact": {
         "delay_days": 3,
@@ -1305,7 +1317,7 @@
       "affected_items": [
         "work_item_005"
       ],
-      "detected_at": "2026-01-04T17:25:54.246990",
+      "detected_at": "2026-01-04T17:34:57.586891",
       "mitigated_at": "2026-01-04T17:27:09.744793",
       "accepted_at": null,
       "accepted_by": null,
@@ -1319,9 +1331,9 @@
     {
       "id": "risk_from_blocked_work_item_002",
       "title": "Blocked Dependency: Implement Authentication Backend",
-      "description": "'Implement Authentication Backend' is BLOCKED. 1 dependent item(s) affected: Implement Authentication Frontend [AUTO-RESOLVED: work_item_002 is now in_progress]",
+      "description": "'Implement Authentication Backend' is BLOCKED. 1 dependent item(s) affected: Implement Authentication Frontend",
       "severity": "medium",
-      "status": "closed",
+      "status": "materialised",
       "probability": 1.0,
       "impact": {
         "delay_days": 3,
@@ -1335,8 +1347,8 @@
       "affected_items": [
         "work_item_003"
       ],
-      "detected_at": "2026-01-04T17:15:48.724095",
-      "mitigated_at": "2026-01-04T17:20:57.918501",
+      "detected_at": "2026-01-04T17:34:01.658378",
+      "mitigated_at": "2026-01-04T17:33:05.532271",
       "accepted_at": null,
       "accepted_by": null,
       "acceptance_boundary": null,
@@ -1349,9 +1361,9 @@
     {
       "id": "risk_from_blocked_work_item_007",
       "title": "Blocked Dependency: Design Payment System",
-      "description": "'Design Payment System' is BLOCKED. 1 dependent item(s) affected: Implement Payment API [AUTO-RESOLVED: work_item_007 is no longer blocked]",
+      "description": "'Design Payment System' is BLOCKED. 1 dependent item(s) affected: Implement Payment API",
       "severity": "medium",
-      "status": "closed",
+      "status": "materialised",
       "probability": 1.0,
       "impact": {
         "delay_days": 3,
@@ -1365,8 +1377,8 @@
       "affected_items": [
         "work_item_008"
       ],
-      "detected_at": "2026-01-04T17:21:10.593720",
-      "mitigated_at": "2026-01-04T17:21:10.597894",
+      "detected_at": "2026-01-04T17:34:47.008890",
+      "mitigated_at": "2026-01-04T17:33:15.981031",
       "accepted_at": null,
       "accepted_by": null,
       "acceptance_boundary": null,

@@ -116,6 +116,18 @@ export default function WorkItemsView() {
       console.log('Work item updated successfully:', updated);
       await loadData();
       toast.success(`Work item ${newStatus.replace('_', ' ')}`);
+      
+      // Check if a risk was created
+      if (updated._metadata?.risk_created) {
+        const riskInfo = updated._metadata.risk_created;
+        if (riskInfo.created || riskInfo.updated) {
+          const action = riskInfo.created ? 'created' : 'updated';
+          toast.error(
+            `⚠️ Risk ${action}: "${riskInfo.blocked_item_name}" is blocked and affects ${riskInfo.dependent_count} dependent item(s)`,
+            { duration: 6000 }
+          );
+        }
+      }
     } catch (error) {
       console.error('Error toggling work item status:', error);
       toast.error(`Error updating work item: ${error instanceof Error ? error.message : 'Unknown error'}`);

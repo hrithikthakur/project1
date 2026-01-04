@@ -149,10 +149,13 @@ def _check_and_resolve_dependency_risks(completed_work_item_id: str, world: dict
         _save_mock_world(world)
 
 
-def _create_materialized_risk_for_blocked_item(blocked_work_item_id: str, world: dict):
+def _create_materialized_risk_for_blocked_item(blocked_work_item_id: str, world: dict) -> dict:
     """
     When a work item is blocked, check if other items depend on it.
     If so, create a MATERIALISED risk (actively blocking progress).
+    
+    Returns:
+        dict: Information about the created/updated risk, or None if no risk was created
     """
     work_items = world.get("work_items", [])
     risks = world.get("risks", [])
@@ -161,7 +164,7 @@ def _create_materialized_risk_for_blocked_item(blocked_work_item_id: str, world:
     # Find the blocked work item
     blocked_item = next((item for item in work_items if item.get("id") == blocked_work_item_id), None)
     if not blocked_item:
-        return
+        return None
     
     # Find all items that depend on this blocked item
     dependent_items = []
@@ -172,7 +175,7 @@ def _create_materialized_risk_for_blocked_item(blocked_work_item_id: str, world:
     
     # If no items depend on it, no need to create a risk
     if not dependent_items:
-        return
+        return None
     
     # Get the blocked item's milestone
     milestone_id = blocked_item.get("milestone_id")
@@ -195,6 +198,14 @@ def _create_materialized_risk_for_blocked_item(blocked_work_item_id: str, world:
     if len(dependent_names) > 3:
         dependent_list += f" and {len(dependent_names) - 3} more"
     
+    risk_info = {
+        "created": False,
+        "updated": False,
+        "risk_id": risk_id,
+        "blocked_item_name": blocked_item_name,
+        "dependent_count": len(dependent_items)
+    }
+    
     if existing_risk:
         # Update existing risk to MATERIALISED
         existing_risk["status"] = RiskStatus.MATERIALISED
@@ -205,6 +216,7 @@ def _create_materialized_risk_for_blocked_item(blocked_work_item_id: str, world:
             existing_risk["impact"]["delay_days"] = len(dependent_items) * 3
             existing_risk["impact"]["blocked_item"] = blocked_work_item_id
             existing_risk["impact"]["dependent_items"] = [item["id"] for item in dependent_items]
+        risk_info["updated"] = True
     else:
         # Create new MATERIALISED risk
         new_risk = Risk(
@@ -226,9 +238,12 @@ def _create_materialized_risk_for_blocked_item(blocked_work_item_id: str, world:
             mitigated_at=None
         )
         risks.append(new_risk.model_dump(mode='json'))
+        risk_info["created"] = True
     
     world["risks"] = risks
     _save_mock_world(world)
+    
+    return risk_info
 
 
 @router.get("/work_items", response_model=List[WorkItem])
@@ -264,7 +279,7 @@ async def create_work_item(work_item: WorkItem):
     return work_item
 
 
-@router.put("/work_items/{work_item_id}", response_model=WorkItem)
+@router.put("/work_items/{work_item_id}")
 async def update_work_item(work_item_id: str, work_item: WorkItem):
     """Update an existing work item"""
     if work_item.id != work_item_id:
@@ -289,9 +304,16 @@ async def update_work_item(work_item_id: str, work_item: WorkItem):
     world["work_items"] = work_items
     _save_mock_world(world)
     
+    # Track metadata about what happened
+    metadata = {
+        "risk_created": None
+    }
+    
     # Create MATERIALISED risk if work item is blocked and has dependents
     if work_item.status == "blocked" and old_status != "blocked":
-        _create_materialized_risk_for_blocked_item(work_item_id, world)
+        risk_info = _create_materialized_risk_for_blocked_item(work_item_id, world)
+        if risk_info:
+            metadata["risk_created"] = risk_info
     
     # Auto-resolve risks if work item status changed from blocked to in_progress/completed
     if old_status == "blocked" and work_item.status in ["in_progress", "completed"]:
@@ -301,7 +323,11 @@ async def update_work_item(work_item_id: str, work_item: WorkItem):
     if work_item.status == "completed":
         _check_and_resolve_dependency_risks(work_item_id, world)
     
-    return work_item
+    # Return work item with metadata
+    return {
+        **work_item.model_dump(mode='json'),
+        "_metadata": metadata
+    }
 
 
 @router.delete("/work_items/{work_item_id}")

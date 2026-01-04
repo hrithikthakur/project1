@@ -101,9 +101,21 @@ export default function MilestoneView({ milestoneId, onClose }: MilestoneViewPro
     const newStatus = workItem.status === 'completed' ? 'in_progress' : 'completed';
     
     try {
-      await updateWorkItem(workItem.id, { ...workItem, status: newStatus });
+      const updated = await updateWorkItem(workItem.id, { ...workItem, status: newStatus });
       await loadMilestoneDetails();
       toast.success(`Work item marked as ${newStatus.replace('_', ' ')}`);
+      
+      // Check if a risk was created
+      if (updated._metadata?.risk_created) {
+        const riskInfo = updated._metadata.risk_created;
+        if (riskInfo.created || riskInfo.updated) {
+          const action = riskInfo.created ? 'created' : 'updated';
+          toast.error(
+            `⚠️ Risk ${action}: "${riskInfo.blocked_item_name}" is blocked and affects ${riskInfo.dependent_count} dependent item(s)`,
+            { duration: 6000 }
+          );
+        }
+      }
     } catch (err: any) {
       console.error('Error toggling work item status:', err);
       toast.error('Error updating work item: ' + (err.message || 'Unknown error'));

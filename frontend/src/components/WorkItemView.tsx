@@ -207,6 +207,18 @@ export default function WorkItemView({ workItemId, onClose }: WorkItemViewProps)
       console.log('Work item updated successfully:', result);
       await loadWorkItemDetails();
       toast.success(`Status updated to ${newStatus.replace('_', ' ')}`);
+      
+      // Check if a risk was created
+      if (result._metadata?.risk_created) {
+        const riskInfo = result._metadata.risk_created;
+        if (riskInfo.created || riskInfo.updated) {
+          const action = riskInfo.created ? 'created' : 'updated';
+          toast.error(
+            `⚠️ Risk ${action}: "${riskInfo.blocked_item_name}" is blocked and affects ${riskInfo.dependent_count} dependent item(s)`,
+            { duration: 6000 }
+          );
+        }
+      }
     } catch (err: any) {
       console.error('Error toggling work item status:', err);
       toast.error('Error updating work item: ' + (err.message || 'Unknown error'));
@@ -244,6 +256,18 @@ export default function WorkItemView({ workItemId, onClose }: WorkItemViewProps)
         setMilestone(null);
       }
       toast.success('Work item updated');
+      
+      // Check if a risk was created
+      if (updated._metadata?.risk_created) {
+        const riskInfo = updated._metadata.risk_created;
+        if (riskInfo.created || riskInfo.updated) {
+          const action = riskInfo.created ? 'created' : 'updated';
+          toast.error(
+            `⚠️ Risk ${action}: "${riskInfo.blocked_item_name}" is blocked and affects ${riskInfo.dependent_count} dependent item(s)`,
+            { duration: 6000 }
+          );
+        }
+      }
     } catch (err: any) {
       console.error('Error updating work item:', err);
       toast.error('Failed to update work item: ' + (err.message || 'Unknown error'));

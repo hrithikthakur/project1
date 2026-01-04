@@ -491,7 +491,19 @@ export async function createWorkItem(workItem: WorkItem): Promise<WorkItem> {
   return response.json();
 }
 
-export async function updateWorkItem(workItemId: string, workItem: Partial<WorkItem> & { id: string }): Promise<WorkItem> {
+export interface WorkItemUpdateResponse extends WorkItem {
+  _metadata?: {
+    risk_created?: {
+      created: boolean;
+      updated: boolean;
+      risk_id: string;
+      blocked_item_name: string;
+      dependent_count: number;
+    };
+  };
+}
+
+export async function updateWorkItem(workItemId: string, workItem: Partial<WorkItem> & { id: string }): Promise<WorkItemUpdateResponse> {
   const response = await fetch(`${API_BASE_URL}/work_items/${workItemId}`, {
     method: 'PUT',
     headers: {
