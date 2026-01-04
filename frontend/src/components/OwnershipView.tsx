@@ -32,6 +32,7 @@ export default function OwnershipView() {
   const [showDetail, setShowDetail] = useState(false);
   const [selectedOwnership, setSelectedOwnership] = useState<Ownership | null>(null);
   const [editingOwnership, setEditingOwnership] = useState<Ownership | null>(null);
+  const [showTooltip, setShowTooltip] = useState(false);
   const [formData, setFormData] = useState<Partial<Ownership>>({
     object_type: 'decision',
     object_id: '',
@@ -293,7 +294,67 @@ export default function OwnershipView() {
   return (
     <div className="view-container">
       <div className="view-header">
-        <h2>Ownership</h2>
+        <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          Ownership
+          <span 
+            style={{ 
+              cursor: 'help',
+              fontSize: '0.875rem',
+              color: '#64748b',
+              position: 'relative',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '20px',
+              height: '20px',
+              borderRadius: '50%',
+              border: '1.5px solid #94a3b8',
+              fontWeight: 'bold',
+            }}
+            onMouseEnter={() => setShowTooltip(true)}
+            onMouseLeave={() => setShowTooltip(false)}
+          >
+            ?
+            {showTooltip && (
+              <div style={{
+                position: 'absolute',
+                top: '30px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                backgroundColor: '#1e293b',
+                color: 'white',
+                padding: '12px 16px',
+                borderRadius: '8px',
+                fontSize: '0.875rem',
+                width: '320px',
+                zIndex: 1000,
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                lineHeight: '1.5',
+                textAlign: 'left',
+                fontWeight: 'normal',
+              }}>
+                <div style={{ marginBottom: '8px' }}>
+                  <strong style={{ color: '#f1f5f9' }}>Ownership:</strong> The assignment of accountability for decisions, risks, milestones, or work items to specific actors (users or teams).
+                </div>
+                <div style={{ color: '#cbd5e1', fontSize: '0.8125rem' }}>
+                  ✓ Tracks who is responsible and maintains audit trails.
+                </div>
+                {/* Tooltip arrow */}
+                <div style={{
+                  position: 'absolute',
+                  top: '-6px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '0',
+                  height: '0',
+                  borderLeft: '6px solid transparent',
+                  borderRight: '6px solid transparent',
+                  borderBottom: '6px solid #1e293b',
+                }}></div>
+              </div>
+            )}
+          </span>
+        </h2>
         <button className="btn-primary" onClick={handleNew}>
           + Assign Ownership
         </button>

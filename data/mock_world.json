@@ -1428,7 +1428,7 @@
       "id": "dec_1767564209502",
       "decision_type": "mitigate_risk",
       "subtype": "REDUCE_WIP",
-      "status": "proposed",
+      "status": "approved",
       "milestone_name": "Authentication MVP",
       "next_date": null,
       "created_at": "2026-01-04T22:03:29.502000Z",
@@ -1464,7 +1464,7 @@
       "title": "Blocked Dependency: Design Authentication System",
       "description": "'Design Authentication System' is BLOCKED. 1 dependent item(s) affected: Implement Authentication Backend [AUTO-RESOLVED: work_item_001 is no longer blocked]",
       "severity": "medium",
-      "status": "closed",
+      "status": "mitigating",
       "probability": 1.0,
       "impact": {
         "delay_days": 3,
@@ -1484,9 +1484,9 @@
       "accepted_by": null,
       "acceptance_boundary": null,
       "next_date": null,
-      "mitigation_started_at": null,
-      "mitigation_decision": null,
-      "mitigation_action": null,
+      "mitigation_started_at": "2026-01-04T22:04:46.167196",
+      "mitigation_decision": "dec_1767564209502",
+      "mitigation_action": "wweeff",
       "mitigation_due_date": null
     },
     {

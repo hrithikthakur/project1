@@ -41,6 +41,7 @@ export default function DecisionsView() {
   const [risks, setRisks] = useState<Risk[]>([]);
   const [selectedActorId, setSelectedActorId] = useState<string>('');
   const [currentOwnership, setCurrentOwnership] = useState<Ownership | null>(null);
+  const [showTooltip, setShowTooltip] = useState(false);
   
   // Type-specific fields
   const [newTargetDate, setNewTargetDate] = useState<string>('');
@@ -404,7 +405,67 @@ export default function DecisionsView() {
   return (
     <div className="view-container">
       <div className="view-header">
-        <h2>Decisions</h2>
+        <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          Decisions
+          <span 
+            style={{ 
+              cursor: 'help',
+              fontSize: '0.875rem',
+              color: '#64748b',
+              position: 'relative',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '20px',
+              height: '20px',
+              borderRadius: '50%',
+              border: '1.5px solid #94a3b8',
+              fontWeight: 'bold',
+            }}
+            onMouseEnter={() => setShowTooltip(true)}
+            onMouseLeave={() => setShowTooltip(false)}
+          >
+            ?
+            {showTooltip && (
+              <div style={{
+                position: 'absolute',
+                top: '30px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                backgroundColor: '#1e293b',
+                color: 'white',
+                padding: '12px 16px',
+                borderRadius: '8px',
+                fontSize: '0.875rem',
+                width: '320px',
+                zIndex: 1000,
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                lineHeight: '1.5',
+                textAlign: 'left',
+                fontWeight: 'normal',
+              }}>
+                <div style={{ marginBottom: '8px' }}>
+                  <strong style={{ color: '#f1f5f9' }}>Decision:</strong> A documented choice or commitment made to address project constraints, scope, schedule, capacity, risks, or priorities.
+                </div>
+                <div style={{ color: '#cbd5e1', fontSize: '0.8125rem' }}>
+                  ✓ Tracks approvals and superseded decisions for audit trails.
+                </div>
+                {/* Tooltip arrow */}
+                <div style={{
+                  position: 'absolute',
+                  top: '-6px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '0',
+                  height: '0',
+                  borderLeft: '6px solid transparent',
+                  borderRight: '6px solid transparent',
+                  borderBottom: '6px solid #1e293b',
+                }}></div>
+              </div>
+            )}
+          </span>
+        </h2>
         <button className="btn-primary" onClick={handleNew}>
           + New Decision
         </button>
