@@ -8,6 +8,8 @@ def load_mock_world() -> Dict[str, Any]:
     """Load mock_world.json data file"""
     # Try multiple possible locations for the data file
     possible_paths = [
+        # 0. API_DIR environment variable (set by api/index.py for Vercel)
+        Path(os.environ.get("API_DIR", "")) / "mock_world.json" if os.environ.get("API_DIR") else None,
         # 1. In api directory (for Vercel deployment)
         Path(__file__).parent.parent.parent.parent / "api" / "mock_world.json",
         # 2. Environment variable (set by api/index.py)
@@ -19,15 +21,22 @@ def load_mock_world() -> Dict[str, Any]:
     ]
     
     data_file = None
-    for path in possible_paths:
+    errors = []
+    for i, path in enumerate(possible_paths):
         try:
             if path and path.exists():
                 data_file = path
                 break
-        except Exception:
+            else:
+                errors.append(f"Path {i+1} ({path}): does not exist")
+        except Exception as e:
+            errors.append(f"Path {i+1} error: {str(e)}")
             continue
     
     if not data_file:
+        # Log which paths were tried before falling back to empty structure
+        error_msg = "Could not find mock_world.json. Tried: " + "; ".join(errors)
+        print(f"WARNING: {error_msg}")
         # Return empty structure if file doesn't exist
         return {
             "work_items": [],
@@ -41,8 +50,12 @@ def load_mock_world() -> Dict[str, Any]:
             "risks": []
         }
     
-    with open(data_file, 'r') as f:
-        return json.load(f)
+    try:
+        with open(data_file, 'r') as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"ERROR loading {data_file}: {str(e)}")
+        raise
 
 
 def get_work_items() -> list:
