@@ -4,7 +4,7 @@
       "id": "work_item_001",
       "title": "Design Authentication System",
       "description": "Design OAuth2 authentication flow",
-      "status": "blocked",
+      "status": "in_progress",
       "estimated_days": 3.0,
       "actual_days": null,
       "assigned_to": [
@@ -20,7 +20,7 @@
       "id": "work_item_002",
       "title": "Implement Authentication Backend",
       "description": "Implement OAuth2 server endpoints",
-      "status": "blocked",
+      "status": "in_progress",
       "estimated_days": 5.0,
       "actual_days": null,
       "assigned_to": [
@@ -59,11 +59,15 @@
       "description": "Design database schema for user data",
       "status": "completed",
       "estimated_days": 2.0,
+      "actual_days": null,
       "assigned_to": [
         "actor_003"
       ],
       "dependencies": [],
-      "milestone_id": "milestone_001"
+      "start_date": null,
+      "end_date": null,
+      "milestone_id": "milestone_001",
+      "tags": null
     },
     {
       "id": "work_item_005",
@@ -107,11 +111,15 @@
       "description": "Design payment processing architecture",
       "status": "not_started",
       "estimated_days": 5.0,
+      "actual_days": null,
       "assigned_to": [
         "actor_002"
       ],
       "dependencies": [],
-      "milestone_id": "milestone_003"
+      "start_date": null,
+      "end_date": null,
+      "milestone_id": "milestone_003",
+      "tags": null
     },
     {
       "id": "work_item_008",
@@ -1251,50 +1259,114 @@
   ],
   "risks": [
     {
-      "id": "risk_from_issue_002",
-      "title": "Technical blocker: Database migration failing",
-      "description": "Database migration script for user schema is failing in staging environment. Need to fix before deployment.",
-      "severity": "critical",
-      "status": "mitigating",
+      "id": "risk_from_blocked_work_item_001",
+      "title": "Blocked Dependency: Design Authentication System",
+      "description": "'Design Authentication System' is BLOCKED. 1 dependent item(s) affected: Implement Authentication Backend [AUTO-RESOLVED: All blocking items resolved]",
+      "severity": "medium",
+      "status": "closed",
       "probability": 1.0,
       "impact": {
-        "description": "Blocks deployment to production. Cannot proceed with launch until resolved.",
-        "original_issue_type": "technical_blocker"
+        "delay_days": 3,
+        "blocked_item": "work_item_001",
+        "dependent_items": [
+          "work_item_002"
+        ],
+        "cascading_delays": true
       },
-      "affected_items": [
-        "work_item_001"
-      ],
-      "detected_at": "2026-01-02T14:30:00Z",
+      "milestone_id": "milestone_001",
+      "affected_items": [],
+      "detected_at": "2026-01-04T17:13:44.210506",
+      "mitigated_at": "2026-01-04T17:14:07.673001",
+      "accepted_at": null,
+      "accepted_by": null,
+      "acceptance_boundary": null,
       "next_date": null,
-      "linked_risk_id": "risk_001",
-      "mitigation_started_at": "2026-01-04T16:59:02.322087",
-      "mitigation_decision": "dec_1767545942269",
-      "mitigation_action": "abc",
+      "mitigation_started_at": null,
+      "mitigation_decision": null,
+      "mitigation_action": null,
       "mitigation_due_date": null
     },
     {
-      "id": "risk_auto_blocked_milestone_003",
-      "title": "Blocked Dependencies in Payment System",
-      "description": "1 work item(s) blocked: Implement Payment API",
+      "id": "risk_from_blocked_work_item_004",
+      "title": "Blocked Dependency: Database Schema Design",
+      "description": "'Database Schema Design' is BLOCKED. 1 dependent item(s) affected: Implement User API [AUTO-RESOLVED: work_item_004 is no longer blocked]",
       "severity": "medium",
-      "status": "mitigating",
+      "status": "closed",
       "probability": 1.0,
       "impact": {
-        "delay_days": 2,
-        "affected_milestone": "milestone_003",
-        "blocked_items": [
+        "delay_days": 3,
+        "blocked_item": "work_item_004",
+        "dependent_items": [
+          "work_item_005"
+        ],
+        "cascading_delays": true
+      },
+      "milestone_id": "milestone_001",
+      "affected_items": [
+        "work_item_005"
+      ],
+      "detected_at": "2026-01-04T17:25:54.246990",
+      "mitigated_at": "2026-01-04T17:27:09.744793",
+      "accepted_at": null,
+      "accepted_by": null,
+      "acceptance_boundary": null,
+      "next_date": null,
+      "mitigation_started_at": null,
+      "mitigation_decision": null,
+      "mitigation_action": null,
+      "mitigation_due_date": null
+    },
+    {
+      "id": "risk_from_blocked_work_item_002",
+      "title": "Blocked Dependency: Implement Authentication Backend",
+      "description": "'Implement Authentication Backend' is BLOCKED. 1 dependent item(s) affected: Implement Authentication Frontend [AUTO-RESOLVED: work_item_002 is now in_progress]",
+      "severity": "medium",
+      "status": "closed",
+      "probability": 1.0,
+      "impact": {
+        "delay_days": 3,
+        "blocked_item": "work_item_002",
+        "dependent_items": [
+          "work_item_003"
+        ],
+        "cascading_delays": true
+      },
+      "milestone_id": "milestone_001",
+      "affected_items": [
+        "work_item_003"
+      ],
+      "detected_at": "2026-01-04T17:15:48.724095",
+      "mitigated_at": "2026-01-04T17:20:57.918501",
+      "accepted_at": null,
+      "accepted_by": null,
+      "acceptance_boundary": null,
+      "next_date": null,
+      "mitigation_started_at": null,
+      "mitigation_decision": null,
+      "mitigation_action": null,
+      "mitigation_due_date": null
+    },
+    {
+      "id": "risk_from_blocked_work_item_007",
+      "title": "Blocked Dependency: Design Payment System",
+      "description": "'Design Payment System' is BLOCKED. 1 dependent item(s) affected: Implement Payment API [AUTO-RESOLVED: work_item_007 is no longer blocked]",
+      "severity": "medium",
+      "status": "closed",
+      "probability": 1.0,
+      "impact": {
+        "delay_days": 3,
+        "blocked_item": "work_item_007",
+        "dependent_items": [
           "work_item_008"
         ],
-        "blocked_item_names": [
-          "Implement Payment API"
-        ]
+        "cascading_delays": true
       },
       "milestone_id": "milestone_003",
       "affected_items": [
         "work_item_008"
       ],
-      "detected_at": "2026-01-04T16:57:37.702645",
-      "mitigated_at": null,
+      "detected_at": "2026-01-04T17:21:10.593720",
+      "mitigated_at": "2026-01-04T17:21:10.597894",
       "accepted_at": null,
       "accepted_by": null,
       "acceptance_boundary": null,

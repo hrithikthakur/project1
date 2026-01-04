@@ -35,6 +35,13 @@ export default function RisksView() {
   useEffect(() => {
     loadRisks();
     loadWorkItems();
+    
+    // Auto-refresh risks every 10 seconds to catch updates from work item changes
+    const intervalId = setInterval(() => {
+      loadRisks();
+    }, 10000);
+    
+    return () => clearInterval(intervalId);
   }, []);
 
   async function loadRisks() {
@@ -43,6 +50,20 @@ export default function RisksView() {
       setRisks(data);
     } catch (error) {
       console.error('Error loading risks:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleRefresh() {
+    setLoading(true);
+    try {
+      await loadRisks();
+      await loadWorkItems();
+      toast.success('Risks refreshed');
+    } catch (error) {
+      console.error('Error refreshing:', error);
+      toast.error('Error refreshing risks');
     } finally {
       setLoading(false);
     }
@@ -166,7 +187,7 @@ export default function RisksView() {
 
   const stats = {
     total: risks.length,
-    open: risks.filter(r => r.status === 'open').length,
+    closed: risks.filter(r => r.status === 'closed').length,
     materialised: risks.filter(r => r.status === 'materialised').length,
     mitigating: risks.filter(r => r.status === 'mitigating').length,
     accepted: risks.filter(r => r.status === 'accepted').length,
@@ -192,6 +213,13 @@ export default function RisksView() {
         <div style={{ display: 'flex', gap: '10px' }}>
           <button 
             className="btn-secondary" 
+            onClick={handleRefresh}
+            title="Refresh risks list (auto-refreshes every 10s)"
+          >
+            🔄 Refresh
+          </button>
+          <button 
+            className="btn-secondary" 
             onClick={handleDetectRisks}
           >
             🔍 Auto-Detect Risks
@@ -200,6 +228,19 @@ export default function RisksView() {
             + New Risk
           </button>
         </div>
+      </div>
+
+      {/* Auto-refresh info */}
+      <div style={{ 
+        marginBottom: '1rem', 
+        padding: '0.75rem 1rem', 
+        backgroundColor: '#f0f9ff', 
+        borderLeft: '4px solid #3b82f6',
+        borderRadius: '4px',
+        fontSize: '0.875rem',
+        color: '#1e40af'
+      }}>
+        <strong>ℹ️ Auto-sync enabled:</strong> Risks automatically update when work items change status. Page refreshes every 10 seconds.
       </div>
 
       {/* Stats Summary */}
@@ -217,13 +258,13 @@ export default function RisksView() {
         </div>
         <div 
           className="stat-card"
-          onClick={() => handleFilterClick('open')}
-          style={{ cursor: 'pointer' }}
+          onClick={() => handleFilterClick('closed')}
+          style={{ cursor: 'pointer', borderColor: '#27ae60' }}
         >
-          <div className="stat-icon">⭕</div>
+          <div className="stat-icon">✅</div>
           <div className="stat-content">
-            <h3>{stats.open}</h3>
-            <p>Open</p>
+            <h3>{stats.closed}</h3>
+            <p>Closed</p>
           </div>
         </div>
         <div 
@@ -476,6 +517,7 @@ export default function RisksView() {
               <div>
                 <h3 style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   {selectedRisk.status === 'materialised' && <span>🚨</span>}
+                  {selectedRisk.status === 'closed' && <span>✅</span>}
                   {selectedRisk.title}
                 </h3>
                 <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
@@ -645,43 +687,6 @@ export default function RisksView() {
               </div>
             )}
 
-            {/* Impact Details for Blocked Dependencies */}
-            {selectedRisk.status === 'materialised' && (selectedRisk.impact as any)?.blocked_item && (
-              <div style={{
-                marginBottom: '1.5rem',
-                padding: '1rem',
-                backgroundColor: '#fef2f2',
-                borderLeft: '4px solid #ef4444',
-                borderRadius: '4px',
-              }}>
-                <div style={{ 
-                  fontSize: '0.875rem', 
-                  fontWeight: 'bold', 
-                  color: '#991b1b',
-                  marginBottom: '0.5rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                }}>
-                  <span>🚨</span>
-                  <span>Dependency Blocked</span>
-                </div>
-                <div style={{ fontSize: '0.8125rem', color: '#7f1d1d' }}>
-                  <div style={{ marginBottom: '0.5rem' }}>
-                    <strong>Blocked Item:</strong> {(selectedRisk.impact as any).blocked_item}
-                  </div>
-                  <div style={{ marginBottom: '0.5rem' }}>
-                    <strong>Waiting For:</strong> {(selectedRisk.impact as any).blocking_item}
-                  </div>
-                  {(selectedRisk.impact as any).p80_delay_days && (
-                    <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid #fecaca' }}>
-                      <strong>Expected Delay:</strong> {(selectedRisk.impact as any).p80_delay_days} days (P80)
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
             {/* Affected Work Items */}
             {selectedRisk.affected_items.length > 0 && (
               <div style={{ marginBottom: '1.5rem' }}>
@@ -750,19 +755,28 @@ export default function RisksView() {
           if (a.status !== 'materialised' && b.status === 'materialised') return 1;
           return 0;
         }).map((risk) => {
+          // Determine border style based on status
+          let borderStyle = undefined;
+          if (risk.status === 'materialised') {
+            borderStyle = '3px solid #ef4444';  // Red for materialized
+          } else if (risk.status === 'closed') {
+            borderStyle = '3px solid #27ae60';  // Green for closed
+          }
+          
           return (
             <div 
               key={risk.id} 
               className={`card ${risk.status === 'materialised' ? 'materialised-risk' : ''}`}
               style={{ 
                 cursor: 'pointer',
-                border: risk.status === 'materialised' ? '3px solid #ef4444' : undefined
+                border: borderStyle
               }}
               onClick={() => openRiskModal(risk)}
             >
               <div className="card-header">
                 <h3>
                   {risk.status === 'materialised' && <span style={{ marginRight: '8px' }}>🚨</span>}
+                  {risk.status === 'closed' && <span style={{ marginRight: '8px' }}>✅</span>}
                   {risk.title}
                 </h3>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -791,25 +805,6 @@ export default function RisksView() {
                 }}>
                   {risk.description}
                 </p>
-                
-                {/* Show blocking details for materialized dependency risks */}
-                {risk.status === 'materialised' && (risk.impact as any)?.blocked_item && (
-                  <div style={{
-                    marginTop: '0.5rem',
-                    padding: '0.5rem',
-                    backgroundColor: '#fef2f2',
-                    borderRadius: '4px',
-                    fontSize: '0.75rem',
-                    color: '#991b1b',
-                  }}>
-                    <strong>🚫 {(risk.impact as any).blocked_item}</strong> waiting for <strong>{(risk.impact as any).blocking_item}</strong>
-                    {(risk.impact as any).p80_delay_days && (
-                      <span style={{ marginLeft: '0.5rem' }}>
-                        • Delay: {(risk.impact as any).p80_delay_days}d
-                      </span>
-                    )}
-                  </div>
-                )}
                 
                 <div className="card-meta" style={{ marginTop: '0.5rem' }}>
                   <div className="meta-item">

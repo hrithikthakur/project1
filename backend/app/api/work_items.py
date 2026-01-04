@@ -30,47 +30,63 @@ def _auto_resolve_risks_for_work_item(work_item_id: str, new_status: str, world:
     work_items = world.get("work_items", [])
     updated = False
     
-    # Check if there are no more blocked items
-    blocked_items = [item for item in work_items if item.get("status") == "blocked"]
-    
     for risk in risks:
-        # Check if this risk is about blocked dependencies and includes our work item
-        affected_items = risk.get("affected_items", [])
+        # Skip already closed risks
+        if risk.get("status") in [RiskStatus.CLOSED, "closed"]:
+            continue
+            
+        # Check if this risk is about THIS specific work item being blocked
+        risk_id = risk.get("id", "")
         
-        # If this work item was affecting this risk
+        # Case 1: Risk ID contains the work item ID (e.g., risk_from_blocked_work_item_004)
+        if f"blocked_{work_item_id}" in risk_id or f"blocked_work_item_{work_item_id.split('_')[-1]}" in risk_id:
+            print(f"[AUTO-RESOLVE] Found risk {risk_id} for unblocked item {work_item_id}")
+            risk["status"] = RiskStatus.CLOSED
+            risk["mitigated_at"] = datetime.now().isoformat()
+            original_desc = risk.get("description", "").split("[AUTO-RESOLVED")[0].strip()
+            risk["description"] = original_desc + f" [AUTO-RESOLVED: {work_item_id} is no longer blocked]"
+            updated = True
+            continue
+        
+        # Case 2: Check if work item is in the impact.blocked_item field
+        impact = risk.get("impact", {})
+        if impact.get("blocked_item") == work_item_id:
+            print(f"[AUTO-RESOLVE] Found risk {risk_id} with blocked_item={work_item_id}")
+            risk["status"] = RiskStatus.CLOSED
+            risk["mitigated_at"] = datetime.now().isoformat()
+            original_desc = risk.get("description", "").split("[AUTO-RESOLVED")[0].strip()
+            risk["description"] = original_desc + f" [AUTO-RESOLVED: {work_item_id} is no longer blocked]"
+            updated = True
+            continue
+        
+        # Case 3: Check if this work item was in affected_items
+        affected_items = risk.get("affected_items", [])
         if work_item_id in affected_items:
-            # If no more blocked items remain, close the risk
-            if len(blocked_items) == 0:
-                if risk.get("status") not in [RiskStatus.CLOSED, "closed"]:
-                    risk["status"] = RiskStatus.CLOSED
-                    risk["mitigated_at"] = datetime.now().isoformat()
-                    risk["description"] = risk.get("description", "") + " [AUTO-RESOLVED: All blocking items completed]"
-                    updated = True
-            # If some blocked items remain but not this one, update the risk
+            # Remove this work item from affected items
+            new_affected = [item_id for item_id in affected_items if item_id != work_item_id]
+            risk["affected_items"] = new_affected
+            
+            # If no more affected items, close the risk
+            if len(new_affected) == 0:
+                risk["status"] = RiskStatus.CLOSED
+                risk["mitigated_at"] = datetime.now().isoformat()
+                original_desc = risk.get("description", "").split("[AUTO-RESOLVED")[0].strip()
+                risk["description"] = original_desc + " [AUTO-RESOLVED: All affected items resolved]"
             else:
-                # Remove this work item from affected items
-                new_affected = [item_id for item_id in affected_items if item_id != work_item_id]
-                if len(new_affected) != len(affected_items):
-                    risk["affected_items"] = new_affected
-                    
-                    # Update the description to reflect reduced blocking
-                    if len(new_affected) == 0:
-                        risk["status"] = RiskStatus.CLOSED
-                        risk["mitigated_at"] = datetime.now().isoformat()
-                        risk["description"] = risk.get("description", "") + " [AUTO-RESOLVED: All blocking items resolved]"
-                    else:
-                        # Update impact
-                        if "impact" in risk:
-                            risk["impact"]["blocked_items"] = new_affected
-                            risk["impact"]["delay_days"] = len(new_affected) * 2
-                        
-                        risk["description"] = f"{len(new_affected)} work item(s) still blocked (reduced from {len(affected_items)})"
-                    
-                    updated = True
+                # Update impact
+                if "impact" in risk:
+                    risk["impact"]["blocked_items"] = new_affected
+                    risk["impact"]["delay_days"] = len(new_affected) * 2
+                
+                original_desc = risk.get("description", "").split("[AUTO-RESOLVED")[0].strip()
+                risk["description"] = f"{original_desc} [UPDATED: {len(new_affected)} item(s) still affected]"
+            
+            updated = True
     
     if updated:
         world["risks"] = risks
         _save_mock_world(world)
+        print(f"[AUTO-RESOLVE] Updated risks after {work_item_id} status change to {new_status}")
 
 
 def _check_and_resolve_dependency_risks(completed_work_item_id: str, world: dict):
