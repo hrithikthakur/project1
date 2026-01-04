@@ -279,7 +279,7 @@ export default function RolesView() {
 
       <div className="roles-sections">
         <div className="roles-section">
-          <h3>System Roles ({roles.length})</h3>
+          <h3>System Roles </h3>
           <p style={{ marginBottom: '1rem', color: '#666', fontSize: '0.95em' }}>
             The system has four fixed roles: ADMIN, VIEWER, APPROVER, and EDITOR. Use the "Assign Role" button to assign these roles to actors.
           </p>
@@ -301,11 +301,6 @@ export default function RolesView() {
                 <div key={role.id} className="card">
                   <div className="card-header">
                     <h3>{role.name}</h3>
-                    <span className="status-badge" style={{ 
-                      backgroundColor: getRoleColor(role.name),
-                    }}>
-                      {role.id}
-                    </span>
                   </div>
                   <div className="card-body">
                     <p className="card-description" style={{ marginBottom: '1rem' }}>

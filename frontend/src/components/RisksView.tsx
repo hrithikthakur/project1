@@ -2,15 +2,15 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import {
   listRisks,
-  getRisk,
   createRisk,
   updateRisk,
   deleteRisk,
   detectRisks,
-  previewRiskDetection,
   listWorkItems,
+  listMilestones,
   Risk,
   WorkItem,
+  Milestone,
 } from '../api';
 import { formatDate, formatDateTime } from '../utils';
 
@@ -21,7 +21,9 @@ export default function RisksView() {
   const [editingRisk, setEditingRisk] = useState<Risk | null>(null);
   const [selectedRisk, setSelectedRisk] = useState<Risk | null>(null);
   const [workItems, setWorkItems] = useState<WorkItem[]>([]);
+  const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [showTooltip, setShowTooltip] = useState(false);
   const [formData, setFormData] = useState<Partial<Risk>>({
     title: '',
     description: '',
@@ -35,6 +37,7 @@ export default function RisksView() {
   useEffect(() => {
     loadRisks();
     loadWorkItems();
+    loadMilestones();
     
     // Auto-refresh risks every 10 seconds to catch updates from work item changes
     const intervalId = setInterval(() => {
@@ -60,6 +63,7 @@ export default function RisksView() {
     try {
       await loadRisks();
       await loadWorkItems();
+      await loadMilestones();
       toast.success('Risks refreshed');
     } catch (error) {
       console.error('Error refreshing:', error);
@@ -75,6 +79,15 @@ export default function RisksView() {
       setWorkItems(data);
     } catch (error) {
       console.error('Error loading work items:', error);
+    }
+  }
+
+  async function loadMilestones() {
+    try {
+      const data = await listMilestones();
+      setMilestones(data);
+    } catch (error) {
+      console.error('Error loading milestones:', error);
     }
   }
 
@@ -185,6 +198,20 @@ export default function RisksView() {
     return colors[status] || '#95a5a6';
   }
 
+  function getAffectedMilestones(risk: Risk): Milestone[] {
+    // Get unique milestone IDs from affected work items
+    const milestoneIds = new Set<string>();
+    risk.affected_items.forEach(itemId => {
+      const workItem = workItems.find(wi => wi.id === itemId);
+      if (workItem?.milestone_id) {
+        milestoneIds.add(workItem.milestone_id);
+      }
+    });
+    
+    // Return milestone objects
+    return milestones.filter(m => milestoneIds.has(m.id));
+  }
+
   const stats = {
     total: risks.length,
     closed: risks.filter(r => r.status === 'closed').length,
@@ -209,7 +236,67 @@ export default function RisksView() {
   return (
     <div className="view-container">
       <div className="view-header">
-        <h2>Risks</h2>
+        <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          Risks
+          <span 
+            style={{ 
+              cursor: 'help',
+              fontSize: '0.875rem',
+              color: '#64748b',
+              position: 'relative',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '20px',
+              height: '20px',
+              borderRadius: '50%',
+              border: '1.5px solid #94a3b8',
+              fontWeight: 'bold',
+            }}
+            onMouseEnter={() => setShowTooltip(true)}
+            onMouseLeave={() => setShowTooltip(false)}
+          >
+            ?
+            {showTooltip && (
+              <div style={{
+                position: 'absolute',
+                top: '30px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                backgroundColor: '#1e293b',
+                color: 'white',
+                padding: '12px 16px',
+                borderRadius: '8px',
+                fontSize: '0.875rem',
+                width: '320px',
+                zIndex: 1000,
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                lineHeight: '1.5',
+                textAlign: 'left',
+                fontWeight: 'normal',
+              }}>
+                <div style={{ marginBottom: '8px' }}>
+                  <strong style={{ color: '#f1f5f9' }}>Risk:</strong> A potential event or condition that could negatively impact project delivery.
+                </div>
+                <div style={{ color: '#cbd5e1', fontSize: '0.8125rem' }}>
+                  ✓ Auto-sync is enabled: risks automatically update when work items change status.
+                </div>
+                {/* Tooltip arrow */}
+                <div style={{
+                  position: 'absolute',
+                  top: '-6px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '0',
+                  height: '0',
+                  borderLeft: '6px solid transparent',
+                  borderRight: '6px solid transparent',
+                  borderBottom: '6px solid #1e293b',
+                }}></div>
+              </div>
+            )}
+          </span>
+        </h2>
         <div style={{ display: 'flex', gap: '10px' }}>
           <button 
             className="btn-secondary" 
@@ -228,19 +315,6 @@ export default function RisksView() {
             + New Risk
           </button>
         </div>
-      </div>
-
-      {/* Auto-refresh info */}
-      <div style={{ 
-        marginBottom: '1rem', 
-        padding: '0.75rem 1rem', 
-        backgroundColor: '#f0f9ff', 
-        borderLeft: '4px solid #3b82f6',
-        borderRadius: '4px',
-        fontSize: '0.875rem',
-        color: '#1e40af'
-      }}>
-        <strong>ℹ️ Auto-sync enabled:</strong> Risks automatically update when work items change status. Page refreshes every 10 seconds.
       </div>
 
       {/* Stats Summary */}
@@ -704,6 +778,56 @@ export default function RisksView() {
               </div>
             )}
 
+            {/* Affected Milestones */}
+            {(() => {
+              const affectedMilestones = getAffectedMilestones(selectedRisk);
+              if (affectedMilestones.length > 0) {
+                return (
+                  <div style={{ marginBottom: '1.5rem' }}>
+                    <h4 style={{ marginBottom: '0.75rem', fontSize: '0.9rem', color: '#666', textTransform: 'uppercase' }}>
+                      Affected Milestones ({affectedMilestones.length})
+                    </h4>
+                    <div style={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: '0.5rem',
+                      padding: '0.75rem',
+                      backgroundColor: '#f8f9fa',
+                      borderRadius: '8px',
+                      border: '1px solid #e0e0e0'
+                    }}>
+                      {affectedMilestones.map(milestone => (
+                        <div
+                          key={milestone.id}
+                          style={{
+                            padding: '0.5rem 0.75rem',
+                            backgroundColor: '#fff',
+                            border: '2px solid #3498db',
+                            borderRadius: '6px',
+                            fontSize: '0.875rem',
+                            fontWeight: '500',
+                            color: '#333',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem'
+                          }}
+                        >
+                          <span>📍</span>
+                          <div>
+                            <div>{milestone.name}</div>
+                            <div style={{ fontSize: '0.75rem', color: '#666', marginTop: '2px' }}>
+                              Target: {formatDate(milestone.target_date)}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              }
+              return null;
+            })()}
+
             {/* Affected Work Items */}
             {selectedRisk.affected_items.length > 0 && (
               <div style={{ marginBottom: '1.5rem' }}>
@@ -767,10 +891,19 @@ export default function RisksView() {
 
       <div className="cards-grid">
         {[...filteredRisks].sort((a, b) => {
-          // Materialized risks should appear first
-          if (a.status === 'materialised' && b.status !== 'materialised') return -1;
-          if (a.status !== 'materialised' && b.status === 'materialised') return 1;
-          return 0;
+          // Define status priority: materialised -> accepted -> mitigating -> open -> closed
+          const statusOrder: Record<string, number> = {
+            'materialised': 1,
+            'accepted': 2,
+            'mitigating': 3,
+            'open': 4,
+            'closed': 5,
+          };
+          
+          const aOrder = statusOrder[a.status] || 999;
+          const bOrder = statusOrder[b.status] || 999;
+          
+          return aOrder - bOrder;
         }).map((risk) => {
           // Determine border style based on status
           let borderStyle = undefined;
@@ -833,6 +966,38 @@ export default function RisksView() {
                     <span className="meta-value">{risk.affected_items.length}</span>
                   </div>
                 </div>
+                
+                {/* Affected Milestones */}
+                {(() => {
+                  const affectedMilestones = getAffectedMilestones(risk);
+                  if (affectedMilestones.length > 0) {
+                    return (
+                      <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid #e0e0e0' }}>
+                        <div style={{ fontSize: '0.75rem', color: '#666', marginBottom: '0.25rem', fontWeight: '600' }}>
+                          Affected Milestones:
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+                          {affectedMilestones.map(milestone => (
+                            <span
+                              key={milestone.id}
+                              style={{
+                                fontSize: '0.75rem',
+                                padding: '0.25rem 0.5rem',
+                                backgroundColor: '#f0f0f0',
+                                color: '#555',
+                                borderRadius: '4px',
+                                fontWeight: '500',
+                              }}
+                            >
+                              📍 {milestone.name}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
               <div className="card-actions" onClick={(e) => e.stopPropagation()}>
                 <button className="btn-icon" onClick={(e) => { e.stopPropagation(); handleEdit(risk); }}>

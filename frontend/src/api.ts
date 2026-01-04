@@ -499,6 +499,8 @@ export interface WorkItemUpdateResponse extends WorkItem {
       risk_id: string;
       blocked_item_name: string;
       dependent_count: number;
+      milestone_id?: string;
+      milestone_name?: string;
     };
   };
 }

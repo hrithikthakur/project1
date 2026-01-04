@@ -451,8 +451,13 @@ export default function DecisionsView() {
                   ))}
                 </select>
               </div>
-              {/* Hide milestone dropdown for accept_risk and mitigate_risk - milestone comes from risk */}
-              {formData.decision_type !== 'accept_risk' && formData.decision_type !== 'mitigate_risk' && (
+              {/* Show milestone dropdown for all decision types EXCEPT accept_risk/mitigate_risk when milestone is auto-populated from risk */}
+              {(
+                // Always show for other decision types
+                (formData.decision_type !== 'accept_risk' && formData.decision_type !== 'mitigate_risk') ||
+                // Show for accept_risk/mitigate_risk ONLY if risk is selected but milestone couldn't be auto-populated
+                ((formData.decision_type === 'accept_risk' || formData.decision_type === 'mitigate_risk') && riskId && !formData.milestone_name)
+              ) && (
                 <div className="form-group">
                   <label>Milestone *</label>
                   <select
@@ -989,10 +994,39 @@ export default function DecisionsView() {
                         setRiskId(selectedRiskId);
                         // Auto-populate milestone from the selected risk
                         const selectedRisk = risks.find(r => r.id === selectedRiskId);
-                        if (selectedRisk && selectedRisk.milestone_id) {
-                          const milestone = milestones.find(m => m.id === selectedRisk.milestone_id);
-                          if (milestone) {
-                            setFormData({ ...formData, milestone_name: milestone.name });
+                        if (selectedRisk) {
+                          let milestoneName = '';
+                          
+                          // Try to get milestone from risk's milestone_id field
+                          if (selectedRisk.milestone_id) {
+                            const milestone = milestones.find(m => m.id === selectedRisk.milestone_id);
+                            if (milestone) {
+                              milestoneName = milestone.name;
+                            }
+                          }
+                          
+                          // If not found, infer from affected work items
+                          if (!milestoneName && selectedRisk.affected_items && selectedRisk.affected_items.length > 0) {
+                            const affectedMilestoneIds = new Set<string>();
+                            selectedRisk.affected_items.forEach(itemId => {
+                              const workItem = workItems.find(wi => wi.id === itemId);
+                              if (workItem?.milestone_id) {
+                                affectedMilestoneIds.add(workItem.milestone_id);
+                              }
+                            });
+                            
+                            // Use the first milestone found
+                            if (affectedMilestoneIds.size > 0) {
+                              const firstMilestoneId = Array.from(affectedMilestoneIds)[0];
+                              const milestone = milestones.find(m => m.id === firstMilestoneId);
+                              if (milestone) {
+                                milestoneName = milestone.name;
+                              }
+                            }
+                          }
+                          
+                          if (milestoneName) {
+                            setFormData({ ...formData, milestone_name: milestoneName });
                           }
                         }
                       }}
@@ -1019,6 +1053,22 @@ export default function DecisionsView() {
                       </div>
                       <div style={{ fontSize: '12px', color: '#0c4a6e', marginTop: '4px' }}>
                         This risk is linked to the milestone above
+                      </div>
+                    </div>
+                  )}
+                  {riskId && !formData.milestone_name && (
+                    <div style={{
+                      padding: '12px',
+                      backgroundColor: '#fef2f2',
+                      borderRadius: '6px',
+                      border: '1px solid #fecaca',
+                      marginBottom: '16px'
+                    }}>
+                      <div style={{ fontSize: '13px', color: '#dc2626', fontWeight: '500' }}>
+                        ⚠️ Warning: No milestone found for this risk
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#991b1b', marginTop: '4px' }}>
+                        Please select a milestone manually or ensure the risk has affected work items with milestone assignments.
                       </div>
                     </div>
                   )}
@@ -1059,10 +1109,39 @@ export default function DecisionsView() {
                         // Auto-populate milestone from the selected risk
                         if (selectedRiskId) {
                           const selectedRisk = risks.find(r => r.id === selectedRiskId);
-                          if (selectedRisk && selectedRisk.milestone_id) {
-                            const milestone = milestones.find(m => m.id === selectedRisk.milestone_id);
-                            if (milestone) {
-                              setFormData({ ...formData, milestone_name: milestone.name });
+                          if (selectedRisk) {
+                            let milestoneName = '';
+                            
+                            // Try to get milestone from risk's milestone_id field
+                            if (selectedRisk.milestone_id) {
+                              const milestone = milestones.find(m => m.id === selectedRisk.milestone_id);
+                              if (milestone) {
+                                milestoneName = milestone.name;
+                              }
+                            }
+                            
+                            // If not found, infer from affected work items
+                            if (!milestoneName && selectedRisk.affected_items && selectedRisk.affected_items.length > 0) {
+                              const affectedMilestoneIds = new Set<string>();
+                              selectedRisk.affected_items.forEach(itemId => {
+                                const workItem = workItems.find(wi => wi.id === itemId);
+                                if (workItem?.milestone_id) {
+                                  affectedMilestoneIds.add(workItem.milestone_id);
+                                }
+                              });
+                              
+                              // Use the first milestone found
+                              if (affectedMilestoneIds.size > 0) {
+                                const firstMilestoneId = Array.from(affectedMilestoneIds)[0];
+                                const milestone = milestones.find(m => m.id === firstMilestoneId);
+                                if (milestone) {
+                                  milestoneName = milestone.name;
+                                }
+                              }
+                            }
+                            
+                            if (milestoneName) {
+                              setFormData({ ...formData, milestone_name: milestoneName });
                             }
                           }
                         }
@@ -1089,6 +1168,22 @@ export default function DecisionsView() {
                       </div>
                       <div style={{ fontSize: '12px', color: '#0c4a6e', marginTop: '4px' }}>
                         This risk is linked to the milestone above
+                      </div>
+                    </div>
+                  )}
+                  {riskId && !formData.milestone_name && (
+                    <div style={{
+                      padding: '12px',
+                      backgroundColor: '#fef2f2',
+                      borderRadius: '6px',
+                      border: '1px solid #fecaca',
+                      marginBottom: '16px'
+                    }}>
+                      <div style={{ fontSize: '13px', color: '#dc2626', fontWeight: '500' }}>
+                        ⚠️ Warning: No milestone found for this risk
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#991b1b', marginTop: '4px' }}>
+                        Please select a milestone manually or ensure the risk has affected work items with milestone assignments.
                       </div>
                     </div>
                   )}
@@ -1463,7 +1558,9 @@ export default function DecisionsView() {
             </tr>
           </thead>
           <tbody>
-            {decisions.map((decision) => (
+            {[...decisions]
+              .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+              .map((decision) => (
               <tr 
                 key={decision.id}
                 onClick={() => handleView(decision)}
