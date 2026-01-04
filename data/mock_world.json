@@ -617,6 +617,16 @@
       "ended_at": null,
       "assigned_by_actor_id": null,
       "reason": null
+    },
+    {
+      "id": "ownership_1767565571193",
+      "object_type": "decision",
+      "object_id": "dec_1767565571166",
+      "owner_actor_id": "actor_001",
+      "assigned_at": "2026-01-04T22:26:11.193000Z",
+      "ended_at": null,
+      "assigned_by_actor_id": null,
+      "reason": null
     }
   ],
   "roles": [
@@ -1453,6 +1463,42 @@
       "threshold": null,
       "escalation_trigger": null,
       "action": "wweeff",
+      "expected_probability_delta": null,
+      "expected_impact_days_delta": null,
+      "due_date": null
+    },
+    {
+      "id": "dec_1767565571166",
+      "decision_type": "change_priority",
+      "subtype": "MAKE_CRITICAL",
+      "status": "approved",
+      "milestone_name": "Authentication MVP",
+      "next_date": null,
+      "created_at": "2026-01-04T22:26:11.166000Z",
+      "add_item_ids": null,
+      "remove_item_ids": null,
+      "reason": "reason",
+      "effort_delta_days": null,
+      "new_target_date": null,
+      "previous_target_date": null,
+      "commitment_percentile": null,
+      "team_id": null,
+      "delta_fte": null,
+      "start_date": null,
+      "end_date": null,
+      "method": null,
+      "cost_delta": null,
+      "item_ids": [
+        "work_item_001",
+        "work_item_002"
+      ],
+      "priority_rank": null,
+      "priority_bucket": null,
+      "risk_id": null,
+      "acceptance_until": null,
+      "threshold": null,
+      "escalation_trigger": null,
+      "action": null,
       "expected_probability_delta": null,
       "expected_impact_days_delta": null,
       "due_date": null

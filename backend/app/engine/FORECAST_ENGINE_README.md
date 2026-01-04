@@ -399,11 +399,11 @@ Honesty builds trust.
 ```python
 # In backend/app/api/forecast.py
 from app.engine.forecast import forecastMilestone, forecast_with_scenario
-from app.data.loader import load_mock_data
+from app.data.loader import load_mock_world
 
 @app.get("/api/forecast/{milestone_id}")
 def get_forecast(milestone_id: str):
-    state = load_mock_data()
+    state = load_mock_world()
     result = forecastMilestone(milestone_id, state)
     return {
         "p50_date": result.p50_date.isoformat(),
@@ -417,7 +417,7 @@ def get_forecast(milestone_id: str):
 
 @app.post("/api/forecast/{milestone_id}/scenario")
 def get_scenario_forecast(milestone_id: str, scenario: ScenarioRequest):
-    state = load_mock_data()
+    state = load_mock_world()
     baseline, scenario_result = forecast_with_scenario(
         milestone_id, state,
         ScenarioType(scenario.type),

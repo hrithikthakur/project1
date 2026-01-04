@@ -22,7 +22,7 @@ from app.engine.forecast import (
 from app.data.loader import load_mock_world
 
 
-router = APIRouter(prefix="/api/forecast", tags=["forecast"])
+router = APIRouter(prefix="/forecast", tags=["forecast"])
 
 
 # ============================================================================

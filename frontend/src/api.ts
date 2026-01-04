@@ -159,9 +159,106 @@ export interface Resource {
 }
 
 // ============================================================================
-// Forecast API
+// Forecast API (Forecast Engine v1)
 // ============================================================================
 
+export interface MilestoneForecast {
+  p50_date: string;
+  p80_date: string;
+  delta_p50_days: number;
+  delta_p80_days: number;
+  confidence_level: string;
+  contribution_breakdown: Array<{
+    cause: string;
+    days: number;
+  }>;
+  explanation: string;
+}
+
+export interface ScenarioRequest {
+  scenario_type: 'dependency_delay' | 'scope_change' | 'capacity_change';
+  params: Record<string, any>;
+}
+
+export interface ScenarioComparison {
+  baseline: MilestoneForecast;
+  scenario: MilestoneForecast;
+  impact_days: number;
+  impact_description: string;
+}
+
+export interface MitigationPreviewRequest {
+  risk_id: string;
+  expected_impact_reduction_days?: number;
+}
+
+export interface MitigationPreview {
+  current: MilestoneForecast;
+  with_mitigation: MilestoneForecast;
+  improvement_days: number;
+  recommendation: string;
+  reasoning: string;
+}
+
+export async function getMilestoneForecast(milestoneId: string): Promise<MilestoneForecast> {
+  const response = await fetch(`${API_BASE_URL}/forecast/${milestoneId}`);
+
+  if (!response.ok) {
+    throw new Error(`Forecast API error: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+export async function getScenarioForecast(
+  milestoneId: string,
+  scenario: ScenarioRequest
+): Promise<ScenarioComparison> {
+  const response = await fetch(`${API_BASE_URL}/forecast/${milestoneId}/scenario`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(scenario),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Scenario forecast error: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+export async function getMitigationPreview(
+  milestoneId: string,
+  request: MitigationPreviewRequest
+): Promise<MitigationPreview> {
+  const response = await fetch(`${API_BASE_URL}/forecast/${milestoneId}/mitigation-preview`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Mitigation preview error: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+export async function getForecastSummary(milestoneId: string): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/forecast/${milestoneId}/summary`);
+
+  if (!response.ok) {
+    throw new Error(`Forecast summary error: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+// Legacy Forecast API (deprecated, kept for compatibility)
 export async function getForecast(request: ForecastRequest): Promise<ForecastResult[]> {
   const response = await fetch(`${API_BASE_URL}/forecast`, {
     method: 'POST',
