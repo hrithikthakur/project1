@@ -1,12 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   listRoles,
-  getRole,
-  createRole,
-  updateRole,
-  deleteRole,
   listActorRoles,
-  getActorRolesByActor,
   createActorRole,
   deleteActorRole,
   listActors,
@@ -23,13 +18,7 @@ export default function RolesView() {
   const [actors, setActors] = useState<Actor[]>([]);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showRoleForm, setShowRoleForm] = useState(false);
   const [showActorRoleForm, setShowActorRoleForm] = useState(false);
-  const [editingRole, setEditingRole] = useState<Role | null>(null);
-  const [roleFormData, setRoleFormData] = useState<Partial<Role>>({
-    name: '',
-    description: '',
-  });
   const [actorRoleFormData, setActorRoleFormData] = useState<Partial<ActorRole>>({
     actor_id: '',
     role_id: '',
@@ -60,15 +49,6 @@ export default function RolesView() {
     }
   }
 
-  function handleNewRole() {
-    setEditingRole(null);
-    setRoleFormData({
-      name: '',
-      description: '',
-    });
-    setShowRoleForm(true);
-  }
-
   function handleNewActorRole() {
     setActorRoleFormData({
       actor_id: '',
@@ -77,27 +57,6 @@ export default function RolesView() {
       scope_id: '',
     });
     setShowActorRoleForm(true);
-  }
-
-  async function handleRoleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    try {
-      if (editingRole) {
-        await updateRole(editingRole.id, roleFormData as Role);
-      } else {
-        const newRole: Role = {
-          id: `role_${Date.now()}`,
-          ...roleFormData,
-          created_at: new Date().toISOString(),
-        } as Role;
-        await createRole(newRole);
-      }
-      setShowRoleForm(false);
-      loadData();
-    } catch (error) {
-      console.error('Error saving role:', error);
-      alert('Error saving role');
-    }
   }
 
   async function handleActorRoleSubmit(e: React.FormEvent) {
@@ -113,17 +72,6 @@ export default function RolesView() {
     } catch (error) {
       console.error('Error saving actor role:', error);
       alert('Error saving actor role');
-    }
-  }
-
-  async function handleDeleteRole(id: string) {
-    if (!confirm('Are you sure you want to delete this role?')) return;
-    try {
-      await deleteRole(id);
-      loadData();
-    } catch (error) {
-      console.error('Error deleting role:', error);
-      alert('Error deleting role');
     }
   }
 
@@ -175,50 +123,11 @@ export default function RolesView() {
       <div className="view-header">
         <h2>Roles & Permissions</h2>
         <div className="header-actions">
-          <button className="btn-secondary" onClick={handleNewRole}>
-            + New Role
-          </button>
           <button className="btn-primary" onClick={handleNewActorRole}>
             + Assign Role
           </button>
         </div>
       </div>
-
-      {showRoleForm && (
-        <div className="modal-overlay" onClick={() => setShowRoleForm(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3>{editingRole ? 'Edit Role' : 'New Role'}</h3>
-            <form onSubmit={handleRoleSubmit}>
-              <div className="form-group">
-                <label>Role Name *</label>
-                <input
-                  type="text"
-                  value={roleFormData.name}
-                  onChange={(e) => setRoleFormData({ ...roleFormData, name: e.target.value as any })}
-                  placeholder="Enter role name"
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Description</label>
-                <textarea
-                  value={roleFormData.description}
-                  onChange={(e) => setRoleFormData({ ...roleFormData, description: e.target.value })}
-                  rows={3}
-                />
-              </div>
-              <div className="form-actions">
-                <button type="submit" className="btn-primary">
-                  {editingRole ? 'Update' : 'Create'}
-                </button>
-                <button type="button" className="btn-secondary" onClick={() => setShowRoleForm(false)}>
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {showActorRoleForm && (
         <div className="modal-overlay" onClick={() => setShowActorRoleForm(false)}>
@@ -308,7 +217,10 @@ export default function RolesView() {
 
       <div className="roles-sections">
         <div className="roles-section">
-          <h3>Roles ({roles.length})</h3>
+          <h3>System Roles ({roles.length})</h3>
+          <p style={{ marginBottom: '1rem', color: '#666' }}>
+            The system has four fixed roles: ADMIN, VIEWER, APPROVER, and EDITOR. Use the "Assign Role" button to assign these roles to actors.
+          </p>
           <div className="cards-grid">
             {roles.map((role) => (
               <div key={role.id} className="card">
@@ -317,11 +229,6 @@ export default function RolesView() {
                 </div>
                 <div className="card-body">
                   <p className="card-description">{role.description || 'No description'}</p>
-                </div>
-                <div className="card-actions">
-                  <button className="btn-icon btn-danger" onClick={() => handleDeleteRole(role.id)}>
-                    🗑️ Delete
-                  </button>
                 </div>
               </div>
             ))}

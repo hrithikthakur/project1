@@ -41,67 +41,9 @@ async def get_role(role_id: str):
     raise HTTPException(status_code=404, detail=f"Role {role_id} not found")
 
 
-@router.post("/roles", response_model=Role)
-async def create_role(role: Role):
-    """Create a new role"""
-    world = load_mock_world()
-    roles = world.get("roles", [])
-    
-    # Check if ID already exists
-    if any(r.get("id") == role.id for r in roles):
-        raise HTTPException(status_code=400, detail=f"Role with ID {role.id} already exists")
-    
-    # Convert to dict with mode='json' to properly serialize dates
-    role_dict = role.model_dump(mode='json')
-    roles.append(role_dict)
-    world["roles"] = roles
-    _save_mock_world(world)
-    
-    return role
-
-
-@router.put("/roles/{role_id}", response_model=Role)
-async def update_role(role_id: str, role: Role):
-    """Update an existing role"""
-    if role.id != role_id:
-        raise HTTPException(status_code=400, detail="Role ID mismatch")
-    
-    world = load_mock_world()
-    roles = world.get("roles", [])
-    
-    found = False
-    for i, r in enumerate(roles):
-        if r.get("id") == role_id:
-            # Convert to dict with mode='json' to properly serialize dates
-            roles[i] = role.model_dump(mode='json')
-            found = True
-            break
-    
-    if not found:
-        raise HTTPException(status_code=404, detail=f"Role {role_id} not found")
-    
-    world["roles"] = roles
-    _save_mock_world(world)
-    
-    return role
-
-
-@router.delete("/roles/{role_id}")
-async def delete_role(role_id: str):
-    """Delete a role"""
-    world = load_mock_world()
-    roles = world.get("roles", [])
-    
-    original_count = len(roles)
-    roles = [r for r in roles if r.get("id") != role_id]
-    
-    if len(roles) == original_count:
-        raise HTTPException(status_code=404, detail=f"Role {role_id} not found")
-    
-    world["roles"] = roles
-    _save_mock_world(world)
-    
-    return {"message": f"Role {role_id} deleted successfully"}
+# Role creation, update, and deletion endpoints have been removed.
+# The system now uses four fixed roles: ADMIN, VIEWER, APPROVER, EDITOR.
+# Only role assignments can be managed through the ActorRoles endpoints below.
 
 
 # ActorRoles endpoints

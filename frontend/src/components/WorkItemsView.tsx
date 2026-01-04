@@ -9,6 +9,7 @@ import {
   WorkItem,
   Milestone,
 } from '../api';
+import WorkItemView from './WorkItemView';
 
 export default function WorkItemsView() {
   const [workItems, setWorkItems] = useState<WorkItem[]>([]);
@@ -16,6 +17,7 @@ export default function WorkItemsView() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState<WorkItem | null>(null);
+  const [selectedWorkItemId, setSelectedWorkItemId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<WorkItem>>({
     title: '',
     description: '',
@@ -206,7 +208,17 @@ export default function WorkItemsView() {
           </thead>
           <tbody>
             {workItems.map((item) => (
-              <tr key={item.id}>
+              <tr 
+                key={item.id}
+                onClick={() => setSelectedWorkItemId(item.id)}
+                style={{ cursor: 'pointer' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#f5f5f5';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '';
+                }}
+              >
                 <td>
                   <div className="table-cell-title">{item.title}</div>
                   <div className="table-cell-subtitle">{item.description}</div>
@@ -225,10 +237,22 @@ export default function WorkItemsView() {
                 </td>
                 <td>
                   <div className="table-actions">
-                    <button className="btn-icon" onClick={() => handleEdit(item)}>
+                    <button 
+                      className="btn-icon" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEdit(item);
+                      }}
+                    >
                       ✏️
                     </button>
-                    <button className="btn-icon btn-danger" onClick={() => handleDelete(item.id)}>
+                    <button 
+                      className="btn-icon btn-danger" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(item.id);
+                      }}
+                    >
                       🗑️
                     </button>
                   </div>
@@ -243,6 +267,14 @@ export default function WorkItemsView() {
         <div className="empty-state">
           <p>No work items found. Create your first work item!</p>
         </div>
+      )}
+
+      {/* Work Item Detail Modal */}
+      {selectedWorkItemId && (
+        <WorkItemView 
+          workItemId={selectedWorkItemId} 
+          onClose={() => setSelectedWorkItemId(null)} 
+        />
       )}
     </div>
   );

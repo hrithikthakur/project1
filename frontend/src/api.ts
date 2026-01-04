@@ -700,47 +700,9 @@ export async function getRole(roleId: string): Promise<Role> {
   return response.json();
 }
 
-export async function createRole(role: Role): Promise<Role> {
-  const response = await fetch(`${API_BASE_URL}/roles`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(role),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Role API error: ${response.statusText}`);
-  }
-
-  return response.json();
-}
-
-export async function updateRole(roleId: string, role: Role): Promise<Role> {
-  const response = await fetch(`${API_BASE_URL}/roles/${roleId}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(role),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Role API error: ${response.statusText}`);
-  }
-
-  return response.json();
-}
-
-export async function deleteRole(roleId: string): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/roles/${roleId}`, {
-    method: 'DELETE',
-  });
-
-  if (!response.ok) {
-    throw new Error(`Role API error: ${response.statusText}`);
-  }
-}
+// Role creation, update, and deletion functions have been removed.
+// The system now uses four fixed roles: ADMIN, VIEWER, APPROVER, EDITOR.
+// Only role assignments can be managed through the ActorRole functions below.
 
 // ============================================================================
 // Actor Roles API

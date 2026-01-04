@@ -26,6 +26,7 @@ export default function DecisionsView() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingDecision, setEditingDecision] = useState<Decision | null>(null);
+  const [viewingDecision, setViewingDecision] = useState<Decision | null>(null);
   const [formData, setFormData] = useState<Partial<Decision>>({
     decision_type: 'change_schedule',
     subtype: 'MOVE_TARGET_DATE',
@@ -127,6 +128,10 @@ export default function DecisionsView() {
       console.error('Error loading risks:', error);
       alert(`Failed to load risks: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
+  }
+
+  function handleView(decision: Decision) {
+    setViewingDecision(decision);
   }
 
   async function handleEdit(decision: Decision) {
@@ -338,6 +343,50 @@ export default function DecisionsView() {
       superseded: '#95a5a6',
     };
     return colors[status] || '#95a5a6';
+  }
+
+  function formatDecisionType(type: string): string {
+    const typeMap: Record<string, string> = {
+      change_scope: 'Change Scope',
+      change_schedule: 'Change Schedule',
+      change_capacity: 'Change Capacity',
+      change_priority: 'Change Priority',
+      accept_risk: 'Accept Risk',
+      mitigate_risk: 'Mitigate Risk',
+    };
+    return typeMap[type] || type;
+  }
+
+  function formatSubtype(subtype: string): string {
+    // Convert SNAKE_CASE or UPPER_CASE to Title Case
+    return subtype
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  }
+
+  function formatDate(dateString?: string | null): string {
+    if (!dateString) return 'Not set';
+    try {
+      return new Date(dateString).toLocaleDateString();
+    } catch {
+      return dateString;
+    }
+  }
+
+  function getActorName(actorId: string): string {
+    const actor = actors.find(a => a.id === actorId);
+    return actor ? actor.display_name : actorId;
+  }
+
+  function getWorkItemTitle(itemId: string): string {
+    const item = workItems.find(wi => wi.id === itemId);
+    return item ? item.title : itemId;
+  }
+
+  function getRiskTitle(riskId: string): string {
+    const risk = risks.find(r => r.id === riskId);
+    return risk ? risk.title : riskId;
   }
 
   if (loading) {
@@ -1020,11 +1069,340 @@ export default function DecisionsView() {
         </div>
       )}
 
+      {viewingDecision && (
+        <div className="modal-overlay" onClick={() => setViewingDecision(null)}>
+          <div className="modal-content detail-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Decision Details</h2>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <button className="btn-icon" onClick={() => {
+                  setViewingDecision(null);
+                  handleEdit(viewingDecision);
+                }} title="Edit">
+                  ✏️
+                </button>
+                <button className="modal-close" onClick={() => setViewingDecision(null)}>✕</button>
+              </div>
+            </div>
+
+            <div className="detail-view detail-view-simple">
+              {/* Title and Status */}
+              <div className="detail-section-header">
+                <h3>{formatDecisionType(viewingDecision.decision_type)} - {formatSubtype(viewingDecision.subtype)}</h3>
+                <span
+                  className="status-badge"
+                  style={{ backgroundColor: getStatusColor(viewingDecision.status) }}
+                >
+                  {viewingDecision.status}
+                </span>
+              </div>
+
+              {/* Basic Information */}
+              <div className="detail-section">
+                <div className="detail-row">
+                  <div className="detail-label">Decision Type</div>
+                  <div className="detail-value">{formatDecisionType(viewingDecision.decision_type)}</div>
+                </div>
+
+                <div className="detail-row">
+                  <div className="detail-label">Subtype</div>
+                  <div className="detail-value">{formatSubtype(viewingDecision.subtype)}</div>
+                </div>
+
+                <div className="detail-row">
+                  <div className="detail-label">Milestone</div>
+                  <div className="detail-value">{viewingDecision.milestone_name}</div>
+                </div>
+
+                <div className="detail-row">
+                  <div className="detail-label">Created</div>
+                  <div className="detail-value">{formatDate(viewingDecision.created_at)}</div>
+                </div>
+
+                {viewingDecision.next_date && (
+                  <div className="detail-row">
+                    <div className="detail-label">Next Review Date</div>
+                    <div className="detail-value">{formatDate(viewingDecision.next_date)}</div>
+                  </div>
+                )}
+              </div>
+
+              {/* Type-Specific Fields */}
+              {viewingDecision.decision_type === 'change_scope' && (
+                <>
+                  <div className="detail-section-break"></div>
+                  <div className="detail-section">
+                    <h4 className="detail-section-title">Scope Changes</h4>
+                    
+                    {viewingDecision.add_item_ids && viewingDecision.add_item_ids.length > 0 && (
+                      <div className="detail-row">
+                        <div className="detail-label">Items to Add</div>
+                        <div className="detail-value">
+                          <ul style={{ margin: 0, paddingLeft: '1.2rem' }}>
+                            {viewingDecision.add_item_ids.map(itemId => (
+                              <li key={itemId}>{getWorkItemTitle(itemId)}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    )}
+
+                    {viewingDecision.remove_item_ids && viewingDecision.remove_item_ids.length > 0 && (
+                      <div className="detail-row">
+                        <div className="detail-label">Items to Remove</div>
+                        <div className="detail-value">
+                          <ul style={{ margin: 0, paddingLeft: '1.2rem' }}>
+                            {viewingDecision.remove_item_ids.map(itemId => (
+                              <li key={itemId}>{getWorkItemTitle(itemId)}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    )}
+
+                    {viewingDecision.reason && (
+                      <div className="detail-row">
+                        <div className="detail-label">Reason</div>
+                        <div className="detail-value">{viewingDecision.reason}</div>
+                      </div>
+                    )}
+
+                    {viewingDecision.effort_delta_days && (
+                      <div className="detail-row">
+                        <div className="detail-label">Effort Delta</div>
+                        <div className="detail-value">{viewingDecision.effort_delta_days} days</div>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {viewingDecision.decision_type === 'change_schedule' && (
+                <>
+                  <div className="detail-section-break"></div>
+                  <div className="detail-section">
+                    <h4 className="detail-section-title">Schedule Changes</h4>
+                    
+                    {viewingDecision.new_target_date && (
+                      <div className="detail-row">
+                        <div className="detail-label">New Target Date</div>
+                        <div className="detail-value">{formatDate(viewingDecision.new_target_date)}</div>
+                      </div>
+                    )}
+
+                    {viewingDecision.previous_target_date && (
+                      <div className="detail-row">
+                        <div className="detail-label">Previous Target Date</div>
+                        <div className="detail-value">{formatDate(viewingDecision.previous_target_date)}</div>
+                      </div>
+                    )}
+
+                    {viewingDecision.commitment_percentile && (
+                      <div className="detail-row">
+                        <div className="detail-label">Commitment Percentile</div>
+                        <div className="detail-value">P{viewingDecision.commitment_percentile}</div>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {viewingDecision.decision_type === 'change_capacity' && (
+                <>
+                  <div className="detail-section-break"></div>
+                  <div className="detail-section">
+                    <h4 className="detail-section-title">Capacity Changes</h4>
+                    
+                    {viewingDecision.team_id && (
+                      <div className="detail-row">
+                        <div className="detail-label">Team</div>
+                        <div className="detail-value">{getActorName(viewingDecision.team_id)}</div>
+                      </div>
+                    )}
+
+                    {viewingDecision.delta_fte !== undefined && (
+                      <div className="detail-row">
+                        <div className="detail-label">FTE Change</div>
+                        <div className="detail-value">
+                          {viewingDecision.delta_fte > 0 ? '+' : ''}{viewingDecision.delta_fte} FTE
+                        </div>
+                      </div>
+                    )}
+
+                    {viewingDecision.start_date && (
+                      <div className="detail-row">
+                        <div className="detail-label">Start Date</div>
+                        <div className="detail-value">{formatDate(viewingDecision.start_date)}</div>
+                      </div>
+                    )}
+
+                    {viewingDecision.end_date && (
+                      <div className="detail-row">
+                        <div className="detail-label">End Date</div>
+                        <div className="detail-value">{formatDate(viewingDecision.end_date)}</div>
+                      </div>
+                    )}
+
+                    {viewingDecision.method && (
+                      <div className="detail-row">
+                        <div className="detail-label">Method</div>
+                        <div className="detail-value">{viewingDecision.method.replace('_', ' ')}</div>
+                      </div>
+                    )}
+
+                    {viewingDecision.cost_delta !== undefined && (
+                      <div className="detail-row">
+                        <div className="detail-label">Cost Delta</div>
+                        <div className="detail-value">${viewingDecision.cost_delta.toLocaleString()}</div>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {viewingDecision.decision_type === 'change_priority' && (
+                <>
+                  <div className="detail-section-break"></div>
+                  <div className="detail-section">
+                    <h4 className="detail-section-title">Priority Changes</h4>
+                    
+                    {viewingDecision.item_ids && viewingDecision.item_ids.length > 0 && (
+                      <div className="detail-row">
+                        <div className="detail-label">Affected Items</div>
+                        <div className="detail-value">
+                          <ul style={{ margin: 0, paddingLeft: '1.2rem' }}>
+                            {viewingDecision.item_ids.map(itemId => (
+                              <li key={itemId}>{getWorkItemTitle(itemId)}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    )}
+
+                    {viewingDecision.priority_bucket && (
+                      <div className="detail-row">
+                        <div className="detail-label">Priority Bucket</div>
+                        <div className="detail-value">{viewingDecision.priority_bucket}</div>
+                      </div>
+                    )}
+
+                    {viewingDecision.priority_rank !== undefined && (
+                      <div className="detail-row">
+                        <div className="detail-label">Priority Rank</div>
+                        <div className="detail-value">{viewingDecision.priority_rank}</div>
+                      </div>
+                    )}
+
+                    {viewingDecision.reason && (
+                      <div className="detail-row">
+                        <div className="detail-label">Reason</div>
+                        <div className="detail-value">{viewingDecision.reason}</div>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {viewingDecision.decision_type === 'accept_risk' && (
+                <>
+                  <div className="detail-section-break"></div>
+                  <div className="detail-section">
+                    <h4 className="detail-section-title">Risk Acceptance</h4>
+                    
+                    {viewingDecision.risk_id && (
+                      <div className="detail-row">
+                        <div className="detail-label">Risk</div>
+                        <div className="detail-value">{getRiskTitle(viewingDecision.risk_id)}</div>
+                      </div>
+                    )}
+
+                    {viewingDecision.acceptance_until && (
+                      <div className="detail-row">
+                        <div className="detail-label">Accepted Until</div>
+                        <div className="detail-value">{formatDate(viewingDecision.acceptance_until)}</div>
+                      </div>
+                    )}
+
+                    {viewingDecision.threshold && (
+                      <div className="detail-row">
+                        <div className="detail-label">Threshold</div>
+                        <div className="detail-value">{viewingDecision.threshold}</div>
+                      </div>
+                    )}
+
+                    {viewingDecision.escalation_trigger && (
+                      <div className="detail-row">
+                        <div className="detail-label">Escalation Trigger</div>
+                        <div className="detail-value">{viewingDecision.escalation_trigger}</div>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {viewingDecision.decision_type === 'mitigate_risk' && (
+                <>
+                  <div className="detail-section-break"></div>
+                  <div className="detail-section">
+                    <h4 className="detail-section-title">Risk Mitigation</h4>
+                    
+                    {viewingDecision.risk_id && (
+                      <div className="detail-row">
+                        <div className="detail-label">Risk</div>
+                        <div className="detail-value">{getRiskTitle(viewingDecision.risk_id)}</div>
+                      </div>
+                    )}
+
+                    {viewingDecision.issue_id && (
+                      <div className="detail-row">
+                        <div className="detail-label">Issue ID</div>
+                        <div className="detail-value"><code>{viewingDecision.issue_id}</code></div>
+                      </div>
+                    )}
+
+                    {viewingDecision.action && (
+                      <div className="detail-row">
+                        <div className="detail-label">Action</div>
+                        <div className="detail-value">{viewingDecision.action}</div>
+                      </div>
+                    )}
+
+                    {viewingDecision.expected_probability_delta !== undefined && (
+                      <div className="detail-row">
+                        <div className="detail-label">Expected Probability Delta</div>
+                        <div className="detail-value">
+                          {viewingDecision.expected_probability_delta > 0 ? '+' : ''}{(viewingDecision.expected_probability_delta * 100).toFixed(0)}%
+                        </div>
+                      </div>
+                    )}
+
+                    {viewingDecision.expected_impact_days_delta !== undefined && (
+                      <div className="detail-row">
+                        <div className="detail-label">Expected Impact Days Delta</div>
+                        <div className="detail-value">
+                          {viewingDecision.expected_impact_days_delta > 0 ? '+' : ''}{viewingDecision.expected_impact_days_delta} days
+                        </div>
+                      </div>
+                    )}
+
+                    {viewingDecision.due_date && (
+                      <div className="detail-row">
+                        <div className="detail-label">Due Date</div>
+                        <div className="detail-value">{formatDate(viewingDecision.due_date)}</div>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="table-container">
         <table className="data-table">
           <thead>
             <tr>
-              <th>ID</th>
               <th>Type</th>
               <th>Subtype</th>
               <th>Milestone</th>
@@ -1035,10 +1413,13 @@ export default function DecisionsView() {
           </thead>
           <tbody>
             {decisions.map((decision) => (
-              <tr key={decision.id}>
-                <td>{decision.id}</td>
-                <td>{decision.decision_type}</td>
-                <td>{decision.subtype}</td>
+              <tr 
+                key={decision.id}
+                onClick={() => handleView(decision)}
+                style={{ cursor: 'pointer' }}
+              >
+                <td>{formatDecisionType(decision.decision_type)}</td>
+                <td>{formatSubtype(decision.subtype)}</td>
                 <td>{decision.milestone_name}</td>
                 <td>
                   <span
@@ -1050,7 +1431,7 @@ export default function DecisionsView() {
                 </td>
                 <td>{new Date(decision.created_at).toLocaleDateString()}</td>
                 <td>
-                  <div className="table-actions">
+                  <div className="table-actions" onClick={(e) => e.stopPropagation()}>
                     <button className="btn-icon" onClick={() => handleEdit(decision)}>
                       ✏️
                     </button>
