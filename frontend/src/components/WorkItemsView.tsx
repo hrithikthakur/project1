@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import {
   listWorkItems,
   getWorkItem,
@@ -25,6 +26,7 @@ export default function WorkItemsView() {
     estimated_days: 0,
     assigned_to: [],
     dependencies: [],
+    tags: [],
   });
 
   useEffect(() => {
@@ -61,6 +63,7 @@ export default function WorkItemsView() {
       estimated_days: 0,
       assigned_to: [],
       dependencies: [],
+      tags: [],
     });
     setShowForm(true);
   }
@@ -77,14 +80,16 @@ export default function WorkItemsView() {
           estimated_days: formData.estimated_days || 0,
           assigned_to: formData.assigned_to || [],
           dependencies: formData.dependencies || [],
+          tags: formData.tags || [],
         } as WorkItem;
         await createWorkItem(newItem);
       }
       setShowForm(false);
       loadData();
+      toast.success(editingItem ? 'Work item updated' : 'Work item created');
     } catch (error) {
       console.error('Error saving work item:', error);
-      alert('Error saving work item');
+      toast.error('Error saving work item');
     }
   }
 
@@ -93,9 +98,27 @@ export default function WorkItemsView() {
     try {
       await deleteWorkItem(id);
       loadData();
+      toast.success('Work item deleted');
     } catch (error) {
       console.error('Error deleting work item:', error);
-      alert('Error deleting work item');
+      toast.error('Error deleting work item');
+    }
+  }
+
+  async function handleToggleComplete(item: WorkItem, e: React.ChangeEvent<HTMLInputElement>) {
+    e.stopPropagation();
+    // When checked, always set to completed. When unchecked, set to in_progress
+    const newStatus = item.status === 'completed' ? 'in_progress' : 'completed';
+    
+    console.log(`Toggling work item ${item.id} from ${item.status} to ${newStatus}`);
+    try {
+      const updated = await updateWorkItem(item.id, { ...item, status: newStatus });
+      console.log('Work item updated successfully:', updated);
+      await loadData();
+      toast.success(`Work item ${newStatus.replace('_', ' ')}`);
+    } catch (error) {
+      console.error('Error toggling work item status:', error);
+      toast.error(`Error updating work item: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -182,6 +205,19 @@ export default function WorkItemsView() {
                   ))}
                 </select>
               </div>
+              <div className="form-group">
+                <label>Tags (comma-separated)</label>
+                <input
+                  type="text"
+                  value={formData.tags?.join(', ') || ''}
+                  onChange={(e) => {
+                    const tagString = e.target.value;
+                    const tags = tagString ? tagString.split(',').map(t => t.trim()).filter(t => t) : [];
+                    setFormData({ ...formData, tags });
+                  }}
+                  placeholder="e.g., urgent, review"
+                />
+              </div>
               <div className="form-actions">
                 <button type="submit" className="btn-primary">
                   {editingItem ? 'Update' : 'Create'}
@@ -199,6 +235,7 @@ export default function WorkItemsView() {
         <table className="data-table">
           <thead>
             <tr>
+              <th style={{ width: '40px' }}></th>
               <th>Title</th>
               <th>Status</th>
               <th>Estimated Days</th>
@@ -219,16 +256,48 @@ export default function WorkItemsView() {
                   e.currentTarget.style.backgroundColor = '';
                 }}
               >
+                <td onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="checkbox"
+                    checked={item.status === 'completed'}
+                    onChange={(e) => handleToggleComplete(item, e as any)}
+                    style={{ 
+                      width: '18px', 
+                      height: '18px', 
+                      cursor: 'pointer',
+                      accentColor: '#28a745'
+                    }}
+                  />
+                </td>
                 <td>
                   <div className="table-cell-title">{item.title}</div>
                   <div className="table-cell-subtitle">{item.description}</div>
+                  {item.tags && item.tags.filter(t => t !== 'completed').length > 0 && (
+                    <div style={{ marginTop: '4px', display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                      {item.tags.filter(t => t !== 'completed').map((tag, idx) => (
+                        <span
+                          key={idx}
+                          style={{
+                            fontSize: '0.7rem',
+                            padding: '2px 6px',
+                            backgroundColor: '#3498db',
+                            color: 'white',
+                            borderRadius: '3px',
+                            fontWeight: 500
+                          }}
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </td>
                 <td>
                   <span
                     className="status-badge"
                     style={{ backgroundColor: getStatusColor(item.status) }}
                   >
-                    {item.status}
+                    {item.status.replace('_', ' ')}
                   </span>
                 </td>
                 <td>{item.estimated_days}</td>

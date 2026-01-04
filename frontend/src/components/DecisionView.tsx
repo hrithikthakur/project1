@@ -47,7 +47,6 @@ export default function DecisionView() {
   const [escalationTrigger, setEscalationTrigger] = useState<string>('');
   
   // MITIGATE_RISK fields
-  const [issueId, setIssueId] = useState<string>('');
   const [action, setAction] = useState<string>('');
   const [expectedProbabilityDelta, setExpectedProbabilityDelta] = useState<string>('');
   const [expectedImpactDaysDelta, setExpectedImpactDaysDelta] = useState<string>('');
@@ -119,7 +118,6 @@ export default function DecisionView() {
         if (escalationTrigger) newDecision.escalation_trigger = escalationTrigger;
       } else if (decisionType === 'mitigate_risk') {
         if (riskId) newDecision.risk_id = riskId;
-        if (issueId) newDecision.issue_id = issueId;
         if (action) newDecision.action = action;
         if (expectedProbabilityDelta) newDecision.expected_probability_delta = parseFloat(expectedProbabilityDelta);
         if (expectedImpactDaysDelta) newDecision.expected_impact_days_delta = parseFloat(expectedImpactDaysDelta);
@@ -428,17 +426,6 @@ export default function DecisionView() {
                 value={riskId}
                 onChange={(e) => setRiskId(e.target.value)}
                 placeholder="RISK-13"
-              />
-            </label>
-          </div>
-          <div>
-            <label>
-              Issue ID:
-              <input
-                type="text"
-                value={issueId}
-                onChange={(e) => setIssueId(e.target.value)}
-                placeholder="ISSUE-42"
               />
             </label>
           </div>

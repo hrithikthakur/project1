@@ -302,6 +302,45 @@ body {
   box-shadow: var(--shadow);
 }
 
+.btn-danger {
+  padding: 0.75rem 1.5rem;
+  background: var(--danger-color);
+  color: #ffffff;
+  border: 1px solid var(--danger-color);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-danger::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-danger:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #b8887a;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+  border-color: #b8887a;
+}
+
 .btn-icon.btn-danger {
   color: var(--danger-color);
   border-color: var(--danger-color);
@@ -484,6 +523,18 @@ button:disabled {
   border-color: var(--secondary-color);
 }
 
+.card.expanded {
+  grid-column: 1 / -1;
+  transform: none !important;
+  box-shadow: var(--shadow-lg);
+  border-color: var(--secondary-color);
+  border-width: 2px;
+}
+
+.materialised-risk {
+  border: 3px solid #ef4444 !important;
+}
+
 .card-header {
   padding: 1.25rem;
   border-bottom: 1px solid var(--cream-dark);
@@ -552,7 +603,8 @@ button:disabled {
   font-weight: 600;
   text-transform: uppercase;
   display: inline-block;
-  border: 1px solid;
+  border: 1.5px solid #f1f5f9;
+  color: #f1f5f9;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -562,38 +614,26 @@ button:disabled {
 
 .status-pending {
   background: var(--warning-color);
-  color: #8b7355;
-  border-color: var(--warning-color);
 }
 
 .status-at_risk {
   background: var(--danger-color);
-  color: #8b5a42;
-  border-color: var(--danger-color);
 }
 
 .status-achieved {
   background: var(--success-color);
-  color: #5a7a52;
-  border-color: var(--success-color);
 }
 
 .status-missed {
   background: var(--danger-color);
-  color: #8b5a42;
-  border-color: var(--danger-color);
 }
 
 .status-active {
   background: var(--success-color);
-  color: #5a7a52;
-  border-color: var(--success-color);
 }
 
 .status-inactive {
   background: var(--danger-color);
-  color: #8b5a42;
-  border-color: var(--danger-color);
 }
 
 .badge {
@@ -610,6 +650,107 @@ button:disabled {
 .badge:hover {
   background: var(--cream);
   transform: scale(1.05);
+}
+
+/* Issue and Risk Card Specifics */
+.issue-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.issue-card .card-header {
+  padding: 1.25rem;
+  background: var(--cream-light);
+  border-bottom: 1px solid var(--cream-dark);
+}
+
+.issue-card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.15rem !important;
+  font-weight: 700 !important;
+  color: var(--text-primary) !important;
+}
+
+.issue-type-icon {
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: var(--cream);
+  border-radius: 8px;
+  border: 1px solid var(--cream-dark);
+}
+
+.card-badges {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.75rem;
+}
+
+.issue-description {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin-bottom: 1.25rem;
+}
+
+.info-box {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  background: var(--cream-light);
+  border: 1px solid var(--cream-dark);
+}
+
+.info-box-label {
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-secondary);
+}
+
+.info-box.impact {
+  border: 1px solid rgba(201, 155, 136, 0.3);
+  background: rgba(201, 155, 136, 0.05);
+}
+
+.info-box.resolution {
+  border: 1px solid rgba(168, 197, 160, 0.3);
+  background: rgba(168, 197, 160, 0.05);
+}
+
+.meta-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--cream-dark);
+}
+
+.meta-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.meta-tag-label {
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 /* Tables */

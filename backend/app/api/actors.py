@@ -13,7 +13,7 @@ def _save_mock_world(data: dict):
     data_dir = Path(__file__).parent.parent.parent.parent / "data"
     data_file = data_dir / "mock_world.json"
     with open(data_file, 'w') as f:
-        json.dump(data, f, indent=2)
+        json.dump(data, f, indent=2, default=str)
 
 
 @router.get("/actors", response_model=List[Actor])
@@ -51,7 +51,7 @@ async def create_actor(actor: Actor):
     if any(a.get("id") == actor.id for a in actors):
         raise HTTPException(status_code=400, detail=f"Actor with ID {actor.id} already exists")
     
-    actors.append(actor.model_dump())
+    actors.append(actor.model_dump(mode='json'))
     world["actors"] = actors
     _save_mock_world(world)
     
@@ -70,7 +70,7 @@ async def update_actor(actor_id: str, actor: Actor):
     found = False
     for i, a in enumerate(actors):
         if a.get("id") == actor_id:
-            actors[i] = actor.model_dump()
+            actors[i] = actor.model_dump(mode='json')
             found = True
             break
     

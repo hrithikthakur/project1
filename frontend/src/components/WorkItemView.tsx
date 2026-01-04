@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import {
   getWorkItem,
   updateWorkItem,
@@ -13,6 +14,7 @@ import {
   Risk,
   Ownership,
 } from '../api';
+import { formatDate, formatDateForInput } from '../utils';
 
 interface WorkItemViewProps {
   workItemId: string;
@@ -34,22 +36,45 @@ export default function WorkItemView({ workItemId, onClose }: WorkItemViewProps)
   const [saving, setSaving] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [refreshing, setRefreshing] = useState(false);
+  const scrollPositionRef = React.useRef<number>(0);
+  const isScrollingRef = React.useRef<boolean>(false);
 
   useEffect(() => {
     loadWorkItemDetails();
     
+    // Track scroll events to prevent refresh during scrolling
+    let scrollTimeout: NodeJS.Timeout;
+    const handleScroll = () => {
+      isScrollingRef.current = true;
+      scrollPositionRef.current = window.scrollY || document.documentElement.scrollTop;
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        isScrollingRef.current = false;
+      }, 1000); // Consider user stopped scrolling after 1 second
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
     // Set up polling to refresh data every 5 seconds
+    // Only refresh if user is not actively editing or scrolling
     const pollInterval = setInterval(() => {
-      loadWorkItemDetails();
+      if (!isEditing && !isScrollingRef.current) {
+        loadWorkItemDetails(true);
+      }
     }, 5000);
 
     // Cleanup on unmount
     return () => {
       clearInterval(pollInterval);
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(scrollTimeout);
     };
-  }, [workItemId]);
+  }, [workItemId, isEditing]);
 
   async function loadWorkItemDetails(isRefresh = false) {
+    // Save scroll position before refresh
+    const scrollPosition = window.scrollY || document.documentElement.scrollTop;
+    
     if (isRefresh) {
       setRefreshing(true);
     } else {
@@ -94,6 +119,16 @@ export default function WorkItemView({ workItemId, onClose }: WorkItemViewProps)
       
       setLastUpdated(new Date());
 
+      // Restore scroll position after state updates
+      if (isRefresh && scrollPosition > 0) {
+        // Use multiple timeouts to ensure React has finished rendering
+        setTimeout(() => {
+          requestAnimationFrame(() => {
+            window.scrollTo(0, scrollPosition);
+          });
+        }, 0);
+      }
+
     } catch (err: any) {
       console.error('Error loading work item details:', err);
       setError(err.message || 'Failed to load work item details');
@@ -123,9 +158,19 @@ export default function WorkItemView({ workItemId, onClose }: WorkItemViewProps)
     return colors[status] || '#95a5a6';
   }
 
+  function getMilestoneStatusColor(status: string) {
+    const colors: Record<string, string> = {
+      pending: '#3498db',
+      at_risk: '#f39c12',
+      achieved: '#27ae60',
+      missed: '#e74c3c',
+    };
+    return colors[status] || '#95a5a6';
+  }
+
   function getSeverityColor(severity: string) {
     const colors: Record<string, string> = {
-      low: '#3498db',
+      low: '#27ae60',
       medium: '#f39c12',
       high: '#e67e22',
       critical: '#e74c3c',
@@ -133,24 +178,6 @@ export default function WorkItemView({ workItemId, onClose }: WorkItemViewProps)
     return colors[severity] || '#95a5a6';
   }
 
-  function formatDate(dateString?: string | null): string {
-    if (!dateString) return 'Not set';
-    try {
-      return new Date(dateString).toLocaleDateString();
-    } catch {
-      return dateString;
-    }
-  }
-
-  function formatDateForInput(dateString?: string | null): string {
-    if (!dateString) return '';
-    try {
-      const date = new Date(dateString);
-      return date.toISOString().split('T')[0];
-    } catch {
-      return '';
-    }
-  }
 
   function handleEdit() {
     setFormData(workItem!);
@@ -164,6 +191,28 @@ export default function WorkItemView({ workItemId, onClose }: WorkItemViewProps)
 
   function handleRefresh() {
     loadWorkItemDetails(true);
+  }
+
+  async function handleToggleComplete() {
+    if (!workItem) return;
+    
+    // When checked, always set to completed. When unchecked, set to in_progress
+    const newStatus = workItem.status === 'completed' ? 'in_progress' : 'completed';
+    
+    console.log(`Toggling work item ${workItem.id} from ${workItem.status} to ${newStatus}`);
+    setSaving(true);
+    try {
+      const updatedItem = { ...workItem, status: newStatus };
+      const result = await updateWorkItem(workItem.id, updatedItem);
+      console.log('Work item updated successfully:', result);
+      await loadWorkItemDetails();
+      toast.success(`Status updated to ${newStatus.replace('_', ' ')}`);
+    } catch (err: any) {
+      console.error('Error toggling work item status:', err);
+      toast.error('Error updating work item: ' + (err.message || 'Unknown error'));
+    } finally {
+      setSaving(false);
+    }
   }
 
   function getStatusChangeIndicator(itemId: string, currentStatus: string): string | null {
@@ -194,9 +243,10 @@ export default function WorkItemView({ workItemId, onClose }: WorkItemViewProps)
       } else {
         setMilestone(null);
       }
+      toast.success('Work item updated');
     } catch (err: any) {
       console.error('Error updating work item:', err);
-      alert('Failed to update work item: ' + (err.message || 'Unknown error'));
+      toast.error('Failed to update work item: ' + (err.message || 'Unknown error'));
     } finally {
       setSaving(false);
     }
@@ -209,112 +259,137 @@ export default function WorkItemView({ workItemId, onClose }: WorkItemViewProps)
 
   if (loading) {
     return (
-      <div className="modal-overlay" onClick={onClose}>
-        <div className="modal-content detail-modal" onClick={(e) => e.stopPropagation()}>
-          <div className="view-loading">Loading work item details...</div>
-        </div>
+      <div className="view-container">
+        <div className="view-loading">Loading work item details...</div>
       </div>
     );
   }
 
   if (error || !workItem) {
     return (
-      <div className="modal-overlay" onClick={onClose}>
-        <div className="modal-content detail-modal" onClick={(e) => e.stopPropagation()}>
-          <div className="modal-header">
-            <h2>Error</h2>
-            <button className="modal-close" onClick={onClose}>✕</button>
-          </div>
-          <div className="error-message">{error || 'Work item not found'}</div>
+      <div className="view-container">
+        <div className="view-header">
+          <button className="btn-secondary" onClick={onClose} style={{ marginRight: '1rem' }}>
+            ← Back
+          </button>
+          <h2>Error</h2>
+        </div>
+        <div style={{ padding: '20px', color: '#dc3545' }}>
+          {error || 'Work item not found'}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content detail-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-            <h2>{isEditing ? 'Edit Work Item' : 'Work Item Details'}</h2>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 'normal' }}>
+    <div className="view-container">
+      <div className="view-header">
+        <button className="btn-secondary" onClick={onClose} style={{ marginRight: '1rem' }}>
+          ← Back
+        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: 1 }}>
+          <h2>{isEditing ? 'Edit Work Item' : workItem.title}</h2>
+          {!isEditing && (
+            <span style={{ fontSize: '0.75rem', color: '#6c757d', fontWeight: 'normal' }}>
               Last updated: {lastUpdated.toLocaleTimeString()}
               {refreshing && <span style={{ marginLeft: '0.5rem' }}>🔄 Refreshing...</span>}
             </span>
-          </div>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            {!isEditing && (
-              <button 
-                className="btn-icon" 
-                onClick={handleRefresh} 
-                title="Refresh"
-                disabled={refreshing}
-              >
-                🔄
-              </button>
-            )}
-            {!isEditing ? (
-              <button className="btn-icon" onClick={handleEdit} title="Edit">
-                ✏️
-              </button>
-            ) : (
-              <>
-                <button 
-                  className="btn-primary" 
-                  onClick={handleSave}
-                  disabled={saving}
-                  style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
-                >
-                  {saving ? 'Saving...' : 'Save'}
-                </button>
-                <button 
-                  className="btn-secondary" 
-                  onClick={handleCancelEdit}
-                  disabled={saving}
-                  style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
-                >
-                  Cancel
-                </button>
-              </>
-            )}
-            <button className="modal-close" onClick={onClose}>✕</button>
-          </div>
+          )}
         </div>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          {!isEditing && (
+            <button 
+              className="btn-icon" 
+              onClick={handleRefresh} 
+              title="Refresh"
+              disabled={refreshing}
+            >
+              🔄 Refresh
+            </button>
+          )}
+          {!isEditing ? (
+            <button className="btn-icon" onClick={handleEdit} title="Edit">
+              ✏️ Edit
+            </button>
+          ) : (
+            <>
+              <button 
+                className="btn-primary" 
+                onClick={handleSave}
+                disabled={saving}
+              >
+                {saving ? 'Saving...' : 'Save'}
+              </button>
+              <button 
+                className="btn-secondary" 
+                onClick={handleCancelEdit}
+                disabled={saving}
+              >
+                Cancel
+              </button>
+            </>
+          )}
+        </div>
+      </div>
 
+      <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
         <div className="detail-view detail-view-simple">
           {/* Title and Status */}
-          <div className="detail-section-header">
-            {isEditing ? (
-              <input
-                type="text"
-                value={formData.title || ''}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="detail-input-title"
-                placeholder="Work Item Title"
-              />
-            ) : (
-              <h3>{workItem.title}</h3>
-            )}
-            {isEditing ? (
-              <select
-                value={formData.status || workItem.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                className="detail-select-status"
-              >
-                <option value="not_started">Not Started</option>
-                <option value="in_progress">In Progress</option>
-                <option value="blocked">Blocked</option>
-                <option value="completed">Completed</option>
-              </select>
-            ) : (
-              <span
-                className="status-badge"
-                style={{ backgroundColor: getStatusColor(workItem.status) }}
-              >
-                {workItem.status.replace('_', ' ')}
-              </span>
-            )}
-          </div>
+          {isEditing && (
+            <div className="detail-section" style={{ marginBottom: '20px' }}>
+              <div className="form-group">
+                <label>Title *</label>
+                <input
+                  type="text"
+                  value={formData.title || ''}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="Work Item Title"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Status</label>
+                <select
+                  value={formData.status || workItem.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+                >
+                  <option value="not_started">Not Started</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="blocked">Blocked</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {!isEditing && (
+            <div className="detail-section-header" style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '2px solid #e0e0e0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <input
+                    type="checkbox"
+                    checked={workItem.status === 'completed'}
+                    onChange={handleToggleComplete}
+                    disabled={saving}
+                    style={{ 
+                      width: '20px', 
+                      height: '20px', 
+                      cursor: saving ? 'not-allowed' : 'pointer',
+                      accentColor: '#28a745',
+                      flexShrink: 0
+                    }}
+                  />
+                  <h3 style={{ margin: 0 }}>{workItem.title}</h3>
+                </div>
+                <span
+                  className="status-badge"
+                  style={{ backgroundColor: getStatusColor(workItem.status) }}
+                >
+                  {workItem.status.replace('_', ' ')}
+                </span>
+              </div>
+            </div>
+          )}
 
           <div className="detail-section">
             <div className="detail-row">
@@ -416,6 +491,47 @@ export default function WorkItemView({ workItemId, onClose }: WorkItemViewProps)
                 )}
               </div>
             </div>
+
+            <div className="detail-row">
+              <div className="detail-label">Tags</div>
+              <div className="detail-value">
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={formData.tags?.join(', ') || ''}
+                    onChange={(e) => {
+                      const tagString = e.target.value;
+                      const tags = tagString ? tagString.split(',').map(t => t.trim()).filter(t => t) : [];
+                      setFormData({ ...formData, tags });
+                    }}
+                    className="detail-input"
+                    placeholder="e.g., urgent, review"
+                  />
+                ) : (
+                  workItem.tags && workItem.tags.filter(t => t !== 'completed').length > 0 ? (
+                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                      {workItem.tags.filter(t => t !== 'completed').map((tag, idx) => (
+                        <span
+                          key={idx}
+                          style={{
+                            fontSize: '0.85rem',
+                            padding: '4px 8px',
+                            backgroundColor: '#3498db',
+                            color: 'white',
+                            borderRadius: '4px',
+                            fontWeight: 500
+                          }}
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    '-'
+                  )
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Milestone Section */}
@@ -456,7 +572,7 @@ export default function WorkItemView({ workItemId, onClose }: WorkItemViewProps)
                 <div className="detail-row">
                   <div className="detail-label">Status</div>
                   <div className="detail-value">
-                    <span className="status-badge" style={{ backgroundColor: '#3498db' }}>
+                    <span className="status-badge" style={{ backgroundColor: getMilestoneStatusColor(milestone.status) }}>
                       {milestone.status}
                     </span>
                   </div>

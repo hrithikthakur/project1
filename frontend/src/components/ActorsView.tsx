@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import {
   listActors,
   getActor,
@@ -70,9 +71,10 @@ export default function ActorsView() {
       }
       setShowForm(false);
       loadActors();
+      toast.success(editingActor ? 'Actor updated' : 'Actor created');
     } catch (error) {
       console.error('Error saving actor:', error);
-      alert('Error saving actor');
+      toast.error('Error saving actor');
     }
   }
 
@@ -81,9 +83,10 @@ export default function ActorsView() {
     try {
       await deleteActor(id);
       loadActors();
+      toast.success('Actor deleted');
     } catch (error) {
       console.error('Error deleting actor:', error);
-      alert('Error deleting actor');
+      toast.error('Error deleting actor');
     }
   }
 
@@ -180,9 +183,23 @@ export default function ActorsView() {
                 <div className="card-header">
                   <h3>{actor.display_name}</h3>
                   {actor.is_active ? (
-                    <span className="status-badge status-active">Active</span>
+                    <span
+                      className="status-badge"
+                      style={{
+                        backgroundColor: '#27ae60', // Vibrant Green
+                      }}
+                    >
+                      Active
+                    </span>
                   ) : (
-                    <span className="status-badge status-inactive">Inactive</span>
+                    <span
+                      className="status-badge"
+                      style={{
+                        backgroundColor: '#e74c3c', // Vibrant Red
+                      }}
+                    >
+                      Inactive
+                    </span>
                   )}
                 </div>
                 <div className="card-body">
@@ -210,9 +227,23 @@ export default function ActorsView() {
                 <div className="card-header">
                   <h3>{actor.display_name}</h3>
                   {actor.is_active ? (
-                    <span className="status-badge status-active">Active</span>
+                    <span
+                      className="status-badge"
+                      style={{
+                        backgroundColor: '#27ae60', // Vibrant Green
+                      }}
+                    >
+                      Active
+                    </span>
                   ) : (
-                    <span className="status-badge status-inactive">Inactive</span>
+                    <span
+                      className="status-badge"
+                      style={{
+                        backgroundColor: '#e74c3c', // Vibrant Red
+                      }}
+                    >
+                      Inactive
+                    </span>
                   )}
                 </div>
                 <div className="card-actions">

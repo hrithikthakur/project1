@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 import { getForecast, ForecastRequest, ForecastResult } from '../api';
 
 export default function ForecastView() {
@@ -17,9 +18,10 @@ export default function ForecastView() {
       
       const results = await getForecast(request);
       setForecastResults(results);
+      toast.success('Forecast completed');
     } catch (error) {
       console.error('Error running forecast:', error);
-      alert('Failed to run forecast');
+      toast.error('Failed to run forecast');
     } finally {
       setLoading(false);
     }

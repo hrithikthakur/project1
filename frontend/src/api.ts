@@ -72,7 +72,6 @@ export interface Decision {
   escalation_trigger?: string;
   
   // MITIGATE_RISK fields
-  issue_id?: string;
   action?: string;
   expected_probability_delta?: number;
   expected_impact_days_delta?: number;
@@ -87,6 +86,7 @@ export interface Risk {
   status: string;
   probability: number;
   impact: Record<string, any>;
+  milestone_id: string;
   affected_items: string[];
   detected_at: string;
   mitigated_at?: string;
@@ -113,6 +113,7 @@ export interface WorkItem {
   start_date?: string;
   end_date?: string;
   milestone_id?: string;
+  tags?: string[];
 }
 
 export interface Actor {
@@ -129,7 +130,7 @@ export interface Actor {
 
 export interface Ownership {
   id: string;
-  object_type: 'risk' | 'issue' | 'decision' | 'change' | 'milestone' | 'work_item';
+  object_type: 'risk' | 'decision' | 'change' | 'milestone' | 'work_item';
   object_id: string;
   owner_actor_id: string;
   assigned_at: string;
@@ -490,7 +491,7 @@ export async function createWorkItem(workItem: WorkItem): Promise<WorkItem> {
   return response.json();
 }
 
-export async function updateWorkItem(workItemId: string, workItem: WorkItem): Promise<WorkItem> {
+export async function updateWorkItem(workItemId: string, workItem: Partial<WorkItem> & { id: string }): Promise<WorkItem> {
   const response = await fetch(`${API_BASE_URL}/work_items/${workItemId}`, {
     method: 'PUT',
     headers: {

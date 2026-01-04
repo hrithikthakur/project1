@@ -25,6 +25,7 @@ class WorkItem(BaseModel):
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
     milestone_id: Optional[str] = None
+    tags: Optional[List[str]] = None  # Tags for categorization (e.g., "completed")
     
     class Config:
         json_schema_extra = {
@@ -36,7 +37,8 @@ class WorkItem(BaseModel):
                 "estimated_days": 5.0,
                 "assigned_to": ["actor_001", "actor_002"],
                 "dependencies": [],
-                "milestone_id": "milestone_001"
+                "milestone_id": "milestone_001",
+                "tags": ["completed"]
             }
         }
 

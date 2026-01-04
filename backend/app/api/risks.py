@@ -15,7 +15,7 @@ def _save_mock_world(data: dict):
     data_dir = Path(__file__).parent.parent.parent.parent / "data"
     data_file = data_dir / "mock_world.json"
     with open(data_file, 'w') as f:
-        json.dump(data, f, indent=2)
+        json.dump(data, f, indent=2, default=str)
 
 
 @router.post("/risks", response_model=Risk)

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import {
   listRisks,
   getRisk,
@@ -11,18 +12,20 @@ import {
   Risk,
   WorkItem,
 } from '../api';
+import { formatDate, formatDateTime } from '../utils';
 
 export default function RisksView() {
   const [risks, setRisks] = useState<Risk[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingRisk, setEditingRisk] = useState<Risk | null>(null);
+  const [selectedRisk, setSelectedRisk] = useState<Risk | null>(null);
   const [workItems, setWorkItems] = useState<WorkItem[]>([]);
   const [formData, setFormData] = useState<Partial<Risk>>({
     title: '',
     description: '',
     severity: 'medium',
-    status: 'active',
+    status: 'open',
     probability: 0.5,
     impact: {},
     affected_items: [],
@@ -65,7 +68,7 @@ export default function RisksView() {
       title: '',
       description: '',
       severity: 'medium',
-      status: 'active',
+      status: 'open',
       probability: 0.5,
       impact: {},
       affected_items: [],
@@ -83,15 +86,15 @@ export default function RisksView() {
       const newRisks = await detectRisks();
       
       if (newRisks.length === 0) {
-        alert('✅ No new risks detected. System is healthy!');
+        toast.success('No new risks detected. System is healthy!');
       } else {
-        alert(`⚠️ Detected ${newRisks.length} new risk(s). Check the risks list.`);
+        toast(`Detected ${newRisks.length} new risk(s). Check the risks list.`, { icon: '⚠️' });
       }
       
       loadRisks();
     } catch (error) {
       console.error('Error detecting risks:', error);
-      alert(`Error detecting risks: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(`Error detecting risks: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
@@ -112,9 +115,10 @@ export default function RisksView() {
       }
       setShowForm(false);
       loadRisks();
+      toast.success(editingRisk ? 'Risk updated' : 'Risk created');
     } catch (error) {
       console.error('Error saving risk:', error);
-      alert('Error saving risk');
+      toast.error('Error saving risk');
     }
   }
 
@@ -123,10 +127,19 @@ export default function RisksView() {
     try {
       await deleteRisk(id);
       loadRisks();
+      toast.success('Risk deleted');
     } catch (error) {
       console.error('Error deleting risk:', error);
-      alert('Error deleting risk');
+      toast.error('Error deleting risk');
     }
+  }
+
+  function openRiskModal(risk: Risk) {
+    setSelectedRisk(risk);
+  }
+
+  function closeRiskModal() {
+    setSelectedRisk(null);
   }
 
   function getSeverityColor(severity: string) {
@@ -141,14 +154,22 @@ export default function RisksView() {
 
   function getStatusColor(status: string) {
     const colors: Record<string, string> = {
-      active: '#e74c3c',
-      mitigating: '#3498db',  // Blue for actively mitigating
-      mitigated: '#f39c12',
-      resolved: '#27ae60',
+      open: '#e74c3c',
       accepted: '#95a5a6',
+      mitigating: '#3498db',  // Blue for actively mitigating
+      materialised: '#ef4444', // Red for materialized
+      closed: '#27ae60',
     };
     return colors[status] || '#95a5a6';
   }
+
+  const stats = {
+    total: risks.length,
+    open: risks.filter(r => r.status === 'open').length,
+    materialised: risks.filter(r => r.status === 'materialised').length,
+    mitigating: risks.filter(r => r.status === 'mitigating').length,
+    accepted: risks.filter(r => r.status === 'accepted').length,
+  };
 
   if (loading) {
     return <div className="view-loading">Loading risks...</div>;
@@ -173,6 +194,45 @@ export default function RisksView() {
           <button className="btn-primary" onClick={handleNew}>
             + New Risk
           </button>
+        </div>
+      </div>
+
+      {/* Stats Summary */}
+      <div className="stats-grid" style={{ marginBottom: '2rem' }}>
+        <div className="stat-card">
+          <div className="stat-icon">⚠️</div>
+          <div className="stat-content">
+            <h3>{stats.total}</h3>
+            <p>Total Risks</p>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon">⭕</div>
+          <div className="stat-content">
+            <h3>{stats.open}</h3>
+            <p>Open</p>
+          </div>
+        </div>
+        <div className="stat-card" style={{ borderColor: '#ef4444' }}>
+          <div className="stat-icon">🚨</div>
+          <div className="stat-content">
+            <h3 style={{ color: '#ef4444' }}>{stats.materialised}</h3>
+            <p>Materialised</p>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon">🛠️</div>
+          <div className="stat-content">
+            <h3>{stats.mitigating}</h3>
+            <p>Mitigating</p>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon">🤝</div>
+          <div className="stat-content">
+            <h3>{stats.accepted}</h3>
+            <p>Accepted</p>
+          </div>
         </div>
       </div>
 
@@ -217,11 +277,11 @@ export default function RisksView() {
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                   >
-                    <option value="active">Active</option>
-                    <option value="mitigating">Mitigating</option>
-                    <option value="mitigated">Mitigated</option>
-                    <option value="resolved">Resolved</option>
+                    <option value="open">Open</option>
                     <option value="accepted">Accepted</option>
+                    <option value="mitigating">Mitigating</option>
+                    <option value="materialised">Materialised</option>
+                    <option value="closed">Closed</option>
                   </select>
                 </div>
               </div>
@@ -376,158 +436,381 @@ export default function RisksView() {
         </div>
       )}
 
-      <div className="cards-grid">
-        {risks.map((risk) => (
-          <div key={risk.id} className="card">
-            <div className="card-header">
-              <h3>{risk.title}</h3>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <span
-                  className="status-badge"
-                  style={{ backgroundColor: getSeverityColor(risk.severity) }}
-                >
-                  {risk.severity}
-                </span>
-                <span
-                  className="status-badge"
-                  style={{ backgroundColor: getStatusColor(risk.status) }}
-                >
-                  {risk.status}
-                </span>
-              </div>
-            </div>
-            <div className="card-body">
-              <p className="card-description">{risk.description}</p>
-              
-              {/* Acceptance Information */}
-              {risk.status === 'accepted' && (risk as any).accepted_at && (
-                <div style={{
-                  marginTop: '1rem',
-                  padding: '1rem',
-                  backgroundColor: '#f8f9fa',
-                  borderLeft: '4px solid #95a5a6',
-                  borderRadius: '4px',
-                }}>
-                  <div style={{ 
-                    fontSize: '0.875rem', 
-                    fontWeight: 'bold', 
-                    color: '#5a6c7d',
-                    marginBottom: '0.5rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                  }}>
-                    <span>✓</span>
-                    <span>Risk Accepted</span>
-                  </div>
-                  <div style={{ fontSize: '0.8125rem', color: '#6c757d' }}>
-                    <div style={{ marginBottom: '0.25rem' }}>
-                      <strong>Accepted on:</strong> {new Date((risk as any).accepted_at).toLocaleDateString()} at {new Date((risk as any).accepted_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </div>
-                    {(risk as any).accepted_by && (
-                      <div style={{ marginBottom: '0.25rem' }}>
-                        <strong>Accepted by:</strong> {(risk as any).accepted_by}
-                      </div>
-                    )}
-                    {(risk as any).next_date && (
-                      <div style={{ marginBottom: '0.25rem' }}>
-                        <strong>Next review:</strong> {new Date((risk as any).next_date).toLocaleDateString()}
-                      </div>
-                    )}
-                    {(risk as any).acceptance_boundary && (
-                      <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid #dee2e6' }}>
-                        <strong>Boundary:</strong>{' '}
-                        {(risk as any).acceptance_boundary.type === 'date' && (
-                          <span>Until {new Date((risk as any).acceptance_boundary.date).toLocaleDateString()}</span>
-                        )}
-                        {(risk as any).acceptance_boundary.type === 'threshold' && (
-                          <span>Threshold: {(risk as any).acceptance_boundary.threshold}</span>
-                        )}
-                        {(risk as any).acceptance_boundary.type === 'event' && (
-                          <span>Event: {(risk as any).acceptance_boundary.trigger}</span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  <div style={{
-                    marginTop: '0.75rem',
-                    padding: '0.5rem',
-                    backgroundColor: '#e7f3ff',
-                    borderRadius: '4px',
-                    fontSize: '0.75rem',
-                    color: '#004085',
-                  }}>
-                    <strong>🔕 Quiet Monitoring:</strong> Escalations suppressed. Monitoring for boundary breach or next review date.
-                  </div>
-                </div>
-              )}
-              
-              {/* Mitigation Information */}
-              {risk.status === 'mitigating' && (risk as any).mitigation_started_at && (
-                <div style={{
-                  marginTop: '1rem',
-                  padding: '1rem',
-                  backgroundColor: '#e3f2fd',
-                  borderLeft: '4px solid #3498db',
-                  borderRadius: '4px',
-                }}>
-                  <div style={{ 
-                    fontSize: '0.875rem', 
-                    fontWeight: 'bold', 
-                    color: '#1565c0',
-                    marginBottom: '0.5rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                  }}>
-                    <span>🛠️</span>
-                    <span>Mitigation In Progress</span>
-                  </div>
-                  <div style={{ fontSize: '0.8125rem', color: '#1976d2' }}>
-                    {(risk as any).mitigation_action && (
-                      <div style={{ marginBottom: '0.5rem' }}>
-                        <strong>Action:</strong> {(risk as any).mitigation_action}
-                      </div>
-                    )}
-                    <div style={{ marginBottom: '0.25rem' }}>
-                      <strong>Started:</strong> {new Date((risk as any).mitigation_started_at).toLocaleDateString()}
-                    </div>
-                    {(risk as any).mitigation_due_date && (
-                      <div>
-                        <strong>Due:</strong> {new Date((risk as any).mitigation_due_date).toLocaleDateString()}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-              
-              <div className="card-meta" style={{ marginTop: '1rem' }}>
-                <div className="meta-item">
-                  <span className="meta-label">Probability:</span>
-                  <span className="meta-value">{(risk.probability * 100).toFixed(0)}%</span>
-                </div>
-                <div className="meta-item">
-                  <span className="meta-label">Affected Items:</span>
-                  <span className="meta-value">{risk.affected_items.length}</span>
-                </div>
-                <div className="meta-item">
-                  <span className="meta-label">Detected:</span>
-                  <span className="meta-value">
-                    {new Date(risk.detected_at).toLocaleDateString()}
+      {/* Risk Details Modal */}
+      {selectedRisk && (
+        <div className="modal-overlay" onClick={closeRiskModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '700px' }}>
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'flex-start',
+              marginBottom: '1.5rem',
+              borderBottom: '2px solid #f0f0f0',
+              paddingBottom: '1rem'
+            }}>
+              <div>
+                <h3 style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  {selectedRisk.status === 'materialised' && <span>🚨</span>}
+                  {selectedRisk.title}
+                </h3>
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                  <span
+                    className="status-badge"
+                    style={{ backgroundColor: getSeverityColor(selectedRisk.severity) }}
+                  >
+                    {selectedRisk.severity}
+                  </span>
+                  <span
+                    className="status-badge"
+                    style={{ backgroundColor: getStatusColor(selectedRisk.status) }}
+                  >
+                    {selectedRisk.status}
                   </span>
                 </div>
               </div>
+              <button 
+                onClick={closeRiskModal}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                  padding: '0',
+                  color: '#666',
+                  lineHeight: '1'
+                }}
+              >
+                ✕
+              </button>
             </div>
-            <div className="card-actions">
-              <button className="btn-icon" onClick={() => handleEdit(risk)}>
+            
+            <div style={{ marginBottom: '1.5rem' }}>
+              <h4 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#666', textTransform: 'uppercase' }}>Description</h4>
+              <p style={{ lineHeight: '1.6', color: '#333' }}>{selectedRisk.description}</p>
+            </div>
+
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(3, 1fr)', 
+              gap: '1rem',
+              marginBottom: '1.5rem',
+              padding: '1rem',
+              backgroundColor: '#f8f9fa',
+              borderRadius: '8px'
+            }}>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: '#666', marginBottom: '0.25rem' }}>Probability</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#333' }}>
+                  {(selectedRisk.probability * 100).toFixed(0)}%
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: '#666', marginBottom: '0.25rem' }}>Affected Items</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#333' }}>
+                  {selectedRisk.affected_items.length}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: '#666', marginBottom: '0.25rem' }}>Detected</div>
+                <div style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#333' }}>
+                  {formatDate(selectedRisk.detected_at)}
+                </div>
+              </div>
+            </div>
+
+            {/* Acceptance Information */}
+            {selectedRisk.status === 'accepted' && (selectedRisk as any).accepted_at && (
+              <div style={{
+                marginBottom: '1.5rem',
+                padding: '1rem',
+                backgroundColor: '#f8f9fa',
+                borderLeft: '4px solid #95a5a6',
+                borderRadius: '4px',
+              }}>
+                <div style={{ 
+                  fontSize: '0.875rem', 
+                  fontWeight: 'bold', 
+                  color: '#5a6c7d',
+                  marginBottom: '0.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                }}>
+                  <span>✓</span>
+                  <span>Risk Accepted</span>
+                </div>
+                <div style={{ fontSize: '0.8125rem', color: '#6c757d' }}>
+                  <div style={{ marginBottom: '0.25rem' }}>
+                    <strong>Accepted on:</strong> {formatDateTime((selectedRisk as any).accepted_at)}
+                  </div>
+                  {(selectedRisk as any).accepted_by && (
+                    <div style={{ marginBottom: '0.25rem' }}>
+                      <strong>Accepted by:</strong> {(selectedRisk as any).accepted_by}
+                    </div>
+                  )}
+                  {(selectedRisk as any).next_date && (
+                    <div style={{ marginBottom: '0.25rem' }}>
+                      <strong>Next review:</strong> {formatDate((selectedRisk as any).next_date)}
+                    </div>
+                  )}
+                  {(selectedRisk as any).acceptance_boundary && (
+                    <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid #dee2e6' }}>
+                      <strong>Boundary:</strong>{' '}
+                      {(selectedRisk as any).acceptance_boundary.type === 'date' && (
+                        <span>Until {formatDate((selectedRisk as any).acceptance_boundary.date)}</span>
+                      )}
+                      {(selectedRisk as any).acceptance_boundary.type === 'threshold' && (
+                        <span>Threshold: {(selectedRisk as any).acceptance_boundary.threshold}</span>
+                      )}
+                      {(selectedRisk as any).acceptance_boundary.type === 'event' && (
+                        <span>Event: {(selectedRisk as any).acceptance_boundary.trigger}</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <div style={{
+                  marginTop: '0.75rem',
+                  padding: '0.5rem',
+                  backgroundColor: '#e7f3ff',
+                  borderRadius: '4px',
+                  fontSize: '0.75rem',
+                  color: '#004085',
+                }}>
+                  <strong>🔕 Quiet Monitoring:</strong> Escalations suppressed. Monitoring for boundary breach or next review date.
+                </div>
+              </div>
+            )}
+            
+            {/* Mitigation Information */}
+            {selectedRisk.status === 'mitigating' && (selectedRisk as any).mitigation_started_at && (
+              <div style={{
+                marginBottom: '1.5rem',
+                padding: '1rem',
+                backgroundColor: '#e3f2fd',
+                borderLeft: '4px solid #3498db',
+                borderRadius: '4px',
+              }}>
+                <div style={{ 
+                  fontSize: '0.875rem', 
+                  fontWeight: 'bold', 
+                  color: '#1565c0',
+                  marginBottom: '0.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                }}>
+                  <span>🛠️</span>
+                  <span>Mitigation In Progress</span>
+                </div>
+                <div style={{ fontSize: '0.8125rem', color: '#1976d2' }}>
+                  {(selectedRisk as any).mitigation_action && (
+                    <div style={{ marginBottom: '0.5rem' }}>
+                      <strong>Action:</strong> {(selectedRisk as any).mitigation_action}
+                    </div>
+                  )}
+                  <div style={{ marginBottom: '0.25rem' }}>
+                    <strong>Started:</strong> {formatDate((selectedRisk as any).mitigation_started_at)}
+                  </div>
+                  {(selectedRisk as any).mitigation_due_date && (
+                    <div>
+                      <strong>Due:</strong> {formatDate((selectedRisk as any).mitigation_due_date)}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Impact Details for Blocked Dependencies */}
+            {selectedRisk.status === 'materialised' && (selectedRisk.impact as any)?.blocked_item && (
+              <div style={{
+                marginBottom: '1.5rem',
+                padding: '1rem',
+                backgroundColor: '#fef2f2',
+                borderLeft: '4px solid #ef4444',
+                borderRadius: '4px',
+              }}>
+                <div style={{ 
+                  fontSize: '0.875rem', 
+                  fontWeight: 'bold', 
+                  color: '#991b1b',
+                  marginBottom: '0.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                }}>
+                  <span>🚨</span>
+                  <span>Dependency Blocked</span>
+                </div>
+                <div style={{ fontSize: '0.8125rem', color: '#7f1d1d' }}>
+                  <div style={{ marginBottom: '0.5rem' }}>
+                    <strong>Blocked Item:</strong> {(selectedRisk.impact as any).blocked_item}
+                  </div>
+                  <div style={{ marginBottom: '0.5rem' }}>
+                    <strong>Waiting For:</strong> {(selectedRisk.impact as any).blocking_item}
+                  </div>
+                  {(selectedRisk.impact as any).p80_delay_days && (
+                    <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid #fecaca' }}>
+                      <strong>Expected Delay:</strong> {(selectedRisk.impact as any).p80_delay_days} days (P80)
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Affected Work Items */}
+            {selectedRisk.affected_items.length > 0 && (
+              <div style={{ marginBottom: '1.5rem' }}>
+                <h4 style={{ marginBottom: '0.75rem', fontSize: '0.9rem', color: '#666', textTransform: 'uppercase' }}>
+                  Affected Work Items ({selectedRisk.affected_items.length})
+                </h4>
+                <div style={{
+                  maxHeight: '150px',
+                  overflowY: 'auto',
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '4px',
+                  padding: '0.5rem'
+                }}>
+                  {selectedRisk.affected_items.map((itemId) => {
+                    const workItem = workItems.find(wi => wi.id === itemId);
+                    return (
+                      <div key={itemId} style={{
+                        padding: '0.5rem',
+                        marginBottom: '0.25rem',
+                        backgroundColor: '#f8f9fa',
+                        borderRadius: '4px',
+                        fontSize: '0.85rem'
+                      }}>
+                        {workItem ? workItem.title : itemId}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', paddingTop: '1rem', borderTop: '1px solid #e0e0e0' }}>
+              <button 
+                className="btn-secondary" 
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  closeRiskModal(); 
+                  handleEdit(selectedRisk); 
+                }}
+              >
                 ✏️ Edit
               </button>
-              <button className="btn-icon btn-danger" onClick={() => handleDelete(risk.id)}>
+              <button 
+                className="btn-secondary" 
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  handleDelete(selectedRisk.id);
+                  closeRiskModal();
+                }}
+                style={{ color: '#e74c3c' }}
+              >
                 🗑️ Delete
+              </button>
+              <button className="btn-primary" onClick={closeRiskModal}>
+                Close
               </button>
             </div>
           </div>
-        ))}
+        </div>
+      )}
+
+      <div className="cards-grid">
+        {[...risks].sort((a, b) => {
+          // Materialized risks should appear first
+          if (a.status === 'materialised' && b.status !== 'materialised') return -1;
+          if (a.status !== 'materialised' && b.status === 'materialised') return 1;
+          return 0;
+        }).map((risk) => {
+          return (
+            <div 
+              key={risk.id} 
+              className={`card ${risk.status === 'materialised' ? 'materialised-risk' : ''}`}
+              style={{ 
+                cursor: 'pointer',
+                border: risk.status === 'materialised' ? '3px solid #ef4444' : undefined
+              }}
+              onClick={() => openRiskModal(risk)}
+            >
+              <div className="card-header">
+                <h3>
+                  {risk.status === 'materialised' && <span style={{ marginRight: '8px' }}>🚨</span>}
+                  {risk.title}
+                </h3>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <span
+                    className="status-badge"
+                    style={{ backgroundColor: getSeverityColor(risk.severity) }}
+                  >
+                    {risk.severity}
+                  </span>
+                  <span
+                    className="status-badge"
+                    style={{ backgroundColor: getStatusColor(risk.status) }}
+                  >
+                    {risk.status}
+                  </span>
+                </div>
+              </div>
+              <div className="card-body">
+                <p className="card-description" style={{
+                  display: '-webkit-box',
+                  WebkitLineClamp: '2',
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  marginBottom: '0.5rem'
+                }}>
+                  {risk.description}
+                </p>
+                
+                {/* Show blocking details for materialized dependency risks */}
+                {risk.status === 'materialised' && (risk.impact as any)?.blocked_item && (
+                  <div style={{
+                    marginTop: '0.5rem',
+                    padding: '0.5rem',
+                    backgroundColor: '#fef2f2',
+                    borderRadius: '4px',
+                    fontSize: '0.75rem',
+                    color: '#991b1b',
+                  }}>
+                    <strong>🚫 {(risk.impact as any).blocked_item}</strong> waiting for <strong>{(risk.impact as any).blocking_item}</strong>
+                    {(risk.impact as any).p80_delay_days && (
+                      <span style={{ marginLeft: '0.5rem' }}>
+                        • Delay: {(risk.impact as any).p80_delay_days}d
+                      </span>
+                    )}
+                  </div>
+                )}
+                
+                <div className="card-meta" style={{ marginTop: '0.5rem' }}>
+                  <div className="meta-item">
+                    <span className="meta-label">Probability:</span>
+                    <span className="meta-value">{(risk.probability * 100).toFixed(0)}%</span>
+                  </div>
+                  <div className="meta-item">
+                    <span className="meta-label">Affected Items:</span>
+                    <span className="meta-value">{risk.affected_items.length}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="card-actions" onClick={(e) => e.stopPropagation()}>
+                <button className="btn-icon" onClick={(e) => { e.stopPropagation(); handleEdit(risk); }}>
+                  ✏️ Edit
+                </button>
+                <button className="btn-icon btn-danger" onClick={(e) => { e.stopPropagation(); handleDelete(risk.id); }}>
+                  🗑️ Delete
+                </button>
+                <button className="btn-icon" style={{ marginLeft: 'auto' }} onClick={(e) => { e.stopPropagation(); openRiskModal(risk); }}>
+                  View Details ↗
+                </button>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {risks.length === 0 && (

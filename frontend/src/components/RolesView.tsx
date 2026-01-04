@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import {
   listRoles,
   listActorRoles,
@@ -19,6 +20,7 @@ export default function RolesView() {
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [loading, setLoading] = useState(true);
   const [showActorRoleForm, setShowActorRoleForm] = useState(false);
+  const [expandedRoleId, setExpandedRoleId] = useState<string | null>(null);
   const [actorRoleFormData, setActorRoleFormData] = useState<Partial<ActorRole>>({
     actor_id: '',
     role_id: '',
@@ -69,9 +71,10 @@ export default function RolesView() {
       await createActorRole(newActorRole);
       setShowActorRoleForm(false);
       loadData();
+      toast.success('Role assigned successfully');
     } catch (error) {
       console.error('Error saving actor role:', error);
-      alert('Error saving actor role');
+      toast.error('Error saving actor role');
     }
   }
 
@@ -80,9 +83,10 @@ export default function RolesView() {
     try {
       await deleteActorRole(ar.actor_id, ar.role_id, ar.scope_type, ar.scope_id);
       loadData();
+      toast.success('Role assignment removed');
     } catch (error) {
       console.error('Error deleting actor role:', error);
-      alert('Error deleting actor role');
+      toast.error('Error deleting actor role');
     }
   }
 
@@ -112,6 +116,64 @@ export default function RolesView() {
       return actors.filter(a => a.type === 'TEAM').map(t => ({ id: t.id, name: t.display_name }));
     }
     return [];
+  }
+
+  function getRoleColor(roleName: string) {
+    switch (roleName.toUpperCase()) {
+      case 'ADMIN':
+        return '#e74c3c'; // Vibrant Red
+      case 'EDITOR':
+        return '#3498db'; // Vibrant Blue
+      case 'APPROVER':
+        return '#f39c12'; // Vibrant Orange
+      case 'VIEWER':
+        return '#95a5a6'; // Vibrant Slate
+      default:
+        return '#7f8c8d';
+    }
+  }
+
+  function getRolePermissions(roleName: string) {
+    switch (roleName.toUpperCase()) {
+      case 'ADMIN':
+        return [
+          'Full system access',
+          'Manage all entities',
+          'Approve and reject decisions',
+          'Assign roles to actors',
+          'Configure system settings',
+          'Delete any entity',
+        ];
+      case 'EDITOR':
+        return [
+          'Create and modify work items',
+          'Create and modify milestones',
+          'Create and modify risks',
+          'Create and modify risks',
+          'View all entities',
+          'Cannot approve decisions',
+        ];
+      case 'APPROVER':
+        return [
+          'Review and approve decisions',
+          'Approve risks and milestones',
+          'Read access to all entities',
+          'Comment on work items',
+          'Limited edit capabilities',
+          'Cannot manage roles',
+        ];
+      case 'VIEWER':
+        return [
+          'Read-only access to all entities',
+          'View work items and milestones',
+          'View risks and decisions',
+          'View reports and dashboards',
+          'Cannot make any changes',
+          'Cannot approve or reject',
+        ];
+      default:
+        return [];
+    }
   }
 
   if (loading) {
@@ -218,21 +280,56 @@ export default function RolesView() {
       <div className="roles-sections">
         <div className="roles-section">
           <h3>System Roles ({roles.length})</h3>
-          <p style={{ marginBottom: '1rem', color: '#666' }}>
+          <p style={{ marginBottom: '1rem', color: '#666', fontSize: '0.95em' }}>
             The system has four fixed roles: ADMIN, VIEWER, APPROVER, and EDITOR. Use the "Assign Role" button to assign these roles to actors.
           </p>
-          <div className="cards-grid">
-            {roles.map((role) => (
-              <div key={role.id} className="card">
-                <div className="card-header">
-                  <h3>{role.name}</h3>
+          <button
+            className="btn-secondary"
+            onClick={() => setExpandedRoleId(expandedRoleId ? null : 'show_all')}
+            style={{ marginBottom: '1.5rem' }}
+          >
+            {expandedRoleId ? 'Hide Details' : 'Learn More'}
+          </button>
+
+          {roles.length === 0 ? (
+            <div style={{ padding: '2rem', textAlign: 'center', color: '#999', background: '#f9f9f9', borderRadius: '8px' }}>
+              No roles available. Please check your data configuration.
+            </div>
+          ) : expandedRoleId && (
+            <div className="cards-grid">
+              {roles.map((role) => (
+                <div key={role.id} className="card">
+                  <div className="card-header">
+                    <h3>{role.name}</h3>
+                    <span className="status-badge" style={{ 
+                      backgroundColor: getRoleColor(role.name),
+                    }}>
+                      {role.id}
+                    </span>
+                  </div>
+                  <div className="card-body">
+                    <p className="card-description" style={{ marginBottom: '1rem' }}>
+                      {role.description || 'No description available'}
+                    </p>
+                    <h4 style={{ marginTop: '1rem', marginBottom: '0.5rem', fontSize: '0.9em', color: '#555' }}>
+                      Permissions:
+                    </h4>
+                    <ul style={{ 
+                      marginLeft: '1.25rem',
+                      paddingLeft: '0',
+                      fontSize: '0.9em',
+                      color: '#666',
+                      lineHeight: '1.8'
+                    }}>
+                      {getRolePermissions(role.name).map((permission, idx) => (
+                        <li key={idx}>{permission}</li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
-                <div className="card-body">
-                  <p className="card-description">{role.description || 'No description'}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="roles-section">
@@ -253,7 +350,7 @@ export default function RolesView() {
                   <tr key={index}>
                     <td>{getActorName(ar.actor_id)}</td>
                     <td>
-                      <span className="badge" style={{ 
+                      <span className="status-badge" style={{ 
                         backgroundColor: 
                           ar.role_id.includes('admin') || getRoleName(ar.role_id) === 'ADMIN' ? '#e74c3c' :
                           ar.role_id.includes('editor') || getRoleName(ar.role_id) === 'EDITOR' ? '#3498db' :

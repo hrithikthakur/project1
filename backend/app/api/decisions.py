@@ -3,7 +3,7 @@ from typing import List
 from ..models.decision import Decision, DecisionType
 from ..engine.graph import DependencyGraph
 from ..engine.ripple import RippleEffectEngine
-from ..data.loader import get_decisions, load_mock_world
+from ..data.loader import get_decisions, load_mock_world, get_risks, get_milestones
 import json
 from pathlib import Path
 
@@ -15,7 +15,7 @@ def _save_mock_world(data: dict):
     data_dir = Path(__file__).parent.parent.parent.parent / "data"
     data_file = data_dir / "mock_world.json"
     with open(data_file, 'w') as f:
-        json.dump(data, f, indent=2)
+        json.dump(data, f, indent=2, default=str)
 
 
 @router.post("/decisions", response_model=Decision)
@@ -28,6 +28,28 @@ async def create_decision(decision: Decision):
     if any(d.get("id") == decision.id for d in decisions):
         raise HTTPException(status_code=400, detail=f"Decision with ID {decision.id} already exists")
     
+    # Auto-populate milestone_name from risk if it's an accept/mitigate risk decision and milestone_name is missing
+    if not decision.milestone_name and (decision.decision_type == DecisionType.ACCEPT_RISK or decision.decision_type == DecisionType.MITIGATE_RISK):
+        if decision.risk_id:
+            from ..models.risk import Risk
+            risks_data = get_risks()
+            milestones_data = get_milestones()
+            
+            # Find the risk
+            target_risk = None
+            for r in risks_data:
+                if r.get('id') == decision.risk_id:
+                    # Use Pydantic to normalize the risk data
+                    target_risk = Risk(**r)
+                    break
+            
+            if target_risk and target_risk.milestone_id:
+                # Find the milestone name
+                for m in milestones_data:
+                    if m.get('id') == target_risk.milestone_id:
+                        decision.milestone_name = m.get('name')
+                        break
+
     # Convert to dict with mode='json' to properly serialize dates
     decision_dict = decision.model_dump(mode='json')
     decisions.append(decision_dict)

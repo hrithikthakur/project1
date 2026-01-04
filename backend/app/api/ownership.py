@@ -14,7 +14,7 @@ def _save_mock_world(data: dict):
     data_dir = Path(__file__).parent.parent.parent.parent / "data"
     data_file = data_dir / "mock_world.json"
     with open(data_file, 'w') as f:
-        json.dump(data, f, indent=2)
+        json.dump(data, f, indent=2, default=str)
 
 
 @router.get("/ownership", response_model=List[Ownership])
@@ -64,12 +64,7 @@ async def create_ownership(ownership: Ownership):
                 # End the previous ownership
                 o["ended_at"] = ownership.assigned_at.isoformat()
     
-    ownership_dict = ownership.model_dump()
-    # Convert datetime objects to ISO format strings
-    if isinstance(ownership_dict.get("assigned_at"), datetime):
-        ownership_dict["assigned_at"] = ownership_dict["assigned_at"].isoformat()
-    if isinstance(ownership_dict.get("ended_at"), datetime):
-        ownership_dict["ended_at"] = ownership_dict["ended_at"].isoformat()
+    ownership_dict = ownership.model_dump(mode='json')
     
     ownership_records.append(ownership_dict)
     world["ownership"] = ownership_records
@@ -90,12 +85,7 @@ async def update_ownership(ownership_id: str, ownership: Ownership):
     found = False
     for i, o in enumerate(ownership_records):
         if o.get("id") == ownership_id:
-            ownership_dict = ownership.model_dump()
-            # Convert datetime objects to ISO format strings
-            if isinstance(ownership_dict.get("assigned_at"), datetime):
-                ownership_dict["assigned_at"] = ownership_dict["assigned_at"].isoformat()
-            if isinstance(ownership_dict.get("ended_at"), datetime):
-                ownership_dict["ended_at"] = ownership_dict["ended_at"].isoformat()
+            ownership_dict = ownership.model_dump(mode='json')
             ownership_records[i] = ownership_dict
             found = True
             break

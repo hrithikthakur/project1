@@ -79,17 +79,24 @@ class RiskDetector:
                         milestone_name = m.get("name", "Unknown")
                         break
                 
+                # Get item names for better readability
+                item_names = [item.get("title", item.get("id")) for item in items]
+                items_list = ", ".join(item_names[:3])  # Show first 3 items
+                if len(item_names) > 3:
+                    items_list += f" and {len(item_names) - 3} more"
+                
                 risk = Risk(
                     id=risk_id,
                     title=f"Blocked Dependencies in {milestone_name}",
-                    description=f"{len(items)} work item(s) blocked, impacting milestone delivery",
+                    description=f"{len(items)} work item(s) blocked: {items_list}",
                     severity=RiskSeverity.HIGH if len(items) >= 3 else RiskSeverity.MEDIUM,
-                    status=RiskStatus.ACTIVE,
-                    probability=0.7,
+                    status=RiskStatus.MATERIALISED,
+                    probability=1.0,
                     impact={
                         "delay_days": len(items) * 2,
                         "affected_milestone": milestone_id,
-                        "blocked_items": [item["id"] for item in items]
+                        "blocked_items": [item["id"] for item in items],
+                        "blocked_item_names": item_names,
                     },
                     affected_items=[item["id"] for item in items],
                     detected_at=datetime.now(),
@@ -130,7 +137,7 @@ class RiskDetector:
                 title="High WIP Per Developer",
                 description=f"{len(overloaded_devs)} developer(s) have excessive work in progress, risking quality and delivery",
                 severity=RiskSeverity.MEDIUM,
-                status=RiskStatus.ACTIVE,
+                status=RiskStatus.OPEN,
                 probability=0.6,
                 impact={
                     "velocity_multiplier": 0.7,
@@ -158,16 +165,23 @@ class RiskDetector:
             if risk_id in self.existing_risk_ids:
                 return
             
+            # Get item names for better readability
+            item_names = [item.get("title", item.get("id")) for item in blocked_items]
+            items_list = ", ".join(item_names[:3])  # Show first 3 items
+            if len(item_names) > 3:
+                items_list += f" and {len(item_names) - 3} more"
+            
             risk = Risk(
                 id=risk_id,
                 title="Extended Blocked Time",
-                description=f"{len(blocked_items)} work items blocked, potentially causing delays",
+                description=f"{len(blocked_items)} work items blocked: {items_list}",
                 severity=RiskSeverity.HIGH,
-                status=RiskStatus.ACTIVE,
-                probability=0.8,
+                status=RiskStatus.MATERIALISED,
+                probability=1.0,
                 impact={
                     "delay_days": len(blocked_items) * 3,
-                    "cascading_delays": True
+                    "cascading_delays": True,
+                    "blocked_item_names": item_names,
                 },
                 affected_items=[item["id"] for item in blocked_items],
                 detected_at=datetime.now(),
@@ -209,7 +223,7 @@ class RiskDetector:
                 title=f"High Scope Churn in {milestone.get('name', 'Unknown')}",
                 description=f"Scope changes affect {int(churn_rate * 100)}% of milestone, risking team focus and delivery",
                 severity=RiskSeverity.MEDIUM,
-                status=RiskStatus.ACTIVE,
+                status=RiskStatus.OPEN,
                 probability=0.5,
                 impact={
                     "delay_days": items_changed * 0.5,

@@ -22,12 +22,33 @@ from pydantic import BaseModel, Field
 # ============================================================================
 
 class EventType(str, Enum):
-    """Supported event types"""
+    """Supported event types organized by category"""
+    
+    # A. Dependency events
     DEPENDENCY_BLOCKED = "dependency_blocked"
+    DEPENDENCY_UNBLOCKED = "dependency_unblocked"
+    DEPENDENCY_UNAVAILABLE = "dependency_unavailable"
+    DEPENDENCY_AVAILABLE = "dependency_available"
+    
+    # B. Risk events
+    RISK_CREATED = "risk_created"
+    RISK_UPDATED = "risk_updated"
+    RISK_ACCEPTANCE_EXPIRED = "risk_acceptance_expired"
+    RISK_MATERIALISED = "risk_materialised"
+    
+    # C. Decision events
+    DECISION_CREATED = "decision_created"
     DECISION_APPROVED = "decision_approved"
-    DECISION_REJECTED = "decision_rejected"
-    RISK_THRESHOLD_EXCEEDED = "risk_threshold_exceeded"
-    MILESTONE_AT_RISK = "milestone_at_risk"
+    DECISION_SUPERSEDED = "decision_superseded"
+    
+    # D. Change events
+    CHANGE_CREATED = "change_created"
+    CHANGE_APPROVED = "change_approved"
+    CHANGE_REJECTED = "change_rejected"
+    
+    # E. Forecast events
+    FORECAST_UPDATED = "forecast_updated"
+    FORECAST_THRESHOLD_BREACHED = "forecast_threshold_breached"
 
 
 class Event(BaseModel):
@@ -40,10 +61,21 @@ class Event(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.now)
     
     # Context fields (event-specific)
-    dependency_id: Optional[str] = None  # For DEPENDENCY_BLOCKED
-    decision_id: Optional[str] = None    # For DECISION_APPROVED/REJECTED
-    risk_id: Optional[str] = None        # For RISK_THRESHOLD_EXCEEDED
-    milestone_id: Optional[str] = None   # For MILESTONE_AT_RISK
+    dependency_id: Optional[str] = None
+    risk_id: Optional[str] = None
+    risk_status: Optional[str] = None
+    decision_id: Optional[str] = None
+    decision_type: Optional[str] = None
+    change_id: Optional[str] = None
+    change_type: Optional[str] = None
+    forecast_id: Optional[str] = None
+    p50_date: Optional[date] = None
+    p80_date: Optional[date] = None
+    delta_p80_days: Optional[float] = None
+    
+    # Common fields
+    milestone_id: Optional[str] = None
+    owner_id: Optional[str] = None
     
     # Additional metadata
     metadata: Dict[str, Any] = Field(default_factory=dict)
@@ -55,13 +87,26 @@ class Event(BaseModel):
 
 class CommandType(str, Enum):
     """Command types that the engine can emit"""
-    CREATE_ISSUE = "create_issue"
-    UPDATE_ISSUE = "update_issue"
+    
+    # Risk-related
     CREATE_RISK = "create_risk"
     UPDATE_RISK = "update_risk"
+    SET_RISK_STATUS = "set_risk_status"
+    LINK_RISK_TO_MILESTONE = "link_risk_to_milestone"
+    
+    # Decision-related
+    LINK_DECISION_TO_RISK = "link_decision_to_risk"
+    MARK_DECISION_EFFECTIVE = "mark_decision_effective"
+    
+    # Forecast-related
     UPDATE_FORECAST = "update_forecast"
+    RECOMPUTE_FORECAST = "recompute_forecast"
+    
+    # Control / hygiene
     SET_NEXT_DATE = "set_next_date"
-    CREATE_NOTIFICATION = "create_notification"
+    ASSIGN_OWNER = "assign_owner"
+    EMIT_EXPLANATION = "emit_explanation"
+    ESCALATE_RISK = "escalate_risk"
 
 
 class Command(BaseModel):
@@ -97,7 +142,6 @@ class StateSnapshot(BaseModel):
     work_items: Dict[str, Any] = Field(default_factory=dict)
     dependencies: Dict[str, Any] = Field(default_factory=dict)
     risks: Dict[str, Any] = Field(default_factory=dict)
-    issues: Dict[str, Any] = Field(default_factory=dict)
     decisions: Dict[str, Any] = Field(default_factory=dict)
     milestones: Dict[str, Any] = Field(default_factory=dict)
     ownerships: Dict[str, Any] = Field(default_factory=dict)
@@ -136,7 +180,7 @@ def simulate_ripple_stub(
     # TODO: Replace with real simulation
     
     # Heuristic: dependency blocks add ~7 days with high variance
-    if triggering_event.event_type == EventType.DEPENDENCY_BLOCKED:
+    if triggering_event.event_type in [EventType.DEPENDENCY_BLOCKED, EventType.DEPENDENCY_UNAVAILABLE]:
         p50_delta = 7.0
         p80_delta = 14.0
         explanation = "Heuristic: Blocked dependencies typically add 7-14 days"
@@ -185,22 +229,22 @@ class Rule:
 
 class Rule1_DependencyBlocked(Rule):
     """
-    Rule 1: Dependency Blocked
+    Rule 1: Dependency Blocked → Risk (MATERIALISED)
     
-    When a dependency is blocked:
-    1. Ensure an Issue exists (type: dependency_blocked)
-    2. Call forecast/ripple stub
-    3. Compare forecast before vs after
-    4. If P80 delta > threshold: create or update a Risk
+    When a dependency is blocked or unavailable:
+    1. Call forecast/ripple stub
+    2. Compare forecast before vs after
+    3. Create or update a Risk with status MATERIALISED
+    4. Tighten next_date (now + 1 day)
     """
     
     name = "rule_1_dependency_blocked"
     
-    # Configuration
-    P80_THRESHOLD_DAYS = 7.0  # Create risk if P80 slips by more than 7 days
-    
     def matches(self, event: Event, state: StateSnapshot) -> bool:
-        return event.event_type == EventType.DEPENDENCY_BLOCKED
+        return event.event_type in [
+            EventType.DEPENDENCY_BLOCKED,
+            EventType.DEPENDENCY_UNAVAILABLE
+        ]
     
     def execute(self, event: Event, state: StateSnapshot) -> List[Command]:
         commands = []
@@ -213,101 +257,104 @@ class Rule1_DependencyBlocked(Rule):
         if not dependency:
             return commands
         
-        # Step 1: Ensure Issue exists
-        issue_id = f"issue_dep_blocked_{dependency_id}"
-        existing_issue = state.issues.get(issue_id)
-        
-        if not existing_issue:
-            commands.append(Command(
-                command_id=f"cmd_{event.event_id}_create_issue",
-                command_type=CommandType.CREATE_ISSUE,
-                target_id=issue_id,
-                reason=f"Dependency {dependency_id} is blocked",
-                rule_name=self.name,
-                payload={
-                    "id": issue_id,
-                    "type": "dependency_blocked",
-                    "title": f"Dependency blocked: {dependency.get('from_id')} → {dependency.get('to_id')}",
-                    "description": f"Work item {dependency.get('from_id')} is blocked waiting for {dependency.get('to_id')}",
-                    "dependency_id": dependency_id,
-                    "created_at": datetime.now().isoformat(),
-                }
-            ))
-        
-        # Step 2: Call forecast stub
+        # Step 1: Call forecast stub
         forecast_result = simulate_ripple_stub(event, state)
-        
-        # Step 3: Compare forecast delta
         p80_delta = forecast_result.delta_p80_days
         
-        # Step 4: If P80 delta > threshold, create/update Risk
-        if p80_delta > self.P80_THRESHOLD_DAYS:
-            risk_id = f"risk_dep_blocked_{dependency_id}"
-            existing_risk = state.risks.get(risk_id)
-            
-            # Determine owner (dependency owner or milestone owner)
-            owner_id = self._determine_owner(dependency, state)
-            
-            # Calculate next_date
-            next_date = date.today() + timedelta(days=7)
-            
-            if existing_risk:
-                # Update existing risk
-                commands.append(Command(
-                    command_id=f"cmd_{event.event_id}_update_risk",
-                    command_type=CommandType.UPDATE_RISK,
-                    target_id=risk_id,
-                    reason=f"P80 forecast slipped by {p80_delta:.1f} days (threshold: {self.P80_THRESHOLD_DAYS})",
-                    rule_name=self.name,
-                    payload={
-                        "status": "active",
-                        "impact": {
-                            "p80_delay_days": p80_delta,
-                            "p50_delay_days": forecast_result.delta_p50_days
-                        },
-                        "forecast_method": forecast_result.method,
-                        "confidence": forecast_result.confidence,
-                    },
-                    priority="high"
-                ))
-            else:
-                # Create new risk
-                commands.append(Command(
-                    command_id=f"cmd_{event.event_id}_create_risk",
-                    command_type=CommandType.CREATE_RISK,
-                    target_id=risk_id,
-                    reason=f"P80 forecast slipped by {p80_delta:.1f} days (threshold: {self.P80_THRESHOLD_DAYS})",
-                    rule_name=self.name,
-                    payload={
-                        "id": risk_id,
-                        "title": f"Schedule risk due to blocked dependency",
-                        "description": f"Blocked dependency {dependency_id} may delay milestone by {p80_delta:.1f} days",
-                        "severity": "high" if p80_delta > 14 else "medium",
-                        "status": "active",
-                        "probability": 0.8,  # P80 implies 80% confidence
-                        "impact": {
-                            "p80_delay_days": p80_delta,
-                            "p50_delay_days": forecast_result.delta_p50_days
-                        },
-                        "affected_items": [dependency.get('from_id')],
-                        "detected_at": datetime.now().isoformat(),
-                    }
-                ))
-            
-            # Set next_date for owner
+        # Step 2: Get work item names for readable descriptions
+        from_id = dependency.get('from_id')
+        to_id = dependency.get('to_id')
+        
+        from_item = state.work_items.get(from_id, {})
+        to_item = state.work_items.get(to_id, {})
+        
+        from_name = from_item.get('title', from_id)
+        to_name = to_item.get('title', to_id)
+        
+        # Step 3: Create/update Risk with status MATERIALISED
+        risk_id = f"risk_dep_blocked_{dependency_id}"
+        existing_risk = state.risks.get(risk_id)
+        
+        # Determine owner
+        owner_id = self._determine_owner(dependency, state)
+        
+        # Tighten next_date (now + 1 day for materialized risks)
+        next_date = date.today() + timedelta(days=1)
+        
+        if existing_risk:
+            # Update existing risk to MATERIALISED
             commands.append(Command(
-                command_id=f"cmd_{event.event_id}_set_next_date",
-                command_type=CommandType.SET_NEXT_DATE,
-                target_id=owner_id,
-                reason="Risk requires review within 7 days",
+                command_id=f"cmd_{event.event_id}_update_risk",
+                command_type=CommandType.UPDATE_RISK,
+                target_id=risk_id,
+                reason=f"Dependency blocked: '{from_name}' is waiting for '{to_name}'. Risk materialized with {p80_delta:.1f} day impact.",
                 rule_name=self.name,
                 payload={
-                    "owner_id": owner_id,
-                    "entity_type": "risk",
-                    "entity_id": risk_id,
-                    "next_date": next_date.isoformat(),
-                }
+                    "status": "materialised",
+                    "description": f"Work item '{from_name}' is blocked waiting for '{to_name}' to complete. Expected delay: {p80_delta:.1f} days",
+                    "impact": {
+                        "p80_delay_days": p80_delta,
+                        "p50_delay_days": forecast_result.delta_p50_days,
+                        "blocked_item": from_name,
+                        "blocking_item": to_name,
+                    },
+                    "forecast_method": forecast_result.method,
+                    "confidence": forecast_result.confidence,
+                },
+                priority="urgent"
             ))
+        else:
+            # Create new risk as MATERIALISED
+            commands.append(Command(
+                command_id=f"cmd_{event.event_id}_create_risk",
+                command_type=CommandType.CREATE_RISK,
+                target_id=risk_id,
+                reason=f"Dependency blocked: '{from_name}' is waiting for '{to_name}'. Risk materialized with {p80_delta:.1f} day impact.",
+                rule_name=self.name,
+                payload={
+                    "id": risk_id,
+                    "title": f"Blocked Dependency: {from_name}",
+                    "description": f"Work item '{from_name}' is blocked waiting for '{to_name}' to complete. Expected delay: {p80_delta:.1f} days",
+                    "severity": "high" if p80_delta > 14 else "medium",
+                    "status": "materialised",
+                    "probability": 1.0,  # Materialized = 100%
+                    "impact": {
+                        "p80_delay_days": p80_delta,
+                        "p50_delay_days": forecast_result.delta_p50_days,
+                        "blocked_item": from_name,
+                        "blocking_item": to_name,
+                    },
+                    "affected_items": [from_id],
+                    "detected_at": datetime.now().isoformat(),
+                },
+                priority="urgent"
+            ))
+        
+        # Step 3: Tighten next_date for owner
+        commands.append(Command(
+            command_id=f"cmd_{event.event_id}_set_next_date",
+            command_type=CommandType.SET_NEXT_DATE,
+            target_id=owner_id,
+            reason="Materialized risk requires immediate attention (within 24h)",
+            rule_name=self.name,
+            payload={
+                "owner_id": owner_id,
+                "entity_type": "risk",
+                "entity_id": risk_id,
+                "next_date": next_date.isoformat(),
+            },
+            priority="urgent"
+        ))
+        
+        # Step 4: Escalate
+        commands.append(Command(
+            command_id=f"cmd_{event.event_id}_escalate",
+            command_type=CommandType.ESCALATE_RISK,
+            target_id=risk_id,
+            reason="Risk materialized - immediate attention required",
+            rule_name=self.name,
+            priority="urgent"
+        ))
         
         return commands
     
@@ -325,9 +372,91 @@ class Rule1_DependencyBlocked(Rule):
         return "default_owner"
 
 
-class Rule2_AcceptRiskDecisionApproved(Rule):
+class Rule2_DependencyUnblocked(Rule):
     """
-    Rule 2: Accept Risk Decision Approved
+    Rule 2: Dependency unblocked → Risk CLOSED
+    
+    When a dependency is unblocked or becomes available:
+    1. Update Risk.status → CLOSED
+    2. Recompute forecast
+    """
+    
+    name = "rule_2_dependency_unblocked"
+    
+    def matches(self, event: Event, state: StateSnapshot) -> bool:
+        return event.event_type in [
+            EventType.DEPENDENCY_UNBLOCKED,
+            EventType.DEPENDENCY_AVAILABLE
+        ]
+    
+    def execute(self, event: Event, state: StateSnapshot) -> List[Command]:
+        commands = []
+        
+        dependency_id = event.dependency_id
+        if not dependency_id:
+            return commands
+        
+        # Step 1: Find and close related Risk
+        risk_id = f"risk_dep_blocked_{dependency_id}"
+        existing_risk = state.risks.get(risk_id)
+        
+        if existing_risk:
+            commands.append(Command(
+                command_id=f"cmd_{event.event_id}_close_risk",
+                command_type=CommandType.SET_RISK_STATUS,
+                target_id=risk_id,
+                reason=f"Dependency {dependency_id} unblocked. Closing materialized risk.",
+                rule_name=self.name,
+                payload={
+                    "status": "closed",
+                    "closed_at": datetime.now().isoformat()
+                }
+            ))
+        
+        # Step 2: Recompute forecast
+        commands.append(Command(
+            command_id=f"cmd_{event.event_id}_recompute_forecast",
+            command_type=CommandType.RECOMPUTE_FORECAST,
+            target_id="system",
+            reason="Dependency unblocked - recomputing overall forecast",
+            rule_name=self.name
+        ))
+        
+        return commands
+
+
+class Rule3_ForecastThresholdBreached(Rule):
+    """
+    Rule 3: Forecast threshold breached → Escalate risk
+    
+    When forecast threshold is breached:
+    1. If risk is ACCEPTED and boundary breached:
+       - Reopen risk
+       - Escalate
+    2. Tighten next_date (+2 days)
+    """
+    
+    name = "rule_3_forecast_threshold_breached"
+    
+    def matches(self, event: Event, state: StateSnapshot) -> bool:
+        return event.event_type == EventType.FORECAST_THRESHOLD_BREACHED
+    
+    def execute(self, event: Event, state: StateSnapshot) -> List[Command]:
+        """STUB: To be implemented"""
+        commands = []
+        
+        # TODO: Implement Rule 3
+        # 1. Check if risk is ACCEPTED
+        # 2. Check if boundary breached
+        # 3. Reopen risk and escalate
+        # 4. Tighten next_date
+        
+        return commands
+
+
+class Rule4_AcceptRiskDecisionApproved(Rule):
+    """
+    Rule 4: Accept Risk Decision Approved
     
     When a decision to accept a risk is approved:
     1. Transition Risk.status → ACCEPTED
@@ -335,7 +464,7 @@ class Rule2_AcceptRiskDecisionApproved(Rule):
     3. Set next_date = acceptance_until (or sooner)
     """
     
-    name = "rule_2_accept_risk_approved"
+    name = "rule_4_accept_risk_approved"
     
     def matches(self, event: Event, state: StateSnapshot) -> bool:
         if event.event_type != EventType.DECISION_APPROVED:
@@ -451,9 +580,9 @@ class Rule2_AcceptRiskDecisionApproved(Rule):
         return "default_owner"
 
 
-class Rule3_MitigateRiskDecisionApproved(Rule):
+class Rule5_MitigateRiskDecisionApproved(Rule):
     """
-    Rule 3: Mitigate Risk Decision Approved
+    Rule 5: Mitigate Risk Decision Approved
     
     When a decision to mitigate a risk is approved:
     1. Transition Risk.status → MITIGATING
@@ -461,7 +590,7 @@ class Rule3_MitigateRiskDecisionApproved(Rule):
     3. Recompute forecast on mitigation completion
     """
     
-    name = "rule_3_mitigate_risk_approved"
+    name = "rule_5_mitigate_risk_approved"
     
     def matches(self, event: Event, state: StateSnapshot) -> bool:
         if event.event_type != EventType.DECISION_APPROVED:
@@ -570,6 +699,144 @@ class Rule3_MitigateRiskDecisionApproved(Rule):
         return "default_owner"
 
 
+class Rule6_RiskMaterialised(Rule):
+    """
+    Rule 6: Risk materialises → Escalate
+    
+    When a risk materialises (detected externally):
+    1. Set status to MATERIALISED
+    2. Escalate
+    3. Tighten next_date (24h)
+    """
+    
+    name = "rule_6_risk_materialised"
+    
+    def matches(self, event: Event, state: StateSnapshot) -> bool:
+        return event.event_type == EventType.RISK_MATERIALISED
+    
+    def execute(self, event: Event, state: StateSnapshot) -> List[Command]:
+        commands = []
+        
+        risk_id = event.risk_id
+        if not risk_id:
+            return commands
+        
+        # 1. Update status to MATERIALISED
+        commands.append(Command(
+            command_id=f"cmd_{event.event_id}_materialise_risk",
+            command_type=CommandType.SET_RISK_STATUS,
+            target_id=risk_id,
+            reason="Risk materialisation detected",
+            rule_name=self.name,
+            payload={"status": "materialised"},
+            priority="urgent"
+        ))
+        
+        # 2. Escalate
+        commands.append(Command(
+            command_id=f"cmd_{event.event_id}_escalate_materialised",
+            command_type=CommandType.ESCALATE_RISK,
+            target_id=risk_id,
+            reason="Risk has materialised - urgent attention required",
+            rule_name=self.name,
+            priority="urgent"
+        ))
+        
+        return commands
+
+
+class Rule7_RiskClosed(Rule):
+    """
+    Rule 7: Risk closed → Update forecast
+    
+    When a risk is closed:
+    1. Recompute forecast
+    """
+    
+    name = "rule_7_risk_closed"
+    
+    def matches(self, event: Event, state: StateSnapshot) -> bool:
+        if event.event_type == EventType.RISK_UPDATED:
+            return event.risk_status == "closed"
+        return False
+    
+    def execute(self, event: Event, state: StateSnapshot) -> List[Command]:
+        commands = []
+        
+        commands.append(Command(
+            command_id=f"cmd_{event.event_id}_recompute_forecast_on_close",
+            command_type=CommandType.RECOMPUTE_FORECAST,
+            target_id="system",
+            reason="Risk closed - updating forecast",
+            rule_name=self.name
+        ))
+        
+        return commands
+
+
+class Rule8_ChangeApproved(Rule):
+    """
+    Rule 8: Change approved → Forecast update
+    
+    When a change is approved:
+    1. Recompute forecast
+    2. If negative impact:
+       - Create or update Risk
+    3. Set next_date
+    """
+    
+    name = "rule_8_change_approved"
+    
+    def matches(self, event: Event, state: StateSnapshot) -> bool:
+        return event.event_type == EventType.CHANGE_APPROVED
+    
+    def execute(self, event: Event, state: StateSnapshot) -> List[Command]:
+        """STUB: To be implemented"""
+        commands = []
+        
+        change_id = event.change_id
+        if not change_id:
+            return commands
+        
+        # TODO: Implement Rule 8
+        # 1. Recompute forecast
+        # 2. If negative impact, create/update Risk
+        # 3. Set next_date
+        
+        return commands
+
+
+class Rule9_DecisionSuperseded(Rule):
+    """
+    Rule 9: Decision superseded
+    
+    When a decision is superseded:
+    1. Re-evaluate linked risks
+    2. Restore escalation if needed
+    3. Set new next_dates
+    """
+    
+    name = "rule_9_decision_superseded"
+    
+    def matches(self, event: Event, state: StateSnapshot) -> bool:
+        return event.event_type == EventType.DECISION_SUPERSEDED
+    
+    def execute(self, event: Event, state: StateSnapshot) -> List[Command]:
+        """STUB: To be implemented"""
+        commands = []
+        
+        decision_id = event.decision_id
+        if not decision_id:
+            return commands
+        
+        # TODO: Implement Rule 9
+        # 1. Re-evaluate linked risks
+        # 2. Restore escalation if needed
+        # 3. Set new next_dates
+        
+        return commands
+
+
 # ============================================================================
 # ENGINE
 # ============================================================================
@@ -587,11 +854,34 @@ class DecisionRiskEngine:
     """
     
     def __init__(self):
-        """Initialize the engine with rules"""
+        """Initialize the engine with all rules"""
         self.rules: List[Rule] = [
+            # Rule 1: Dependency blocked → Risk (MATERIALISED)
             Rule1_DependencyBlocked(),
-            Rule2_AcceptRiskDecisionApproved(),
-            Rule3_MitigateRiskDecisionApproved(),
+            
+            # Rule 2: Dependency unblocked → Risk CLOSED
+            Rule2_DependencyUnblocked(),
+            
+            # Rule 3: Forecast threshold breached → Escalate risk (STUB)
+            Rule3_ForecastThresholdBreached(),
+            
+            # Rule 4: Decision approved (ACCEPT_RISK)
+            Rule4_AcceptRiskDecisionApproved(),
+            
+            # Rule 5: Decision approved (MITIGATE_RISK)
+            Rule5_MitigateRiskDecisionApproved(),
+            
+            # Rule 6: Risk materialises → Escalate
+            Rule6_RiskMaterialised(),
+            
+            # Rule 7: Risk closed → Update forecast
+            Rule7_RiskClosed(),
+            
+            # Rule 8: Change approved → Forecast update (STUB)
+            Rule8_ChangeApproved(),
+            
+            # Rule 9: Decision superseded (STUB)
+            Rule9_DecisionSuperseded(),
         ]
     
     def process_event(self, event: Event, state: StateSnapshot) -> List[Command]:

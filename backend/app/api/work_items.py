@@ -13,7 +13,7 @@ def _save_mock_world(data: dict):
     data_dir = Path(__file__).parent.parent.parent.parent / "data"
     data_file = data_dir / "mock_world.json"
     with open(data_file, 'w') as f:
-        json.dump(data, f, indent=2)
+        json.dump(data, f, indent=2, default=str)
 
 
 @router.get("/work_items", response_model=List[WorkItem])
@@ -42,7 +42,7 @@ async def create_work_item(work_item: WorkItem):
     if any(item.get("id") == work_item.id for item in work_items):
         raise HTTPException(status_code=400, detail=f"Work item with ID {work_item.id} already exists")
     
-    work_items.append(work_item.model_dump())
+    work_items.append(work_item.model_dump(mode='json'))
     world["work_items"] = work_items
     _save_mock_world(world)
     
@@ -61,7 +61,8 @@ async def update_work_item(work_item_id: str, work_item: WorkItem):
     found = False
     for i, item in enumerate(work_items):
         if item.get("id") == work_item_id:
-            work_items[i] = work_item.model_dump()
+            # Convert to dict with mode='json' to properly serialize dates
+            work_items[i] = work_item.model_dump(mode='json')
             found = True
             break
     

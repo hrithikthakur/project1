@@ -4,7 +4,7 @@
       "id": "work_item_001",
       "title": "Design Authentication System",
       "description": "Design OAuth2 authentication flow",
-      "status": "blocked",
+      "status": "completed",
       "estimated_days": 3.0,
       "actual_days": null,
       "assigned_to": [
@@ -13,13 +13,14 @@
       "dependencies": [],
       "start_date": null,
       "end_date": null,
-      "milestone_id": "milestone_001"
+      "milestone_id": "milestone_001",
+      "tags": null
     },
     {
       "id": "work_item_002",
       "title": "Implement Authentication Backend",
       "description": "Implement OAuth2 server endpoints",
-      "status": "blocked",
+      "status": "in_progress",
       "estimated_days": 5.0,
       "actual_days": null,
       "assigned_to": [
@@ -31,21 +32,26 @@
       ],
       "start_date": null,
       "end_date": null,
-      "milestone_id": "milestone_001"
+      "milestone_id": "milestone_001",
+      "tags": []
     },
     {
       "id": "work_item_003",
       "title": "Implement Authentication Frontend",
       "description": "Build login UI components",
-      "status": "in_progress",
+      "status": "completed",
       "estimated_days": 4.0,
+      "actual_days": null,
       "assigned_to": [
         "actor_004"
       ],
       "dependencies": [
         "work_item_002"
       ],
-      "milestone_id": "milestone_001"
+      "start_date": null,
+      "end_date": null,
+      "milestone_id": "milestone_001",
+      "tags": null
     },
     {
       "id": "work_item_004",
@@ -141,13 +147,17 @@
       "id": "work_item_010",
       "title": "Design Analytics Dashboard",
       "description": "Design analytics and reporting system",
-      "status": "not_started",
+      "status": "blocked",
       "estimated_days": 4.0,
+      "actual_days": null,
       "assigned_to": [
         "actor_003"
       ],
       "dependencies": [],
-      "milestone_id": "milestone_004"
+      "start_date": null,
+      "end_date": null,
+      "milestone_id": "milestone_004",
+      "tags": null
     },
     {
       "id": "work_item_011",
@@ -189,7 +199,7 @@
         "work_item_002",
         "work_item_003"
       ],
-      "status": "pending"
+      "status": "achieved"
     },
     {
       "id": "milestone_002",
@@ -378,6 +388,16 @@
       "reason": "Risk owner"
     },
     {
+      "id": "ownership_004",
+      "object_type": "milestone",
+      "object_id": "milestone_001",
+      "owner_actor_id": "actor_004",
+      "assigned_at": "2024-01-05T09:00:00Z",
+      "ended_at": null,
+      "assigned_by_actor_id": null,
+      "reason": "Milestone lead"
+    },
+    {
       "id": "ownership_1767483316129",
       "object_type": "decision",
       "object_id": "dec_1767483316103",
@@ -433,6 +453,86 @@
       "object_id": "dec_1767485557728",
       "owner_actor_id": "actor_003",
       "assigned_at": "2026-01-04T00:12:37.835000+00:00",
+      "ended_at": null,
+      "assigned_by_actor_id": null,
+      "reason": null
+    },
+    {
+      "id": "ownership_1767539471859",
+      "object_type": "decision",
+      "object_id": "dec_1767539471837",
+      "owner_actor_id": "actor_001",
+      "assigned_at": "2026-01-04T15:11:11.859000Z",
+      "ended_at": null,
+      "assigned_by_actor_id": null,
+      "reason": null
+    },
+    {
+      "id": "ownership_1767539796699",
+      "object_type": "decision",
+      "object_id": "dec_1767539796648",
+      "owner_actor_id": "actor_001",
+      "assigned_at": "2026-01-04T15:16:36.699000Z",
+      "ended_at": null,
+      "assigned_by_actor_id": null,
+      "reason": null
+    },
+    {
+      "id": "ownership_1767539824274",
+      "object_type": "decision",
+      "object_id": "dec_1767539824075",
+      "owner_actor_id": "actor_001",
+      "assigned_at": "2026-01-04T15:17:04.274000Z",
+      "ended_at": null,
+      "assigned_by_actor_id": null,
+      "reason": null
+    },
+    {
+      "id": "ownership_1767540253627",
+      "object_type": "decision",
+      "object_id": "dec_1767540253588",
+      "owner_actor_id": "actor_001",
+      "assigned_at": "2026-01-04T15:24:13.627000Z",
+      "ended_at": null,
+      "assigned_by_actor_id": null,
+      "reason": null
+    },
+    {
+      "id": "ownership_1767544497433",
+      "object_type": "decision",
+      "object_id": "dec_1767544497392",
+      "owner_actor_id": "actor_003",
+      "assigned_at": "2026-01-04T16:34:57.433000Z",
+      "ended_at": null,
+      "assigned_by_actor_id": null,
+      "reason": null
+    },
+    {
+      "id": "ownership_1767544888370",
+      "object_type": "decision",
+      "object_id": "dec_1767544888328",
+      "owner_actor_id": "actor_001",
+      "assigned_at": "2026-01-04T16:41:28.370000Z",
+      "ended_at": null,
+      "assigned_by_actor_id": null,
+      "reason": null
+    },
+    {
+      "id": "ownership_1767544920256",
+      "object_type": "decision",
+      "object_id": "dec_1767544920219",
+      "owner_actor_id": "actor_002",
+      "assigned_at": "2026-01-04T16:42:00.256000Z",
+      "ended_at": null,
+      "assigned_by_actor_id": null,
+      "reason": null
+    },
+    {
+      "id": "ownership_1767545942293",
+      "object_type": "decision",
+      "object_id": "dec_1767545942269",
+      "owner_actor_id": "actor_001",
+      "assigned_at": "2026-01-04T16:59:02.293000Z",
       "ended_at": null,
       "assigned_by_actor_id": null,
       "reason": null
@@ -873,214 +973,479 @@
       "expected_probability_delta": null,
       "expected_impact_days_delta": null,
       "due_date": null
+    },
+    {
+      "id": "dec_1767539471837",
+      "decision_type": "accept_risk",
+      "subtype": "ACCEPT_UNTIL_DATE",
+      "milestone_name": "",
+      "status": "approved",
+      "next_date": null,
+      "created_at": "2026-01-04T15:11:11.837000Z",
+      "add_item_ids": null,
+      "remove_item_ids": null,
+      "reason": null,
+      "effort_delta_days": null,
+      "new_target_date": null,
+      "previous_target_date": null,
+      "commitment_percentile": null,
+      "team_id": null,
+      "delta_fte": null,
+      "start_date": null,
+      "end_date": null,
+      "method": null,
+      "cost_delta": null,
+      "item_ids": null,
+      "priority_rank": null,
+      "priority_bucket": null,
+      "risk_id": "risk_001",
+      "acceptance_until": "2026-01-10",
+      "threshold": null,
+      "escalation_trigger": null,
+      "issue_id": null,
+      "action": null,
+      "expected_probability_delta": null,
+      "expected_impact_days_delta": null,
+      "due_date": null
+    },
+    {
+      "id": "dec_1767539796648",
+      "decision_type": "accept_risk",
+      "subtype": "ACCEPT_UNTIL_DATE",
+      "milestone_name": "",
+      "status": "approved",
+      "next_date": null,
+      "created_at": "2026-01-04T15:16:36.648000Z",
+      "add_item_ids": null,
+      "remove_item_ids": null,
+      "reason": null,
+      "effort_delta_days": null,
+      "new_target_date": null,
+      "previous_target_date": null,
+      "commitment_percentile": null,
+      "team_id": null,
+      "delta_fte": null,
+      "start_date": null,
+      "end_date": null,
+      "method": null,
+      "cost_delta": null,
+      "item_ids": null,
+      "priority_rank": null,
+      "priority_bucket": null,
+      "risk_id": "risk_003",
+      "acceptance_until": "2026-01-17",
+      "threshold": null,
+      "escalation_trigger": null,
+      "issue_id": null,
+      "action": null,
+      "expected_probability_delta": null,
+      "expected_impact_days_delta": null,
+      "due_date": null
+    },
+    {
+      "id": "dec_1767539824075",
+      "decision_type": "accept_risk",
+      "subtype": "ACCEPT_UNTIL_DATE",
+      "milestone_name": "",
+      "status": "approved",
+      "next_date": null,
+      "created_at": "2026-01-04T15:17:04.075000Z",
+      "add_item_ids": null,
+      "remove_item_ids": null,
+      "reason": null,
+      "effort_delta_days": null,
+      "new_target_date": null,
+      "previous_target_date": null,
+      "commitment_percentile": null,
+      "team_id": null,
+      "delta_fte": null,
+      "start_date": null,
+      "end_date": null,
+      "method": null,
+      "cost_delta": null,
+      "item_ids": null,
+      "priority_rank": null,
+      "priority_bucket": null,
+      "risk_id": "risk_dep_blocked_dep_001",
+      "acceptance_until": "2026-01-09",
+      "threshold": null,
+      "escalation_trigger": null,
+      "issue_id": null,
+      "action": null,
+      "expected_probability_delta": null,
+      "expected_impact_days_delta": null,
+      "due_date": null
+    },
+    {
+      "id": "dec_1767540253588",
+      "decision_type": "accept_risk",
+      "subtype": "ACCEPT_UNTIL_DATE",
+      "status": "approved",
+      "milestone_name": "",
+      "next_date": null,
+      "created_at": "2026-01-04T15:24:13.588000Z",
+      "add_item_ids": null,
+      "remove_item_ids": null,
+      "reason": null,
+      "effort_delta_days": null,
+      "new_target_date": null,
+      "previous_target_date": null,
+      "commitment_percentile": null,
+      "team_id": null,
+      "delta_fte": null,
+      "start_date": null,
+      "end_date": null,
+      "method": null,
+      "cost_delta": null,
+      "item_ids": null,
+      "priority_rank": null,
+      "priority_bucket": null,
+      "risk_id": "risk_002",
+      "acceptance_until": "2026-01-08",
+      "threshold": null,
+      "escalation_trigger": null,
+      "issue_id": null,
+      "action": null,
+      "expected_probability_delta": null,
+      "expected_impact_days_delta": null,
+      "due_date": null
+    },
+    {
+      "id": "dec_1767544497392",
+      "decision_type": "accept_risk",
+      "subtype": "ACCEPT_UNTIL_DATE",
+      "status": "approved",
+      "milestone_name": "User Management",
+      "next_date": null,
+      "created_at": "2026-01-04T16:34:57.392000Z",
+      "add_item_ids": null,
+      "remove_item_ids": null,
+      "reason": null,
+      "effort_delta_days": null,
+      "new_target_date": null,
+      "previous_target_date": null,
+      "commitment_percentile": null,
+      "team_id": null,
+      "delta_fte": null,
+      "start_date": null,
+      "end_date": null,
+      "method": null,
+      "cost_delta": null,
+      "item_ids": null,
+      "priority_rank": null,
+      "priority_bucket": null,
+      "risk_id": "risk_auto_blocked_milestone_002",
+      "acceptance_until": "2026-01-08",
+      "threshold": null,
+      "escalation_trigger": null,
+      "issue_id": null,
+      "action": null,
+      "expected_probability_delta": null,
+      "expected_impact_days_delta": null,
+      "due_date": null
+    },
+    {
+      "id": "dec_1767544888328",
+      "decision_type": "accept_risk",
+      "subtype": "ACCEPT_UNTIL_DATE",
+      "status": "approved",
+      "milestone_name": "",
+      "next_date": null,
+      "created_at": "2026-01-04T16:41:28.328000Z",
+      "add_item_ids": null,
+      "remove_item_ids": null,
+      "reason": null,
+      "effort_delta_days": null,
+      "new_target_date": null,
+      "previous_target_date": null,
+      "commitment_percentile": null,
+      "team_id": null,
+      "delta_fte": null,
+      "start_date": null,
+      "end_date": null,
+      "method": null,
+      "cost_delta": null,
+      "item_ids": null,
+      "priority_rank": null,
+      "priority_bucket": null,
+      "risk_id": "risk_003",
+      "acceptance_until": "2026-01-08",
+      "threshold": null,
+      "escalation_trigger": null,
+      "issue_id": null,
+      "action": null,
+      "expected_probability_delta": null,
+      "expected_impact_days_delta": null,
+      "due_date": null
+    },
+    {
+      "id": "dec_1767544920219",
+      "decision_type": "accept_risk",
+      "subtype": "ACCEPT_UNTIL_DATE",
+      "status": "approved",
+      "milestone_name": "Payment System",
+      "next_date": null,
+      "created_at": "2026-01-04T16:42:00.219000Z",
+      "add_item_ids": null,
+      "remove_item_ids": null,
+      "reason": null,
+      "effort_delta_days": null,
+      "new_target_date": null,
+      "previous_target_date": null,
+      "commitment_percentile": null,
+      "team_id": null,
+      "delta_fte": null,
+      "start_date": null,
+      "end_date": null,
+      "method": null,
+      "cost_delta": null,
+      "item_ids": null,
+      "priority_rank": null,
+      "priority_bucket": null,
+      "risk_id": "risk_002",
+      "acceptance_until": "2026-01-14",
+      "threshold": null,
+      "escalation_trigger": null,
+      "issue_id": null,
+      "action": null,
+      "expected_probability_delta": null,
+      "expected_impact_days_delta": null,
+      "due_date": null
+    },
+    {
+      "id": "dec_1767545942269",
+      "decision_type": "mitigate_risk",
+      "subtype": "REDUCE_WIP",
+      "status": "approved",
+      "milestone_name": "",
+      "next_date": null,
+      "created_at": "2026-01-04T16:59:02.269000Z",
+      "add_item_ids": null,
+      "remove_item_ids": null,
+      "reason": null,
+      "effort_delta_days": null,
+      "new_target_date": null,
+      "previous_target_date": null,
+      "commitment_percentile": null,
+      "team_id": null,
+      "delta_fte": null,
+      "start_date": null,
+      "end_date": null,
+      "method": null,
+      "cost_delta": null,
+      "item_ids": null,
+      "priority_rank": null,
+      "priority_bucket": null,
+      "risk_id": "risk_from_issue_002",
+      "acceptance_until": null,
+      "threshold": null,
+      "escalation_trigger": null,
+      "action": "abc",
+      "expected_probability_delta": null,
+      "expected_impact_days_delta": null,
+      "due_date": null
     }
   ],
   "risks": [
     {
-      "id": "risk_001",
-      "title": "Payment Gateway Integration Delay",
-      "description": "Third-party payment gateway integration may take longer than expected",
-      "severity": "high",
-      "status": "accepted",
-      "probability": 0.4,
-      "impact": {
-        "delay_days": 7,
-        "affected_milestones": [
-          "milestone_003"
-        ]
-      },
-      "affected_items": [
-        "work_item_008",
-        "work_item_009"
-      ],
-      "detected_at": "2024-01-10T10:00:00Z",
-      "mitigated_at": null,
-      "accepted_at": "2026-01-04T00:12:37.789290",
-      "accepted_by": "default_owner",
-      "acceptance_boundary": {
-        "type": "date",
-        "date": "2026-01-17"
-      },
-      "next_date": "2026-01-11"
-    },
-    {
-      "id": "risk_002",
-      "title": "Resource Availability Constraint",
-      "description": "Key engineers may be unavailable due to other commitments. Accepted after team discussion - monitoring for next 30 days.",
-      "severity": "medium",
-      "status": "accepted",
-      "probability": 0.3,
-      "impact": {
-        "velocity_multiplier": 0.8,
-        "affected_teams": [
-          "actor_006"
-        ]
-      },
-      "affected_items": [
-        "work_item_005",
-        "work_item_006"
-      ],
-      "detected_at": "2024-01-12T10:00:00Z",
-      "mitigated_at": null,
-      "accepted_at": "2026-01-03T23:48:31.060758",
-      "accepted_by": "default_owner",
-      "acceptance_boundary": {
-        "type": "threshold",
-        "threshold": "P80 > 7 days"
-      },
-      "next_date": "2026-01-10"
-    },
-    {
-      "id": "risk_003",
-      "title": "Database Migration Complexity",
-      "description": "Database schema changes may require more time than estimated. Mitigation in progress: Breaking migration into smaller incremental steps.",
-      "severity": "medium",
-      "status": "mitigating",
-      "probability": 0.5,
-      "impact": {
-        "delay_days": 3,
-        "rework_probability": 0.3
-      },
-      "affected_items": [
-        "work_item_004",
-        "work_item_005"
-      ],
-      "detected_at": "2024-01-14T10:00:00Z",
-      "mitigated_at": null,
-      "mitigation_started_at": "2026-01-03T16:00:00Z",
-      "mitigation_decision": "dec_001",
-      "mitigation_action": "Break migration into 3 smaller incremental steps with rollback points",
-      "mitigation_due_date": "2026-01-17T00:00:00Z"
-    },
-    {
-      "id": "risk_auto_blocked_milestone_002",
-      "title": "Blocked Dependencies in User Management",
-      "description": "1 work item(s) blocked, impacting milestone delivery",
-      "severity": "medium",
-      "status": "accepted",
-      "probability": 0.7,
-      "impact": {
-        "delay_days": 2,
-        "affected_milestone": "milestone_002",
-        "blocked_items": [
-          "work_item_005"
-        ]
-      },
-      "affected_items": [
-        "work_item_005"
-      ],
-      "detected_at": "2026-01-03T23:05:54.299578",
-      "mitigated_at": null,
-      "accepted_at": "2026-01-03T23:49:10.674389",
-      "accepted_by": "default_owner",
-      "acceptance_boundary": {
-        "type": "date",
-        "date": "2026-01-29"
-      },
-      "next_date": "2026-01-10"
-    },
-    {
-      "id": "risk_auto_blocked_milestone_001",
-      "title": "Blocked Dependencies in Authentication MVP",
-      "description": "1 work item(s) blocked, impacting milestone delivery",
-      "severity": "medium",
-      "status": "accepted",
-      "probability": 0.7,
-      "impact": {
-        "delay_days": 2,
-        "affected_milestone": "milestone_001",
-        "blocked_items": [
-          "work_item_001"
-        ]
-      },
-      "affected_items": [
-        "work_item_001"
-      ],
-      "detected_at": "2026-01-03T23:27:51.423910",
-      "mitigated_at": null,
-      "accepted_at": "2026-01-03T23:53:40.731175",
-      "accepted_by": "default_owner",
-      "acceptance_boundary": {
-        "type": "date",
-        "date": "2026-01-08"
-      },
-      "next_date": "2026-01-08"
-    },
-    {
-      "id": "risk_auto_long_blocked",
-      "title": "Extended Blocked Time",
-      "description": "2 work items blocked, potentially causing delays",
-      "severity": "high",
-      "status": "active",
-      "probability": 0.8,
-      "impact": {
-        "delay_days": 6,
-        "cascading_delays": true
-      },
-      "affected_items": [
-        "work_item_001",
-        "work_item_005"
-      ],
-      "detected_at": "2026-01-03T23:27:51.423975",
-      "mitigated_at": null
-    },
-    {
       "id": "risk_dep_blocked_dep_001",
       "title": "Schedule risk due to blocked dependency",
-      "description": "Blocked dependency dep_001 may delay milestone by 14.0 days",
+      "description": "Work item 'Implement Authentication Backend' is blocked waiting for 'Design Authentication System' to complete. Expected delay: 14.0 days",
       "severity": "medium",
-      "status": "active",
+      "status": "materialised",
       "probability": 0.8,
       "impact": {
         "p80_delay_days": 14.0,
-        "p50_delay_days": 7.0
+        "p50_delay_days": 7.0,
+        "blocked_item": "Implement Authentication Backend",
+        "blocking_item": "Design Authentication System"
       },
       "affected_items": [
         "work_item_002"
       ],
-      "detected_at": "2026-01-03T23:52:23.100552"
-    }
-  ],
-  "issues": [
+      "detected_at": "2026-01-03T23:52:23.100552",
+      "accepted_at": "2026-01-04T15:17:04.306169",
+      "accepted_by": "default_owner",
+      "acceptance_boundary": {
+        "type": "date",
+        "date": "2026-01-09"
+      },
+      "next_date": "2026-01-09",
+      "forecast_method": "heuristic_stub",
+      "confidence": "LOW"
+    },
     {
-      "id": "issue_002",
+      "id": "risk_from_issue_002",
       "title": "Technical blocker: Database migration failing",
       "description": "Database migration script for user schema is failing in staging environment. Need to fix before deployment.",
-      "type": "technical_blocker",
-      "status": "in_progress",
-      "priority": "critical",
-      "dependency_id": null,
-      "work_item_id": "work_item_001",
-      "risk_id": "risk_001",
-      "created_at": "2026-01-02T14:30:00Z",
-      "updated_at": "2026-01-03T09:15:00Z",
-      "resolved_at": null,
-      "impact_description": "Blocks deployment to production. Cannot proceed with launch until resolved.",
-      "resolution_notes": null
+      "severity": "critical",
+      "status": "mitigating",
+      "probability": 1.0,
+      "impact": {
+        "description": "Blocks deployment to production. Cannot proceed with launch until resolved.",
+        "original_issue_type": "technical_blocker"
+      },
+      "affected_items": [
+        "work_item_001"
+      ],
+      "detected_at": "2026-01-02T14:30:00Z",
+      "next_date": null,
+      "linked_risk_id": "risk_001",
+      "mitigation_started_at": "2026-01-04T16:59:02.322087",
+      "mitigation_decision": "dec_1767545942269",
+      "mitigation_action": "abc",
+      "mitigation_due_date": null
     },
     {
-      "id": "issue_003",
+      "id": "risk_from_issue_003",
       "title": "External dependency: Third-party API rate limiting",
       "description": "Payment provider API is rate limiting our requests during peak hours. Need to implement exponential backoff.",
-      "type": "external_dependency",
-      "status": "open",
-      "priority": "medium",
-      "dependency_id": null,
-      "work_item_id": "work_item_005",
-      "risk_id": null,
-      "created_at": "2026-01-01T16:45:00Z",
-      "updated_at": null,
-      "resolved_at": null,
-      "impact_description": "Intermittent failures during peak hours. Affects user experience.",
-      "resolution_notes": null
+      "severity": "medium",
+      "status": "materialised",
+      "probability": 1.0,
+      "impact": {
+        "description": "Intermittent failures during peak hours. Affects user experience.",
+        "original_issue_type": "external_dependency"
+      },
+      "affected_items": [
+        "work_item_005"
+      ],
+      "detected_at": "2026-01-01T16:45:00Z",
+      "next_date": null
     },
     {
-      "id": "issue_dep_blocked_dep_001",
-      "type": "dependency_blocked",
-      "title": "Dependency blocked: work_item_002 \u2192 work_item_001",
-      "description": "Work item work_item_002 is blocked waiting for work_item_001",
-      "dependency_id": "dep_001",
-      "created_at": "2026-01-03T23:52:23.100443"
+      "id": "risk_auto_blocked_milestone_002",
+      "title": "Blocked Dependencies in User Management",
+      "description": "2 work item(s) blocked: Implement User API, Implement Dashboard UI",
+      "severity": "medium",
+      "status": "materialised",
+      "probability": 1.0,
+      "impact": {
+        "delay_days": 4,
+        "affected_milestone": "milestone_002",
+        "blocked_items": [
+          "work_item_005",
+          "work_item_006"
+        ],
+        "blocked_item_names": [
+          "Implement User API",
+          "Implement Dashboard UI"
+        ]
+      },
+      "milestone_id": "milestone_002",
+      "affected_items": [
+        "work_item_005",
+        "work_item_006"
+      ],
+      "detected_at": "2026-01-04T16:57:37.702561",
+      "mitigated_at": null,
+      "accepted_at": null,
+      "accepted_by": null,
+      "acceptance_boundary": null,
+      "next_date": null,
+      "mitigation_started_at": null,
+      "mitigation_decision": null,
+      "mitigation_action": null,
+      "mitigation_due_date": null
+    },
+    {
+      "id": "risk_auto_blocked_milestone_003",
+      "title": "Blocked Dependencies in Payment System",
+      "description": "1 work item(s) blocked: Implement Payment API",
+      "severity": "medium",
+      "status": "mitigating",
+      "probability": 1.0,
+      "impact": {
+        "delay_days": 2,
+        "affected_milestone": "milestone_003",
+        "blocked_items": [
+          "work_item_008"
+        ],
+        "blocked_item_names": [
+          "Implement Payment API"
+        ]
+      },
+      "milestone_id": "milestone_003",
+      "affected_items": [
+        "work_item_008"
+      ],
+      "detected_at": "2026-01-04T16:57:37.702645",
+      "mitigated_at": null,
+      "accepted_at": null,
+      "accepted_by": null,
+      "acceptance_boundary": null,
+      "next_date": null,
+      "mitigation_started_at": null,
+      "mitigation_decision": null,
+      "mitigation_action": null,
+      "mitigation_due_date": null
+    },
+    {
+      "id": "risk_auto_blocked_milestone_004",
+      "title": "Blocked Dependencies in Analytics Dashboard",
+      "description": "1 work item(s) blocked: Design Analytics Dashboard",
+      "severity": "medium",
+      "status": "materialised",
+      "probability": 1.0,
+      "impact": {
+        "delay_days": 2,
+        "affected_milestone": "milestone_004",
+        "blocked_items": [
+          "work_item_010"
+        ],
+        "blocked_item_names": [
+          "Design Analytics Dashboard"
+        ]
+      },
+      "milestone_id": "milestone_004",
+      "affected_items": [
+        "work_item_010"
+      ],
+      "detected_at": "2026-01-04T16:57:37.702658",
+      "mitigated_at": null,
+      "accepted_at": null,
+      "accepted_by": null,
+      "acceptance_boundary": null,
+      "next_date": null,
+      "mitigation_started_at": null,
+      "mitigation_decision": null,
+      "mitigation_action": null,
+      "mitigation_due_date": null
+    },
+    {
+      "id": "risk_auto_long_blocked",
+      "title": "Extended Blocked Time",
+      "description": "4 work items blocked: Implement User API, Implement Dashboard UI, Implement Payment API and 1 more",
+      "severity": "high",
+      "status": "materialised",
+      "probability": 1.0,
+      "impact": {
+        "delay_days": 12,
+        "cascading_delays": true,
+        "blocked_item_names": [
+          "Implement User API",
+          "Implement Dashboard UI",
+          "Implement Payment API",
+          "Design Analytics Dashboard"
+        ]
+      },
+      "milestone_id": null,
+      "affected_items": [
+        "work_item_005",
+        "work_item_006",
+        "work_item_008",
+        "work_item_010"
+      ],
+      "detected_at": "2026-01-04T16:57:37.702689",
+      "mitigated_at": null,
+      "accepted_at": null,
+      "accepted_by": null,
+      "acceptance_boundary": null,
+      "next_date": null,
+      "mitigation_started_at": null,
+      "mitigation_decision": null,
+      "mitigation_action": null,
+      "mitigation_due_date": null
     }
   ]
 }

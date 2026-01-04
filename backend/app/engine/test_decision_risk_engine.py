@@ -16,8 +16,8 @@ from .decision_risk_engine import (
     StateSnapshot,
     DecisionRiskEngine,
     Rule1_DependencyBlocked,
-    Rule2_AcceptRiskDecisionApproved,
-    Rule3_MitigateRiskDecisionApproved,
+    Rule4_AcceptRiskDecisionApproved,
+    Rule5_MitigateRiskDecisionApproved,
 )
 
 
@@ -139,7 +139,7 @@ def engine() -> DecisionRiskEngine:
 # TEST CASE 1: Dependency Blocked → Risk Created
 # ============================================================================
 
-def test_dependency_blocked_creates_issue_and_risk(
+def test_dependency_blocked_creates_risk(
     engine: DecisionRiskEngine,
     state_with_dependency: StateSnapshot
 ):
@@ -149,9 +149,8 @@ def test_dependency_blocked_creates_issue_and_risk(
     Given: A dependency is blocked
     When: A DEPENDENCY_BLOCKED event is processed
     Then: 
-        - An issue is created
-        - A risk is created (if P80 delta > threshold)
-        - Owner's next_date is set
+        - A risk is created with status MATERIALISED
+        - Owner's next_date is set (tightened to 1 day)
     """
     # Given: A dependency blocked event
     event = Event(
@@ -167,34 +166,23 @@ def test_dependency_blocked_creates_issue_and_risk(
     # Then: Commands are emitted
     assert len(commands) > 0, "Engine should emit commands"
     
-    # Verify issue creation command
-    issue_commands = [c for c in commands if c.command_type == CommandType.CREATE_ISSUE]
-    assert len(issue_commands) == 1, "Should create one issue"
-    
-    issue_cmd = issue_commands[0]
-    assert issue_cmd.rule_name == "rule_1_dependency_blocked"
-    assert issue_cmd.payload["type"] == "dependency_blocked"
-    assert "dep_001" in issue_cmd.payload["dependency_id"]
-    
-    # Verify risk creation command (if P80 delta > threshold)
+    # Verify risk creation command
     risk_commands = [c for c in commands if c.command_type == CommandType.CREATE_RISK]
-    
-    # Since stub returns delta_p80_days = 14.0 > threshold (7.0), risk should be created
     assert len(risk_commands) == 1, "Should create one risk"
     
     risk_cmd = risk_commands[0]
     assert risk_cmd.rule_name == "rule_1_dependency_blocked"
     assert "risk_dep_blocked_dep_001" in risk_cmd.target_id
-    assert risk_cmd.payload["status"] == "active"
+    assert risk_cmd.payload["status"] == "materialised"
     assert "p80_delay_days" in risk_cmd.payload["impact"]
     
-    # Verify next_date command
+    # Verify next_date command (tightened to 1 day)
     next_date_commands = [c for c in commands if c.command_type == CommandType.SET_NEXT_DATE]
     assert len(next_date_commands) == 1, "Should set next_date for owner"
     
     next_date_cmd = next_date_commands[0]
     assert next_date_cmd.rule_name == "rule_1_dependency_blocked"
-    assert "next_date" in next_date_cmd.payload
+    assert next_date_cmd.payload["next_date"] == (date.today() + timedelta(days=1)).isoformat()
 
 
 def test_dependency_blocked_does_not_create_risk_if_below_threshold(
@@ -249,7 +237,7 @@ def test_accept_risk_decision_transitions_status(
     assert len(risk_update_commands) == 1, "Should update risk status"
     
     risk_cmd = risk_update_commands[0]
-    assert risk_cmd.rule_name == "rule_2_accept_risk_approved"
+    assert risk_cmd.rule_name == "rule_4_accept_risk_approved"
     assert risk_cmd.payload["status"] == "accepted"
     assert "accepted_at" in risk_cmd.payload
     
@@ -258,7 +246,7 @@ def test_accept_risk_decision_transitions_status(
     assert len(next_date_commands) == 1, "Should set next_date for owner"
     
     next_date_cmd = next_date_commands[0]
-    assert next_date_cmd.rule_name == "rule_2_accept_risk_approved"
+    assert next_date_cmd.rule_name == "rule_4_accept_risk_approved"
     assert "suppress_escalation_until" in next_date_cmd.payload
 
 
@@ -299,7 +287,7 @@ def test_mitigate_risk_decision_transitions_status(
     assert len(risk_update_commands) == 1, "Should update risk status"
     
     risk_cmd = risk_update_commands[0]
-    assert risk_cmd.rule_name == "rule_3_mitigate_risk_approved"
+    assert risk_cmd.rule_name == "rule_5_mitigate_risk_approved"
     assert risk_cmd.payload["status"] == "mitigating"
     assert "mitigation_started_at" in risk_cmd.payload
     
@@ -308,7 +296,7 @@ def test_mitigate_risk_decision_transitions_status(
     assert len(next_date_commands) == 1, "Should set mitigation due date"
     
     next_date_cmd = next_date_commands[0]
-    assert next_date_cmd.rule_name == "rule_3_mitigate_risk_approved"
+    assert next_date_cmd.rule_name == "rule_5_mitigate_risk_approved"
     assert "next_date" in next_date_cmd.payload
     
     # Verify forecast update command
@@ -376,14 +364,12 @@ def test_engine_does_not_mutate_state(
     
     # Capture original state
     original_deps_count = len(state_with_dependency.dependencies)
-    original_issues_count = len(state_with_dependency.issues)
     
     # Process event
     commands = engine.process_event(event, state_with_dependency)
     
     # Verify state unchanged
     assert len(state_with_dependency.dependencies) == original_deps_count
-    assert len(state_with_dependency.issues) == original_issues_count
 
 
 # ============================================================================

@@ -87,8 +87,8 @@ class Decision(BaseModel):
     id: str
     decision_type: DecisionType
     subtype: str
-    milestone_name: str
     status: DecisionStatus = DecisionStatus.PROPOSED
+    milestone_name: str = ""
     next_date: Optional[date] = None
     created_at: datetime = Field(default_factory=datetime.now)
     # Note: Ownership is tracked separately via the Ownership model
@@ -125,7 +125,6 @@ class Decision(BaseModel):
     escalation_trigger: Optional[str] = None
     
     # MITIGATE_RISK fields
-    issue_id: Optional[str] = None
     action: Optional[str] = None
     expected_probability_delta: Optional[float] = None
     expected_impact_days_delta: Optional[float] = None
@@ -200,8 +199,8 @@ class Decision(BaseModel):
             # ACCEPT_AND_MONITOR doesn't require additional fields
         
         elif self.decision_type == DecisionType.MITIGATE_RISK:
-            if not self.risk_id and not self.issue_id:
-                raise ValueError("MITIGATE_RISK requires either risk_id or issue_id")
+            if not self.risk_id:
+                raise ValueError("MITIGATE_RISK requires risk_id")
             if not self.action:
                 raise ValueError("MITIGATE_RISK requires action")
         

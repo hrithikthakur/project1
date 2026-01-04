@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import {
   listOwnership,
   getActiveOwnership,
@@ -17,6 +18,7 @@ import {
   Milestone,
   WorkItem,
 } from '../api';
+import { formatDate, formatDateTime } from '../utils';
 
 export default function OwnershipView() {
   const [ownership, setOwnership] = useState<Ownership[]>([]);
@@ -31,7 +33,7 @@ export default function OwnershipView() {
   const [selectedOwnership, setSelectedOwnership] = useState<Ownership | null>(null);
   const [editingOwnership, setEditingOwnership] = useState<Ownership | null>(null);
   const [formData, setFormData] = useState<Partial<Ownership>>({
-    object_type: 'milestone',
+    object_type: 'decision',
     object_id: '',
     owner_actor_id: '',
     reason: '',
@@ -67,7 +69,7 @@ export default function OwnershipView() {
   function handleNew() {
     setEditingOwnership(null);
     setFormData({
-      object_type: 'milestone',
+      object_type: 'decision',
       object_id: '',
       owner_actor_id: '',
       reason: '',
@@ -90,9 +92,10 @@ export default function OwnershipView() {
       }
       setShowForm(false);
       loadData();
+      toast.success(editingOwnership ? 'Ownership updated' : 'Ownership assigned');
     } catch (error) {
       console.error('Error saving ownership:', error);
-      alert('Error saving ownership');
+      toast.error('Error saving ownership');
     }
   }
 
@@ -101,9 +104,10 @@ export default function OwnershipView() {
     try {
       await deleteOwnership(id);
       loadData();
+      toast.success('Ownership record deleted');
     } catch (error) {
       console.error('Error deleting ownership:', error);
-      alert('Error deleting ownership');
+      toast.error('Error deleting ownership');
     }
   }
 
@@ -121,7 +125,15 @@ export default function OwnershipView() {
         return risks.find((r) => r.id === objectId)?.title || objectId;
       case 'decision':
         const decision = decisions.find((d) => d.id === objectId);
-        return decision ? `${decision.decision_type} - ${decision.milestone_name}` : objectId;
+        if (!decision) return objectId;
+        
+        // Format subtype nicely
+        const formattedSubtype = decision.subtype
+          .split('_')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+          .join(' ');
+          
+        return `${formattedSubtype} (${decision.milestone_name})`;
       default:
         return objectId;
     }
@@ -142,18 +154,72 @@ export default function OwnershipView() {
     }
   }
 
-  function getObjectTypeIcon(objectType: string) {
+  function getDecisionStatusColor(status: string) {
+    const colors: Record<string, string> = {
+      proposed: '#f39c12',
+      approved: '#27ae60',
+      superseded: '#95a5a6',
+    };
+    return colors[status] || '#95a5a6';
+  }
+
+  function getStatusColor(status: string) {
+    switch (status) {
+      case 'achieved': return '#27ae60';
+      case 'at_risk': return '#f39c12';
+      case 'missed': return '#e74c3c';
+      case 'pending': return '#3498db';
+      default: return '#95a5a6';
+    }
+  }
+
+  function getWorkItemStatusColor(status: string) {
+    switch (status) {
+      case 'completed': return '#27ae60';
+      case 'in_progress': return '#3498db';
+      case 'blocked': return '#e74c3c';
+      case 'not_started': return '#95a5a6';
+      default: return '#95a5a6';
+    }
+  }
+
+  function getPriorityColor(priority: string) {
+    switch (priority) {
+      case 'critical': return '#e74c3c';
+      case 'high': return '#e67e22';
+      case 'medium': return '#f39c12';
+      case 'low': return '#27ae60';
+      default: return '#95a5a6';
+    }
+  }
+
+  function getSeverityColor(severity: string) {
+    return getPriorityColor(severity);
+  }
+
+  function getRiskStatusColor(status: string) {
+    switch (status) {
+      case 'resolved': return '#27ae60';
+      case 'mitigating': return '#3498db';
+      case 'active': return '#e74c3c';
+      case 'accepted': return '#95a5a6';
+      case 'mitigated': return '#f39c12';
+      default: return '#95a5a6';
+    }
+  }
+
+  function getObjectTypeColor(objectType: string) {
     switch (objectType) {
-      case 'milestone':
-        return '🎯';
-      case 'work_item':
-        return '📋';
-      case 'risk':
-        return '⚠️';
       case 'decision':
-        return '🤔';
+        return '#3498db'; // Vibrant Blue
+      case 'milestone':
+        return '#9b59b6'; // Vibrant Purple
+      case 'risk':
+        return '#e74c3c'; // Vibrant Red
+      case 'work_item':
+        return '#27ae60'; // Vibrant Green
       default:
-        return '📌';
+        return '#95a5a6'; // Vibrant Slate
     }
   }
 
@@ -191,6 +257,26 @@ export default function OwnershipView() {
     return actors.find((a) => a.id === actorId);
   }
 
+  function getMilestoneName(objectType: string, objectId: string) {
+    const obj = getObject(objectType, objectId);
+    if (!obj) return 'N/A';
+
+    switch (objectType) {
+      case 'milestone':
+        return (obj as Milestone).name;
+      case 'work_item':
+        const workItem = obj as WorkItem;
+        return milestones.find(m => m.id === workItem.milestone_id)?.name || 'N/A';
+      case 'risk':
+        const risk = obj as Risk;
+        return milestones.find(m => m.id === risk.milestone_id)?.name || 'N/A';
+      case 'decision':
+        return (obj as Decision).milestone_name || 'N/A';
+      default:
+        return 'N/A';
+    }
+  }
+
   function handleRowClick(ownership: Ownership) {
     setSelectedOwnership(ownership);
     setShowDetail(true);
@@ -223,10 +309,10 @@ export default function OwnershipView() {
                   onChange={(e) => setFormData({ ...formData, object_type: e.target.value as any, object_id: '' })}
                   required
                 >
-                  <option value="milestone">Milestone</option>
-                  <option value="work_item">Work Item</option>
-                  <option value="risk">Risk</option>
                   <option value="decision">Decision</option>
+                  <option value="milestone">Milestone</option>
+                  <option value="risk">Risk</option>
+                  <option value="work_item">Work Item</option>
                 </select>
               </div>
               <div className="form-group">
@@ -294,8 +380,18 @@ export default function OwnershipView() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
               <div>
                 <h3 style={{ margin: '0 0 8px 0' }}>Ownership Details</h3>
-                <span className="badge" style={{ fontSize: '0.9em' }}>
-                  {getObjectTypeIcon(selectedOwnership.object_type)} {formatObjectType(selectedOwnership.object_type)}
+                <span 
+                  className="status-badge" 
+                  style={{ 
+                    fontSize: '0.8rem',
+                    backgroundColor: getObjectTypeColor(selectedOwnership.object_type),
+                    color: '#f1f5f9',
+                    borderColor: '#f1f5f9',
+                    borderWidth: '1px',
+                    borderStyle: 'solid'
+                  }}
+                >
+                  {formatObjectType(selectedOwnership.object_type)}
                 </span>
               </div>
               <button 
@@ -322,8 +418,8 @@ export default function OwnershipView() {
                     return (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         <div><strong>Name:</strong> {milestone.name}</div>
-                        <div><strong>Target Date:</strong> {new Date(milestone.target_date).toLocaleDateString()}</div>
-                        <div><strong>Status:</strong> <span className="badge">{milestone.status}</span></div>
+                        <div><strong>Target Date:</strong> {formatDate(milestone.target_date)}</div>
+                        <div><strong>Status:</strong> <span className="status-badge" style={{ backgroundColor: getStatusColor(milestone.status) }}>{milestone.status}</span></div>
                         {milestone.description && <div><strong>Description:</strong> {milestone.description}</div>}
                       </div>
                     );
@@ -332,8 +428,8 @@ export default function OwnershipView() {
                     return (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         <div><strong>Title:</strong> {workItem.title}</div>
-                        <div><strong>Status:</strong> <span className="badge">{workItem.status}</span></div>
-                        <div><strong>Priority:</strong> <span className="badge">{workItem.priority}</span></div>
+                        <div><strong>Status:</strong> <span className="status-badge" style={{ backgroundColor: getWorkItemStatusColor(workItem.status) }}>{workItem.status}</span></div>
+                        <div><strong>Priority:</strong> <span className="status-badge" style={{ backgroundColor: getPriorityColor(workItem.priority) }}>{workItem.priority}</span></div>
                         <div><strong>Milestone:</strong> {milestones.find(m => m.id === workItem.milestone_id)?.name || 'N/A'}</div>
                         {workItem.description && <div><strong>Description:</strong> {workItem.description}</div>}
                       </div>
@@ -343,8 +439,8 @@ export default function OwnershipView() {
                     return (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         <div><strong>Title:</strong> {risk.title}</div>
-                        <div><strong>Severity:</strong> <span className="badge">{risk.severity}</span></div>
-                        <div><strong>Status:</strong> <span className="badge">{risk.status}</span></div>
+                        <div><strong>Severity:</strong> <span className="status-badge" style={{ backgroundColor: getSeverityColor(risk.severity) }}>{risk.severity}</span></div>
+                        <div><strong>Status:</strong> <span className="status-badge" style={{ backgroundColor: getRiskStatusColor(risk.status) }}>{risk.status}</span></div>
                         <div><strong>Probability:</strong> {(risk.probability * 100).toFixed(0)}%</div>
                         {risk.impact && typeof risk.impact === 'object' && 'delay_days' in risk.impact && (
                           <div><strong>Impact:</strong> {risk.impact.delay_days} day delay</div>
@@ -358,9 +454,9 @@ export default function OwnershipView() {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         <div><strong>Type:</strong> {decision.decision_type}</div>
                         <div><strong>Milestone:</strong> {decision.milestone_name}</div>
-                        <div><strong>Status:</strong> <span className="badge">{decision.status}</span></div>
+                        <div><strong>Status:</strong> <span className="status-badge" style={{ backgroundColor: getDecisionStatusColor(decision.status) }}>{decision.status}</span></div>
                         {decision.rationale && <div><strong>Rationale:</strong> {decision.rationale}</div>}
-                        {decision.made_at && <div><strong>Made At:</strong> {new Date(decision.made_at).toLocaleString()}</div>}
+                        {decision.made_at && <div><strong>Made At:</strong> {formatDateTime(decision.made_at)}</div>}
                       </div>
                     );
                   }
@@ -379,7 +475,7 @@ export default function OwnershipView() {
                   return (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                       <div><strong>Name:</strong> {owner.display_name}</div>
-                      <div><strong>Type:</strong> <span className="badge">{owner.type}</span></div>
+                      <div><strong>Type:</strong> <span className="status-badge" style={{ backgroundColor: owner.type === 'USER' ? '#3498db' : '#9b59b6' }}>{owner.type}</span></div>
                       {owner.email && <div><strong>Email:</strong> {owner.email}</div>}
                     </div>
                   );
@@ -393,7 +489,7 @@ export default function OwnershipView() {
                 </h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <div><strong>ID:</strong> <code style={{ fontSize: '0.85em', background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px' }}>{selectedOwnership.id}</code></div>
-                  <div><strong>Assigned At:</strong> {new Date(selectedOwnership.assigned_at).toLocaleString()}</div>
+                  <div><strong>Assigned At:</strong> {formatDateTime(selectedOwnership.assigned_at)}</div>
                   {selectedOwnership.assigned_by_actor_id && (
                     <div><strong>Assigned By:</strong> {getActorName(selectedOwnership.assigned_by_actor_id)}</div>
                   )}
@@ -426,11 +522,11 @@ export default function OwnershipView() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>Type</th>
-              <th>Item</th>
+              <th>Item Name</th>
               <th>Owner</th>
+              <th>Type</th>
+              <th>Milestone</th>
               <th>Assigned At</th>
-              <th>Reason</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -442,17 +538,25 @@ export default function OwnershipView() {
                 style={{ cursor: 'pointer' }}
                 className="clickable-row"
               >
-                <td>
-                  <span className="badge">
-                    {getObjectTypeIcon(o.object_type)} {formatObjectType(o.object_type)}
-                  </span>
-                </td>
                 <td style={{ fontWeight: '500' }}>{getObjectName(o.object_type, o.object_id)}</td>
                 <td>{getActorName(o.owner_actor_id)}</td>
-                <td>{new Date(o.assigned_at).toLocaleDateString()}</td>
-                <td style={{ color: o.reason ? 'inherit' : '#94a3b8', fontStyle: o.reason ? 'normal' : 'italic' }}>
-                  {o.reason || 'No reason provided'}
+                <td>
+                  <span 
+                    className="status-badge" 
+                    title={formatObjectType(o.object_type)}
+                    style={{ 
+                      backgroundColor: getObjectTypeColor(o.object_type),
+                      color: '#f1f5f9',
+                      borderColor: '#f1f5f9',
+                      borderWidth: '1px',
+                      borderStyle: 'solid'
+                    }}
+                  >
+                    {formatObjectType(o.object_type)}
+                  </span>
                 </td>
+                <td>{getMilestoneName(o.object_type, o.object_id)}</td>
+                <td>{formatDate(o.assigned_at)}</td>
                 <td>
                   <button 
                     className="btn-icon btn-danger" 

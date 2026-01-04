@@ -1,10 +1,11 @@
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 import { Risk, createRisk, analyzeRisk } from '../api';
 
 export default function RiskView() {
   const [risk, setRisk] = useState<Partial<Risk>>({
     severity: 'medium',
-    status: 'active',
+    status: 'open',
     probability: 0.3,
     impact: { velocity_multiplier: 0.8 },
     affected_items: [],
@@ -17,12 +18,12 @@ export default function RiskView() {
     e.preventDefault();
     setLoading(true);
     try {
-      const newRisk: Risk = {
+        const newRisk: Risk = {
         id: `risk_${Date.now()}`,
         title: risk.title || '',
         description: risk.description || '',
         severity: risk.severity || 'medium',
-        status: risk.status || 'active',
+        status: risk.status || 'open',
         probability: risk.probability || 0.3,
         impact: risk.impact || {},
         affected_items: risk.affected_items || [],
@@ -31,9 +32,10 @@ export default function RiskView() {
       
       const result = await analyzeRisk(newRisk);
       setAnalysis(result);
+      toast.success('Risk analysis completed');
     } catch (error) {
       console.error('Error analyzing risk:', error);
-      alert('Failed to analyze risk');
+      toast.error('Failed to analyze risk');
     } finally {
       setLoading(false);
     }

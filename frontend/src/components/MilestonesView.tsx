@@ -1,18 +1,27 @@
 import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import {
   listMilestones,
   getMilestone,
   createMilestone,
   updateMilestone,
   deleteMilestone,
+  listWorkItems,
   Milestone,
+  WorkItem,
 } from '../api';
+import WorkItemView from './WorkItemView';
+import MilestoneView from './MilestoneView';
+import { formatDate } from '../utils';
 
 export default function MilestonesView() {
   const [milestones, setMilestones] = useState<Milestone[]>([]);
+  const [workItems, setWorkItems] = useState<WorkItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingMilestone, setEditingMilestone] = useState<Milestone | null>(null);
+  const [selectedWorkItemId, setSelectedWorkItemId] = useState<string | null>(null);
+  const [selectedMilestoneId, setSelectedMilestoneId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<Milestone>>({
     name: '',
     description: '',
@@ -22,19 +31,24 @@ export default function MilestonesView() {
   });
 
   useEffect(() => {
-    loadMilestones();
+    loadData();
   }, []);
 
-  async function loadMilestones() {
+  async function loadData() {
     try {
-      const data = await listMilestones();
-      setMilestones(data);
+      const [milestonesData, workItemsData] = await Promise.all([
+        listMilestones(),
+        listWorkItems(),
+      ]);
+      setMilestones(milestonesData);
+      setWorkItems(workItemsData);
     } catch (error) {
-      console.error('Error loading milestones:', error);
+      console.error('Error loading data:', error);
     } finally {
       setLoading(false);
     }
   }
+
 
   function handleEdit(milestone: Milestone) {
     setEditingMilestone(milestone);
@@ -70,10 +84,11 @@ export default function MilestonesView() {
         await createMilestone(newMilestone);
       }
       setShowForm(false);
-      loadMilestones();
+      loadData();
+      toast.success(editingMilestone ? 'Milestone updated' : 'Milestone created');
     } catch (error) {
       console.error('Error saving milestone:', error);
-      alert('Error saving milestone');
+      toast.error('Error saving milestone');
     }
   }
 
@@ -81,15 +96,52 @@ export default function MilestonesView() {
     if (!confirm('Are you sure you want to delete this milestone?')) return;
     try {
       await deleteMilestone(id);
-      loadMilestones();
+      loadData();
+      toast.success('Milestone deleted');
     } catch (error) {
       console.error('Error deleting milestone:', error);
-      alert('Error deleting milestone');
+      toast.error('Error deleting milestone');
+    }
+  }
+
+  function handleWorkItemClick(workItemId: string) {
+    setSelectedWorkItemId(workItemId);
+  }
+
+  function handleSeeWorkItems(milestoneId: string) {
+    setSelectedMilestoneId(milestoneId);
+  }
+
+  function getStatusColor(status: string): string {
+    switch (status) {
+      case 'achieved': return '#27ae60'; // Vibrant Green
+      case 'at_risk': return '#f39c12';  // Vibrant Orange
+      case 'missed': return '#e74c3c';   // Vibrant Red
+      case 'pending': return '#3498db';  // Vibrant Blue
+      default: return '#95a5a6';         // Vibrant Slate
     }
   }
 
   if (loading) {
     return <div className="view-loading">Loading milestones...</div>;
+  }
+
+  if (selectedMilestoneId) {
+    return (
+      <MilestoneView
+        milestoneId={selectedMilestoneId}
+        onClose={() => setSelectedMilestoneId(null)}
+      />
+    );
+  }
+
+  if (selectedWorkItemId) {
+    return (
+      <WorkItemView
+        workItemId={selectedWorkItemId}
+        onClose={() => setSelectedWorkItemId(null)}
+      />
+    );
   }
 
   return (
@@ -162,7 +214,12 @@ export default function MilestonesView() {
           <div key={milestone.id} className="card">
             <div className="card-header">
               <h3>{milestone.name}</h3>
-              <span className={`status-badge status-${milestone.status}`}>
+              <span
+                className="status-badge"
+                style={{
+                  backgroundColor: getStatusColor(milestone.status),
+                }}
+              >
                 {milestone.status}
               </span>
             </div>
@@ -172,7 +229,7 @@ export default function MilestonesView() {
                 <div className="meta-item">
                   <span className="meta-label">Target Date:</span>
                   <span className="meta-value">
-                    {new Date(milestone.target_date).toLocaleDateString()}
+                    {formatDate(milestone.target_date)}
                   </span>
                 </div>
                 <div className="meta-item">
@@ -180,6 +237,40 @@ export default function MilestonesView() {
                   <span className="meta-value">{milestone.work_items.length}</span>
                 </div>
               </div>
+              {milestone.work_items.length > 0 && (
+                <div style={{ marginTop: '12px' }}>
+                  <button
+                    onClick={() => handleSeeWorkItems(milestone.id)}
+                    style={{
+                      padding: '8px 16px',
+                      backgroundColor: '#8b7355',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '0.9em',
+                      fontWeight: '500',
+                      transition: 'all 0.2s',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#6d5b45';
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#8b7355';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                  >
+                    <span>📋</span>
+                    See Work Items ({milestone.work_items.length})
+                  </button>
+                </div>
+              )}
             </div>
             <div className="card-actions">
               <button className="btn-icon" onClick={() => handleEdit(milestone)}>

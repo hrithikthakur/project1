@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import {
   listDecisions,
   getDecision,
@@ -20,6 +21,7 @@ import {
   Risk,
   Ownership,
 } from '../api';
+import { formatDate } from '../utils';
 
 export default function DecisionsView() {
   const [decisions, setDecisions] = useState<Decision[]>([]);
@@ -55,7 +57,6 @@ export default function DecisionsView() {
   const [acceptanceUntil, setAcceptanceUntil] = useState<string>('');
   const [threshold, setThreshold] = useState<string>('');
   const [action, setAction] = useState<string>('');
-  const [issueId, setIssueId] = useState<string>('');
   
   const SUBTYPES: Record<DecisionType, string[]> = {
     change_scope: ['ADD', 'REMOVE', 'SWAP', 'SPLIT_PHASES'],
@@ -92,7 +93,7 @@ export default function DecisionsView() {
       console.log('Loaded milestones:', data);
     } catch (error) {
       console.error('Error loading milestones:', error);
-      alert(`Failed to load milestones: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(`Failed to load milestones: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -104,7 +105,7 @@ export default function DecisionsView() {
       console.log('Loaded actors:', activeActors);
     } catch (error) {
       console.error('Error loading actors:', error);
-      alert(`Failed to load actors: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(`Failed to load actors: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -115,7 +116,7 @@ export default function DecisionsView() {
       console.log('Loaded work items:', data);
     } catch (error) {
       console.error('Error loading work items:', error);
-      alert(`Failed to load work items: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(`Failed to load work items: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -126,7 +127,7 @@ export default function DecisionsView() {
       console.log('Loaded risks:', data);
     } catch (error) {
       console.error('Error loading risks:', error);
-      alert(`Failed to load risks: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(`Failed to load risks: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -155,7 +156,6 @@ export default function DecisionsView() {
     setAcceptanceUntil(decision.acceptance_until || '');
     setThreshold(decision.threshold || '');
     setAction(decision.action || '');
-    setIssueId(decision.issue_id || '');
     
     // Try to fetch the active ownership for this decision
     try {
@@ -195,7 +195,6 @@ export default function DecisionsView() {
     setAcceptanceUntil('');
     setThreshold('');
     setAction('');
-    setIssueId('');
     setShowForm(true);
   }
 
@@ -231,7 +230,6 @@ export default function DecisionsView() {
         if (threshold) decisionData.threshold = threshold;
       } else if (formData.decision_type === 'mitigate_risk') {
         if (riskId) decisionData.risk_id = riskId;
-        if (issueId) decisionData.issue_id = issueId;
         if (action) decisionData.action = action;
       }
       
@@ -282,24 +280,21 @@ export default function DecisionsView() {
           
           if (!response.ok) {
             console.error('Failed to trigger Decision-Risk Engine:', response.statusText);
-            alert('⚠️ Decision approved, but engine processing failed. Check console for details.');
+            toast.error('⚠️ Decision approved, but engine processing failed. Check console for details.');
           } else {
             const result = await response.json();
             console.log(`✅ Decision-Risk Engine processed: ${result.commands_issued} commands issued`);
             
             // Show user-friendly message
-            let message = `✅ Decision approved and processed!\n\n`;
-            message += `${result.commands_issued} action(s) triggered by Decision-Risk Engine.\n\n`;
+            let message = `Decision approved and processed! ${result.commands_issued} action(s) triggered.`;
             
             if (decisionData.decision_type === 'accept_risk') {
-              message += `🔵 Risk has been marked as ACCEPTED.\n`;
-              message += `Navigate to the Risks tab and refresh to see the updated risk status with acceptance details.`;
+              message += ` Risk has been marked as ACCEPTED.`;
             } else if (decisionData.decision_type === 'mitigate_risk') {
-              message += `🛠️ Risk has been marked as MITIGATING.\n`;
-              message += `Navigate to the Risks tab and refresh to see the mitigation plan.`;
+              message += ` Risk has been marked as MITIGATING.`;
             }
             
-            alert(message);
+            toast.success(message, { duration: 5000 });
           }
         } catch (engineError) {
           console.error('Error triggering Decision-Risk Engine:', engineError);
@@ -309,6 +304,7 @@ export default function DecisionsView() {
       
       setShowForm(false);
       loadDecisions();
+      toast.success(editingDecision ? 'Decision updated' : 'Decision created');
     } catch (error: any) {
       console.error('Error saving decision:', error);
       let errorMessage = 'Error saving decision';
@@ -321,7 +317,7 @@ export default function DecisionsView() {
         errorMessage = 'Failed to connect to backend server. Please make sure the backend is running on http://localhost:8000';
       }
       
-      alert(`Error saving decision: ${errorMessage}`);
+      toast.error(`Error saving decision: ${errorMessage}`);
     }
   }
 
@@ -330,17 +326,18 @@ export default function DecisionsView() {
     try {
       await deleteDecision(id);
       loadDecisions();
+      toast.success('Decision deleted');
     } catch (error) {
       console.error('Error deleting decision:', error);
-      alert('Error deleting decision');
+      toast.error('Error deleting decision');
     }
   }
 
   function getStatusColor(status: string) {
     const colors: Record<string, string> = {
-      proposed: '#f39c12',
-      approved: '#27ae60',
-      superseded: '#95a5a6',
+      proposed: '#f39c12', // Vibrant Orange
+      approved: '#27ae60', // Vibrant Green
+      superseded: '#95a5a6', // Vibrant Slate
     };
     return colors[status] || '#95a5a6';
   }
@@ -365,14 +362,6 @@ export default function DecisionsView() {
       .join(' ');
   }
 
-  function formatDate(dateString?: string | null): string {
-    if (!dateString) return 'Not set';
-    try {
-      return new Date(dateString).toLocaleDateString();
-    } catch {
-      return dateString;
-    }
-  }
 
   function getActorName(actorId: string): string {
     const actor = actors.find(a => a.id === actorId);
@@ -384,9 +373,23 @@ export default function DecisionsView() {
     return item ? item.title : itemId;
   }
 
-  function getRiskTitle(riskId: string): string {
-    const risk = risks.find(r => r.id === riskId);
-    return risk ? risk.title : riskId;
+  function getMilestoneNameForDecision(decision: Decision): string {
+    if (decision.milestone_name) return decision.milestone_name;
+    
+    // If milestone_name is missing, try to derive it from the associated risk
+    if (decision.risk_id) {
+      const risk = risks.find(r => r.id === decision.risk_id);
+      if (risk) {
+        // Look for milestone_id at top level (from our new backend fix) or inside impact
+        const milestoneId = risk.milestone_id || (risk.impact as any)?.affected_milestone || (risk.impact as any)?.affected_milestones?.[0];
+        if (milestoneId) {
+          const milestone = milestones.find(m => m.id === milestoneId);
+          if (milestone) return milestone.name;
+        }
+      }
+    }
+    
+    return 'N/A';
   }
 
   if (loading) {
@@ -443,21 +446,24 @@ export default function DecisionsView() {
                   ))}
                 </select>
               </div>
-              <div className="form-group">
-                <label>Milestone *</label>
-                <select
-                  value={formData.milestone_name}
-                  onChange={(e) => setFormData({ ...formData, milestone_name: e.target.value })}
-                  required
-                >
-                  <option value="">Select a milestone...</option>
-                  {milestones.map((milestone) => (
-                    <option key={milestone.id} value={milestone.name}>
-                      {milestone.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* Hide milestone dropdown for accept_risk and mitigate_risk - milestone comes from risk */}
+              {formData.decision_type !== 'accept_risk' && formData.decision_type !== 'mitigate_risk' && (
+                <div className="form-group">
+                  <label>Milestone *</label>
+                  <select
+                    value={formData.milestone_name}
+                    onChange={(e) => setFormData({ ...formData, milestone_name: e.target.value })}
+                    required
+                  >
+                    <option value="">Select a milestone...</option>
+                    {milestones.map((milestone) => (
+                      <option key={milestone.id} value={milestone.name}>
+                        {milestone.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div className="form-group">
                 <label>Actor (Decision Owner)</label>
                 <select
@@ -973,7 +979,18 @@ export default function DecisionsView() {
                     <label>Risk *</label>
                     <select
                       value={riskId}
-                      onChange={(e) => setRiskId(e.target.value)}
+                      onChange={(e) => {
+                        const selectedRiskId = e.target.value;
+                        setRiskId(selectedRiskId);
+                        // Auto-populate milestone from the selected risk
+                        const selectedRisk = risks.find(r => r.id === selectedRiskId);
+                        if (selectedRisk && selectedRisk.milestone_id) {
+                          const milestone = milestones.find(m => m.id === selectedRisk.milestone_id);
+                          if (milestone) {
+                            setFormData({ ...formData, milestone_name: milestone.name });
+                          }
+                        }
+                      }}
                       required
                     >
                       <option value="">Select a risk...</option>
@@ -984,6 +1001,22 @@ export default function DecisionsView() {
                       ))}
                     </select>
                   </div>
+                  {riskId && formData.milestone_name && (
+                    <div style={{
+                      padding: '12px',
+                      backgroundColor: '#f0f9ff',
+                      borderRadius: '6px',
+                      border: '1px solid #bae6fd',
+                      marginBottom: '16px'
+                    }}>
+                      <div style={{ fontSize: '13px', color: '#0369a1', fontWeight: '500' }}>
+                        📍 Associated Milestone: {formData.milestone_name}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#0c4a6e', marginTop: '4px' }}>
+                        This risk is linked to the milestone above
+                      </div>
+                    </div>
+                  )}
                   {formData.subtype === 'ACCEPT_UNTIL_DATE' && (
                     <div className="form-group">
                       <label>Acceptance Until *</label>
@@ -1015,7 +1048,20 @@ export default function DecisionsView() {
                     <label>Risk</label>
                     <select
                       value={riskId}
-                      onChange={(e) => setRiskId(e.target.value)}
+                      onChange={(e) => {
+                        const selectedRiskId = e.target.value;
+                        setRiskId(selectedRiskId);
+                        // Auto-populate milestone from the selected risk
+                        if (selectedRiskId) {
+                          const selectedRisk = risks.find(r => r.id === selectedRiskId);
+                          if (selectedRisk && selectedRisk.milestone_id) {
+                            const milestone = milestones.find(m => m.id === selectedRisk.milestone_id);
+                            if (milestone) {
+                              setFormData({ ...formData, milestone_name: milestone.name });
+                            }
+                          }
+                        }
+                      }}
                     >
                       <option value="">Select a risk (optional)...</option>
                       {risks.map((risk) => (
@@ -1025,15 +1071,22 @@ export default function DecisionsView() {
                       ))}
                     </select>
                   </div>
-                  <div className="form-group">
-                    <label>Issue ID</label>
-                    <input
-                      type="text"
-                      value={issueId}
-                      onChange={(e) => setIssueId(e.target.value)}
-                      placeholder="ISSUE-42"
-                    />
-                  </div>
+                  {riskId && formData.milestone_name && (
+                    <div style={{
+                      padding: '12px',
+                      backgroundColor: '#f0f9ff',
+                      borderRadius: '6px',
+                      border: '1px solid #bae6fd',
+                      marginBottom: '16px'
+                    }}>
+                      <div style={{ fontSize: '13px', color: '#0369a1', fontWeight: '500' }}>
+                        📍 Associated Milestone: {formData.milestone_name}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#0c4a6e', marginTop: '4px' }}>
+                        This risk is linked to the milestone above
+                      </div>
+                    </div>
+                  )}
                   <div className="form-group">
                     <label>Action *</label>
                     <textarea
@@ -1111,7 +1164,7 @@ export default function DecisionsView() {
 
                 <div className="detail-row">
                   <div className="detail-label">Milestone</div>
-                  <div className="detail-value">{viewingDecision.milestone_name}</div>
+                  <div className="detail-value">{getMilestoneNameForDecision(viewingDecision)}</div>
                 </div>
 
                 <div className="detail-row">
@@ -1353,13 +1406,6 @@ export default function DecisionsView() {
                       </div>
                     )}
 
-                    {viewingDecision.issue_id && (
-                      <div className="detail-row">
-                        <div className="detail-label">Issue ID</div>
-                        <div className="detail-value"><code>{viewingDecision.issue_id}</code></div>
-                      </div>
-                    )}
-
                     {viewingDecision.action && (
                       <div className="detail-row">
                         <div className="detail-label">Action</div>
@@ -1420,7 +1466,7 @@ export default function DecisionsView() {
               >
                 <td>{formatDecisionType(decision.decision_type)}</td>
                 <td>{formatSubtype(decision.subtype)}</td>
-                <td>{decision.milestone_name}</td>
+                <td>{getMilestoneNameForDecision(decision)}</td>
                 <td>
                   <span
                     className="status-badge"
@@ -1429,7 +1475,7 @@ export default function DecisionsView() {
                     {decision.status}
                   </span>
                 </td>
-                <td>{new Date(decision.created_at).toLocaleDateString()}</td>
+                <td>{formatDate(decision.created_at)}</td>
                 <td>
                   <div className="table-actions" onClick={(e) => e.stopPropagation()}>
                     <button className="btn-icon" onClick={() => handleEdit(decision)}>
