@@ -9,7 +9,6 @@
   ],
   "functions": {
     "api/index.py": {
-      "runtime": "@vercel/python@3.12",
       "includeFiles": "backend/**,data/**"
     }
   }
