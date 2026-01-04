@@ -6,13 +6,16 @@ import os
 from pathlib import Path
 
 # Get the project root (parent of api folder)
-project_root = Path(__file__).parent.parent
+project_root = Path(__file__).parent.parent.absolute()
 
 # Add backend to path
 sys.path.insert(0, str(project_root / "backend"))
 
-# Set working directory for data file access
-os.chdir(project_root)
+# Set environment variable for the app to know where the root is
+os.environ["PROJECT_ROOT"] = str(project_root)
+
+# Set working directory
+os.chdir(str(project_root))
 
 from app.main import app
 
