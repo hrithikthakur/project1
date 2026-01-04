@@ -389,21 +389,6 @@ button:disabled {
   overflow: hidden;
 }
 
-.stat-card::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, var(--cream) 0%, transparent 70%);
-  opacity: 0;
-  transition: opacity 0.4s;
-}
-
-.stat-card:hover::before {
-  opacity: 1;
-}
 
 .stat-card:hover {
   transform: translateY(-5px);
@@ -501,21 +486,6 @@ button:disabled {
   position: relative;
 }
 
-.card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: var(--cream-dark);
-  opacity: 0;
-  transition: opacity 0.4s;
-}
-
-.card:hover::before {
-  opacity: 1;
-}
 
 .card:hover {
   box-shadow: var(--shadow-lg);
@@ -533,6 +503,10 @@ button:disabled {
 
 .materialised-risk {
   border: 3px solid #ef4444 !important;
+}
+
+.materialised-risk:hover {
+  border-color: #ef4444 !important;
 }
 
 .card-header {

@@ -12,7 +12,11 @@ import {
   Actor,
 } from '../api';
 
-export default function Dashboard() {
+interface DashboardProps {
+  onNavigate: (view: string) => void;
+}
+
+export default function Dashboard({ onNavigate }: DashboardProps) {
   const [stats, setStats] = useState({
     decisions: 0,
     risks: 0,
@@ -58,35 +62,110 @@ export default function Dashboard() {
     <div className="dashboard">
       <h2>Dashboard Overview</h2>
       <div className="stats-grid">
-        <div className="stat-card">
+        <div 
+          className="stat-card" 
+          onClick={() => onNavigate('decisions')}
+          style={{ 
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-4px)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '';
+          }}
+        >
           <div className="stat-icon">📊</div>
           <div className="stat-content">
             <h3>{stats.decisions}</h3>
             <p>Decisions</p>
           </div>
         </div>
-        <div className="stat-card">
+        <div 
+          className="stat-card"
+          onClick={() => onNavigate('risks')}
+          style={{ 
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-4px)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '';
+          }}
+        >
           <div className="stat-icon">⚠️</div>
           <div className="stat-content">
             <h3>{stats.risks}</h3>
             <p>Risks</p>
           </div>
         </div>
-        <div className="stat-card">
+        <div 
+          className="stat-card"
+          onClick={() => onNavigate('milestones')}
+          style={{ 
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-4px)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '';
+          }}
+        >
           <div className="stat-icon">🎯</div>
           <div className="stat-content">
             <h3>{stats.milestones}</h3>
             <p>Milestones</p>
           </div>
         </div>
-        <div className="stat-card">
+        <div 
+          className="stat-card"
+          onClick={() => onNavigate('work_items')}
+          style={{ 
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-4px)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '';
+          }}
+        >
           <div className="stat-icon">📋</div>
           <div className="stat-content">
             <h3>{stats.workItems}</h3>
             <p>Work Items</p>
           </div>
         </div>
-        <div className="stat-card">
+        <div 
+          className="stat-card"
+          onClick={() => onNavigate('actors')}
+          style={{ 
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-4px)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '';
+          }}
+        >
           <div className="stat-icon">👥</div>
           <div className="stat-content">
             <h3>{stats.actors}</h3>

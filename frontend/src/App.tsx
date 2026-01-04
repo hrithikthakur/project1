@@ -62,7 +62,7 @@ export default function App() {
       </header>
 
       <main className="app-main">
-        {currentView === 'dashboard' && <Dashboard />}
+        {currentView === 'dashboard' && <Dashboard onNavigate={setCurrentView} />}
         {currentView === 'decisions' && <DecisionsView />}
         {currentView === 'risks' && <RisksView />}
         {currentView === 'milestones' && <MilestonesView />}

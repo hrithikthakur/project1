@@ -21,6 +21,7 @@ export default function RisksView() {
   const [editingRisk, setEditingRisk] = useState<Risk | null>(null);
   const [selectedRisk, setSelectedRisk] = useState<Risk | null>(null);
   const [workItems, setWorkItems] = useState<WorkItem[]>([]);
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<Risk>>({
     title: '',
     description: '',
@@ -171,6 +172,15 @@ export default function RisksView() {
     accepted: risks.filter(r => r.status === 'accepted').length,
   };
 
+  // Filter risks based on active filter
+  const filteredRisks = statusFilter 
+    ? risks.filter(r => r.status === statusFilter)
+    : risks;
+
+  const handleFilterClick = (filter: string | null) => {
+    setStatusFilter(statusFilter === filter ? null : filter);
+  };
+
   if (loading) {
     return <div className="view-loading">Loading risks...</div>;
   }
@@ -183,11 +193,6 @@ export default function RisksView() {
           <button 
             className="btn-secondary" 
             onClick={handleDetectRisks}
-            style={{
-              backgroundColor: '#8b5cf6',
-              color: 'white',
-              border: 'none',
-            }}
           >
             🔍 Auto-Detect Risks
           </button>
@@ -199,35 +204,55 @@ export default function RisksView() {
 
       {/* Stats Summary */}
       <div className="stats-grid" style={{ marginBottom: '2rem' }}>
-        <div className="stat-card">
+        <div 
+          className="stat-card"
+          onClick={() => handleFilterClick(null)}
+          style={{ cursor: 'pointer' }}
+        >
           <div className="stat-icon">⚠️</div>
           <div className="stat-content">
             <h3>{stats.total}</h3>
             <p>Total Risks</p>
           </div>
         </div>
-        <div className="stat-card">
+        <div 
+          className="stat-card"
+          onClick={() => handleFilterClick('open')}
+          style={{ cursor: 'pointer' }}
+        >
           <div className="stat-icon">⭕</div>
           <div className="stat-content">
             <h3>{stats.open}</h3>
             <p>Open</p>
           </div>
         </div>
-        <div className="stat-card" style={{ borderColor: '#ef4444' }}>
+        <div 
+          className="stat-card" 
+          onClick={() => handleFilterClick('materialised')}
+          style={{ borderColor: '#ef4444', cursor: 'pointer' }}
+        >
           <div className="stat-icon">🚨</div>
           <div className="stat-content">
             <h3 style={{ color: '#ef4444' }}>{stats.materialised}</h3>
             <p>Materialised</p>
           </div>
         </div>
-        <div className="stat-card">
+        <div 
+          className="stat-card"
+          onClick={() => handleFilterClick('mitigating')}
+          style={{ cursor: 'pointer' }}
+        >
           <div className="stat-icon">🛠️</div>
           <div className="stat-content">
             <h3>{stats.mitigating}</h3>
             <p>Mitigating</p>
           </div>
         </div>
-        <div className="stat-card">
+        <div 
+          className="stat-card"
+          onClick={() => handleFilterClick('accepted')}
+          style={{ cursor: 'pointer' }}
+        >
           <div className="stat-icon">🤝</div>
           <div className="stat-content">
             <h3>{stats.accepted}</h3>
@@ -719,7 +744,7 @@ export default function RisksView() {
       )}
 
       <div className="cards-grid">
-        {[...risks].sort((a, b) => {
+        {[...filteredRisks].sort((a, b) => {
           // Materialized risks should appear first
           if (a.status === 'materialised' && b.status !== 'materialised') return -1;
           if (a.status !== 'materialised' && b.status === 'materialised') return 1;
@@ -812,6 +837,19 @@ export default function RisksView() {
           );
         })}
       </div>
+
+      {filteredRisks.length === 0 && risks.length > 0 && (
+        <div className="empty-state">
+          <p>No risks found with the selected filter.</p>
+          <button 
+            className="btn-secondary" 
+            onClick={() => setStatusFilter(null)}
+            style={{ marginTop: '1rem' }}
+          >
+            Clear Filter
+          </button>
+        </div>
+      )}
 
       {risks.length === 0 && (
         <div className="empty-state">

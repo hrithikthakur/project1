@@ -392,6 +392,11 @@ export default function DecisionsView() {
     return 'N/A';
   }
 
+  function getRiskTitle(riskId: string): string {
+    const risk = risks.find(r => r.id === riskId);
+    return risk ? risk.title : riskId;
+  }
+
   if (loading) {
     return <div className="view-loading">Loading decisions...</div>;
   }

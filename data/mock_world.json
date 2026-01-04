@@ -4,7 +4,7 @@
       "id": "work_item_001",
       "title": "Design Authentication System",
       "description": "Design OAuth2 authentication flow",
-      "status": "completed",
+      "status": "blocked",
       "estimated_days": 3.0,
       "actual_days": null,
       "assigned_to": [
@@ -20,7 +20,7 @@
       "id": "work_item_002",
       "title": "Implement Authentication Backend",
       "description": "Implement OAuth2 server endpoints",
-      "status": "in_progress",
+      "status": "blocked",
       "estimated_days": 5.0,
       "actual_days": null,
       "assigned_to": [
@@ -69,7 +69,7 @@
       "id": "work_item_005",
       "title": "Implement User API",
       "description": "Build REST API for user management",
-      "status": "blocked",
+      "status": "in_progress",
       "estimated_days": 6.0,
       "actual_days": null,
       "assigned_to": [
@@ -80,13 +80,14 @@
       ],
       "start_date": null,
       "end_date": null,
-      "milestone_id": "milestone_002"
+      "milestone_id": "milestone_002",
+      "tags": null
     },
     {
       "id": "work_item_006",
       "title": "Implement Dashboard UI",
       "description": "Build main dashboard interface",
-      "status": "blocked",
+      "status": "in_progress",
       "estimated_days": 8.0,
       "actual_days": null,
       "assigned_to": [
@@ -97,7 +98,8 @@
       ],
       "start_date": null,
       "end_date": null,
-      "milestone_id": "milestone_002"
+      "milestone_id": "milestone_002",
+      "tags": null
     },
     {
       "id": "work_item_007",
@@ -115,7 +117,7 @@
       "id": "work_item_008",
       "title": "Implement Payment API",
       "description": "Build payment processing endpoints",
-      "status": "blocked",
+      "status": "in_progress",
       "estimated_days": 7.0,
       "actual_days": null,
       "assigned_to": [
@@ -127,7 +129,8 @@
       ],
       "start_date": null,
       "end_date": null,
-      "milestone_id": "milestone_003"
+      "milestone_id": "milestone_003",
+      "tags": null
     },
     {
       "id": "work_item_009",
@@ -147,7 +150,7 @@
       "id": "work_item_010",
       "title": "Design Analytics Dashboard",
       "description": "Design analytics and reporting system",
-      "status": "blocked",
+      "status": "in_progress",
       "estimated_days": 4.0,
       "actual_days": null,
       "assigned_to": [
@@ -1248,33 +1251,6 @@
   ],
   "risks": [
     {
-      "id": "risk_dep_blocked_dep_001",
-      "title": "Schedule risk due to blocked dependency",
-      "description": "Work item 'Implement Authentication Backend' is blocked waiting for 'Design Authentication System' to complete. Expected delay: 14.0 days",
-      "severity": "medium",
-      "status": "materialised",
-      "probability": 0.8,
-      "impact": {
-        "p80_delay_days": 14.0,
-        "p50_delay_days": 7.0,
-        "blocked_item": "Implement Authentication Backend",
-        "blocking_item": "Design Authentication System"
-      },
-      "affected_items": [
-        "work_item_002"
-      ],
-      "detected_at": "2026-01-03T23:52:23.100552",
-      "accepted_at": "2026-01-04T15:17:04.306169",
-      "accepted_by": "default_owner",
-      "acceptance_boundary": {
-        "type": "date",
-        "date": "2026-01-09"
-      },
-      "next_date": "2026-01-09",
-      "forecast_method": "heuristic_stub",
-      "confidence": "LOW"
-    },
-    {
       "id": "risk_from_issue_002",
       "title": "Technical blocker: Database migration failing",
       "description": "Database migration script for user schema is failing in staging environment. Need to fix before deployment.",
@@ -1294,58 +1270,6 @@
       "mitigation_started_at": "2026-01-04T16:59:02.322087",
       "mitigation_decision": "dec_1767545942269",
       "mitigation_action": "abc",
-      "mitigation_due_date": null
-    },
-    {
-      "id": "risk_from_issue_003",
-      "title": "External dependency: Third-party API rate limiting",
-      "description": "Payment provider API is rate limiting our requests during peak hours. Need to implement exponential backoff.",
-      "severity": "medium",
-      "status": "materialised",
-      "probability": 1.0,
-      "impact": {
-        "description": "Intermittent failures during peak hours. Affects user experience.",
-        "original_issue_type": "external_dependency"
-      },
-      "affected_items": [
-        "work_item_005"
-      ],
-      "detected_at": "2026-01-01T16:45:00Z",
-      "next_date": null
-    },
-    {
-      "id": "risk_auto_blocked_milestone_002",
-      "title": "Blocked Dependencies in User Management",
-      "description": "2 work item(s) blocked: Implement User API, Implement Dashboard UI",
-      "severity": "medium",
-      "status": "materialised",
-      "probability": 1.0,
-      "impact": {
-        "delay_days": 4,
-        "affected_milestone": "milestone_002",
-        "blocked_items": [
-          "work_item_005",
-          "work_item_006"
-        ],
-        "blocked_item_names": [
-          "Implement User API",
-          "Implement Dashboard UI"
-        ]
-      },
-      "milestone_id": "milestone_002",
-      "affected_items": [
-        "work_item_005",
-        "work_item_006"
-      ],
-      "detected_at": "2026-01-04T16:57:37.702561",
-      "mitigated_at": null,
-      "accepted_at": null,
-      "accepted_by": null,
-      "acceptance_boundary": null,
-      "next_date": null,
-      "mitigation_started_at": null,
-      "mitigation_decision": null,
-      "mitigation_action": null,
       "mitigation_due_date": null
     },
     {
@@ -1370,73 +1294,6 @@
         "work_item_008"
       ],
       "detected_at": "2026-01-04T16:57:37.702645",
-      "mitigated_at": null,
-      "accepted_at": null,
-      "accepted_by": null,
-      "acceptance_boundary": null,
-      "next_date": null,
-      "mitigation_started_at": null,
-      "mitigation_decision": null,
-      "mitigation_action": null,
-      "mitigation_due_date": null
-    },
-    {
-      "id": "risk_auto_blocked_milestone_004",
-      "title": "Blocked Dependencies in Analytics Dashboard",
-      "description": "1 work item(s) blocked: Design Analytics Dashboard",
-      "severity": "medium",
-      "status": "materialised",
-      "probability": 1.0,
-      "impact": {
-        "delay_days": 2,
-        "affected_milestone": "milestone_004",
-        "blocked_items": [
-          "work_item_010"
-        ],
-        "blocked_item_names": [
-          "Design Analytics Dashboard"
-        ]
-      },
-      "milestone_id": "milestone_004",
-      "affected_items": [
-        "work_item_010"
-      ],
-      "detected_at": "2026-01-04T16:57:37.702658",
-      "mitigated_at": null,
-      "accepted_at": null,
-      "accepted_by": null,
-      "acceptance_boundary": null,
-      "next_date": null,
-      "mitigation_started_at": null,
-      "mitigation_decision": null,
-      "mitigation_action": null,
-      "mitigation_due_date": null
-    },
-    {
-      "id": "risk_auto_long_blocked",
-      "title": "Extended Blocked Time",
-      "description": "4 work items blocked: Implement User API, Implement Dashboard UI, Implement Payment API and 1 more",
-      "severity": "high",
-      "status": "materialised",
-      "probability": 1.0,
-      "impact": {
-        "delay_days": 12,
-        "cascading_delays": true,
-        "blocked_item_names": [
-          "Implement User API",
-          "Implement Dashboard UI",
-          "Implement Payment API",
-          "Design Analytics Dashboard"
-        ]
-      },
-      "milestone_id": null,
-      "affected_items": [
-        "work_item_005",
-        "work_item_006",
-        "work_item_008",
-        "work_item_010"
-      ],
-      "detected_at": "2026-01-04T16:57:37.702689",
       "mitigated_at": null,
       "accepted_at": null,
       "accepted_by": null,
