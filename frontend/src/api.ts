@@ -1,6 +1,8 @@
 // Use Vite proxy in development, or direct URL if VITE_API_URL is set
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
+console.log('API_BASE_URL:', API_BASE_URL);
+
 export interface ForecastRequest {
   decisions?: any[];
   risks?: any[];
@@ -298,7 +300,7 @@ export async function createDecision(decision: Decision): Promise<Decision> {
     return response.json();
   } catch (error: any) {
     if (error instanceof TypeError && error.message === 'Failed to fetch') {
-      throw new Error('Failed to connect to backend server. Please make sure the backend is running on http://localhost:8000');
+      throw new Error(`Failed to connect to backend at ${API_BASE_URL}. Error: ${error.message}`);
     }
     throw error;
   }
@@ -490,7 +492,7 @@ export async function listMilestones(): Promise<Milestone[]> {
     return response.json();
   } catch (error: any) {
     if (error instanceof TypeError && error.message === 'Failed to fetch') {
-      throw new Error('Failed to connect to backend server. Please make sure the backend is running on http://localhost:8000');
+      throw new Error(`Failed to connect to backend at ${API_BASE_URL}. Error: ${error.message}`);
     }
     throw error;
   }
@@ -645,7 +647,7 @@ export async function listActors(): Promise<Actor[]> {
     return response.json();
   } catch (error: any) {
     if (error instanceof TypeError && error.message === 'Failed to fetch') {
-      throw new Error('Failed to connect to backend server. Please make sure the backend is running on http://localhost:8000');
+      throw new Error(`Failed to connect to backend at ${API_BASE_URL}. Error: ${error.message}`);
     }
     throw error;
   }
@@ -756,7 +758,7 @@ export async function createOwnership(ownership: Ownership): Promise<Ownership> 
     return response.json();
   } catch (error: any) {
     if (error instanceof TypeError && error.message === 'Failed to fetch') {
-      throw new Error('Failed to connect to backend server. Please make sure the backend is running on http://localhost:8000');
+      throw new Error(`Failed to connect to backend at ${API_BASE_URL}. Error: ${error.message}`);
     }
     throw error;
   }

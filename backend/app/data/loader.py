@@ -6,16 +6,36 @@ from typing import Dict, Any
 
 def load_mock_world() -> Dict[str, Any]:
     """Load mock_world.json data file"""
-    # Try environment variable first (set by Vercel entry point), then fallback to relative path
-    root_dir = os.environ.get("PROJECT_ROOT")
-    if root_dir:
-        data_file = Path(root_dir) / "data" / "mock_world.json"
-    else:
-        # Local development fallback
-        data_dir = Path(__file__).parent.parent.parent.parent / "data"
-        data_file = data_dir / "mock_world.json"
+    # Try multiple possible locations for the data file
+    possible_paths = [
+        # 1. Environment variable (set by api/index.py)
+        Path(os.environ.get("PROJECT_ROOT", "")) / "data" / "mock_world.json",
+        # 2. Relative to current working directory
+        Path("data/mock_world.json"),
+        # 3. Relative to this file's location
+        Path(__file__).parent.parent.parent.parent / "data" / "mock_world.json",
+        # 4. In the task root (Vercel specific)
+        Path("/var/task/data/mock_world.json"),
+        # 5. Look in the same directory as index.py if we're in Vercel
+        Path("/var/task/api/data/mock_world.json")
+    ]
     
-    if not data_file.exists():
+    # Try to find it by walking the directory structure if we're on Vercel
+    if os.environ.get("VERCEL"):
+        for root, dirs, files in os.walk("/var/task"):
+            if "mock_world.json" in files:
+                possible_paths.append(Path(root) / "mock_world.json")
+    
+    data_file = None
+    for path in possible_paths:
+        try:
+            if path and path.exists():
+                data_file = path
+                break
+        except:
+            continue
+    
+    if not data_file:
         # Return empty structure if file doesn't exist
         return {
             "work_items": [],
