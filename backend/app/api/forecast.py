@@ -19,7 +19,7 @@ from app.engine.forecast import (
     Scenario,
     HypotheticalMitigation,
 )
-from app.data.loader import load_mock_data
+from app.data.loader import load_mock_world
 
 
 router = APIRouter(prefix="/api/forecast", tags=["forecast"])
@@ -90,7 +90,7 @@ def _get_state_snapshot() -> Dict[str, Any]:
     """Load current state snapshot"""
     # In production, this would aggregate from DB/cache
     # For now, load from mock data
-    return load_mock_data()
+    return load_mock_world()
 
 
 # ============================================================================
