@@ -72,7 +72,33 @@ export default function WorkItemsView() {
     e.preventDefault();
     try {
       if (editingItem) {
-        await updateWorkItem(editingItem.id, formData as WorkItem);
+        const updated = await updateWorkItem(editingItem.id, formData as WorkItem);
+        console.log('Work item updated via form:', updated);
+        console.log('Metadata from form update:', updated._metadata);
+        
+        setShowForm(false);
+        loadData();
+        toast.success('Work item updated');
+        
+        // Check if a risk was created
+        if (updated._metadata?.risk_created) {
+          const riskInfo = updated._metadata.risk_created;
+          console.log('Risk info from form:', riskInfo);
+        if (riskInfo.created || riskInfo.updated) {
+          const action = riskInfo.created ? 'created' : 'updated';
+          console.log('Showing risk notification from form:', action);
+          const milestoneText = riskInfo.milestone_name ? ` in ${riskInfo.milestone_name}` : '';
+          toast(
+            `Risk ${action}: "${riskInfo.blocked_item_name}" is blocked and affects ${riskInfo.dependent_count} dependent item(s)${milestoneText}`,
+            { 
+              icon: '⚠️',
+              duration: 5000
+            }
+          );
+        }
+        } else {
+          console.log('No risk metadata from form update');
+        }
       } else {
         const newItem: WorkItem = {
           id: `work_item_${Date.now()}`,
@@ -83,10 +109,10 @@ export default function WorkItemsView() {
           tags: formData.tags || [],
         } as WorkItem;
         await createWorkItem(newItem);
+        setShowForm(false);
+        loadData();
+        toast.success('Work item created');
       }
-      setShowForm(false);
-      loadData();
-      toast.success(editingItem ? 'Work item updated' : 'Work item created');
     } catch (error) {
       console.error('Error saving work item:', error);
       toast.error('Error saving work item');
@@ -114,19 +140,27 @@ export default function WorkItemsView() {
     try {
       const updated = await updateWorkItem(item.id, { ...item, status: newStatus });
       console.log('Work item updated successfully:', updated);
+      console.log('Metadata:', updated._metadata);
       await loadData();
       toast.success(`Work item ${newStatus.replace('_', ' ')}`);
       
       // Check if a risk was created
       if (updated._metadata?.risk_created) {
         const riskInfo = updated._metadata.risk_created;
+        console.log('Risk info:', riskInfo);
         if (riskInfo.created || riskInfo.updated) {
           const action = riskInfo.created ? 'created' : 'updated';
-          toast.error(
-            `⚠️ Risk ${action}: "${riskInfo.blocked_item_name}" is blocked and affects ${riskInfo.dependent_count} dependent item(s)`,
-            { duration: 6000 }
+          console.log('Showing risk notification:', action);
+          toast(
+            `Risk ${action}: "${riskInfo.blocked_item_name}" is blocked and affects ${riskInfo.dependent_count} dependent item(s)`,
+            { 
+              icon: '⚠️',
+              duration: 5000
+            }
           );
         }
+      } else {
+        console.log('No risk metadata found');
       }
     } catch (error) {
       console.error('Error toggling work item status:', error);

@@ -108,11 +108,16 @@ export default function MilestoneView({ milestoneId, onClose }: MilestoneViewPro
       // Check if a risk was created
       if (updated._metadata?.risk_created) {
         const riskInfo = updated._metadata.risk_created;
+        console.log('Risk info in milestone:', riskInfo);
         if (riskInfo.created || riskInfo.updated) {
           const action = riskInfo.created ? 'created' : 'updated';
-          toast.error(
-            `⚠️ Risk ${action}: "${riskInfo.blocked_item_name}" is blocked and affects ${riskInfo.dependent_count} dependent item(s)`,
-            { duration: 6000 }
+          console.log('Showing risk notification:', action);
+          toast(
+            `Risk ${action}: "${riskInfo.blocked_item_name}" is blocked and affects ${riskInfo.dependent_count} dependent item(s)`,
+            { 
+              icon: '⚠️',
+              duration: 5000
+            }
           );
         }
       }

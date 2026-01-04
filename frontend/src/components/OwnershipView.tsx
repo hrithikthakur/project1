@@ -282,7 +282,9 @@ export default function OwnershipView() {
     setShowDetail(true);
   }
 
-  const activeOwnership = ownership.filter((o) => !o.ended_at);
+  const activeOwnership = ownership
+    .filter((o) => !o.ended_at)
+    .sort((a, b) => new Date(b.assigned_at).getTime() - new Date(a.assigned_at).getTime());
 
   if (loading) {
     return <div className="view-loading">Loading ownership...</div>;

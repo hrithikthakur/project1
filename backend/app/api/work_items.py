@@ -177,8 +177,16 @@ def _create_materialized_risk_for_blocked_item(blocked_work_item_id: str, world:
     if not dependent_items:
         return None
     
-    # Get the blocked item's milestone
+    # Get the milestone - prefer blocked item's milestone, but fall back to dependent items' milestone
     milestone_id = blocked_item.get("milestone_id")
+    
+    # If blocked item has no milestone, try to get milestone from first dependent item
+    if not milestone_id and dependent_items:
+        for dep_item in dependent_items:
+            if dep_item.get("milestone_id"):
+                milestone_id = dep_item.get("milestone_id")
+                break
+    
     milestone_name = "Unknown"
     if milestone_id:
         milestone = next((m for m in milestones if m.get("id") == milestone_id), None)
@@ -203,7 +211,9 @@ def _create_materialized_risk_for_blocked_item(blocked_work_item_id: str, world:
         "updated": False,
         "risk_id": risk_id,
         "blocked_item_name": blocked_item_name,
-        "dependent_count": len(dependent_items)
+        "dependent_count": len(dependent_items),
+        "milestone_id": milestone_id,
+        "milestone_name": milestone_name
     }
     
     if existing_risk:
@@ -212,6 +222,7 @@ def _create_materialized_risk_for_blocked_item(blocked_work_item_id: str, world:
         existing_risk["detected_at"] = datetime.now().isoformat()
         existing_risk["description"] = f"'{blocked_item_name}' is BLOCKED. {len(dependent_items)} dependent item(s) affected: {dependent_list}"
         existing_risk["affected_items"] = [item["id"] for item in dependent_items]
+        existing_risk["milestone_id"] = milestone_id  # Update milestone association
         if "impact" in existing_risk:
             existing_risk["impact"]["delay_days"] = len(dependent_items) * 3
             existing_risk["impact"]["blocked_item"] = blocked_work_item_id
