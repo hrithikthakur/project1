@@ -440,12 +440,15 @@ export default function ForecastView() {
                   >
                     <option value="">Select a risk...</option>
                     {risks
-                      .filter((r) => r.milestone_id === selectedMilestone && ['open', 'materialised'].includes(r.status))
+                      .filter((r) => r.milestone_id === selectedMilestone && r.status !== 'closed')
                       .map((risk) => (
                         <option key={risk.id} value={risk.id}>
                           {risk.title} • {risk.status}
                         </option>
                       ))}
+                    {risks.filter((r) => r.milestone_id === selectedMilestone && r.status !== 'closed').length === 0 && (
+                      <option disabled>No risks found for this milestone</option>
+                    )}
                   </select>
                 </div>
 
