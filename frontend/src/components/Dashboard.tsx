@@ -122,17 +122,34 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   }
 
   // 2. ACTIVE MONITORING - Accepted risks (muted, reassuring)
-  function getMonitoringRisks(): Array<Risk & { daysUntilBoundary?: number, milestoneName?: string }> {
+  function getMonitoringRisks(): Array<Risk & { daysUntilBoundary?: number, boundaryLabel?: string, milestoneName?: string }> {
     const now = new Date();
     
     return risks
       .filter(r => r.status === 'accepted')
       .map(risk => {
         let daysUntilBoundary: number | undefined;
+        let boundaryLabel: string | undefined;
         
-        if ((risk as any).acceptance_boundary?.date) {
+        // Check for next_date (review date)
+        if ((risk as any).next_date) {
+          const nextDate = new Date((risk as any).next_date);
+          daysUntilBoundary = Math.ceil((nextDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+          boundaryLabel = 'Review';
+        }
+        // Check for acceptance_boundary with date
+        else if ((risk as any).acceptance_boundary?.type === 'date' && (risk as any).acceptance_boundary?.date) {
           const boundaryDate = new Date((risk as any).acceptance_boundary.date);
           daysUntilBoundary = Math.ceil((boundaryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+          boundaryLabel = 'Boundary';
+        }
+        // Check for threshold boundary
+        else if ((risk as any).acceptance_boundary?.type === 'threshold') {
+          boundaryLabel = `Threshold: ${(risk as any).acceptance_boundary.threshold}`;
+        }
+        // Check for event boundary
+        else if ((risk as any).acceptance_boundary?.type === 'event') {
+          boundaryLabel = `Event: ${(risk as any).acceptance_boundary.trigger}`;
         }
         
         const milestone = milestones.find(m => m.id === risk.milestone_id);
@@ -140,6 +157,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         return {
           ...risk,
           daysUntilBoundary,
+          boundaryLabel,
           milestoneName: milestone?.name,
         };
       });
@@ -463,13 +481,23 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                   {risk.title}
                 </div>
                 
-                {risk.daysUntilBoundary !== undefined && (
+                {risk.daysUntilBoundary !== undefined && risk.boundaryLabel && (
                   <div style={{ 
                     fontSize: '0.8rem', 
                     color: '#3498db',
                     marginBottom: '0.25rem',
                   }}>
-                    Boundary in {risk.daysUntilBoundary} day{risk.daysUntilBoundary !== 1 ? 's' : ''}
+                    {risk.boundaryLabel} in {risk.daysUntilBoundary} day{risk.daysUntilBoundary !== 1 ? 's' : ''}
+                  </div>
+                )}
+                
+                {!risk.daysUntilBoundary && risk.boundaryLabel && (
+                  <div style={{ 
+                    fontSize: '0.8rem', 
+                    color: '#3498db',
+                    marginBottom: '0.25rem',
+                  }}>
+                    {risk.boundaryLabel}
                   </div>
                 )}
                 

@@ -158,6 +158,15 @@ export default function ForecastView() {
     (wi) => wi.milestone_id === selectedMilestone
   );
 
+  // Get upstream dependencies for the selected milestone
+  // These are work items that milestone work items depend on
+  const upstreamDependencies = workItems.filter((wi) => {
+    // Check if any milestone work item depends on this work item
+    return milestoneWorkItems.some((mwi) => 
+      mwi.dependencies && mwi.dependencies.includes(wi.id)
+    );
+  });
+
   return (
     <div className="view-container">
       <div className="view-header">
@@ -360,19 +369,26 @@ export default function ForecastView() {
                 <div className="form-group">
                   {scenarioType === 'dependency_delay' && (
                     <>
-                      <label>Upstream Work Item (auto-filtered by milestone)</label>
+                      <label>Upstream Work Item to Delay</label>
                       <select
                         value={scenarioParams.work_item_id || ''}
                         onChange={(e) => setScenarioParams({ ...scenarioParams, work_item_id: e.target.value })}
                         className="detail-select"
                       >
-                        <option value="">Select a work item...</option>
-                        {milestoneWorkItems.map((wi) => (
-                          <option key={wi.id} value={wi.id}>
-                            {wi.title}
-                          </option>
-                        ))}
+                        <option value="">Select an upstream dependency...</option>
+                        {upstreamDependencies.length > 0 ? (
+                          upstreamDependencies.map((wi) => (
+                            <option key={wi.id} value={wi.id}>
+                              {wi.title} ({wi.milestone_id || 'external'})
+                            </option>
+                          ))
+                        ) : (
+                          <option value="" disabled>No upstream dependencies found</option>
+                        )}
                       </select>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
+                        Select a work item that this milestone depends on
+                      </p>
                       <div style={{ marginTop: '0.75rem' }}>
                         <label>Delay (days)</label>
                         <input

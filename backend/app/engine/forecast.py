@@ -465,16 +465,17 @@ def _calculate_dependency_delays(
         """Calculate realistic delay for a single dependency edge.
         
         Returns: (delay_days, is_scenario_delay)
+        
+        Note: Scenario delays are NOT calculated here - they're applied as own_delay
+        in _delay_for_work_item and propagate naturally through the dependency graph.
         """
         delay = 0.0
         is_scenario = False
         
-        # 1. Scenario delays (explicit what-if scenarios)
-        if dep_wi["id"] in scenario_delays:
-            delay = max(delay, float(scenario_delays[dep_wi["id"]]))
-            is_scenario = True
+        # Skip scenario delay calculation here to avoid double-counting
+        # Scenario delays are applied in _delay_for_work_item as own_delay
         
-        # 2. Progress-based delay calculation
+        # 1. Progress-based delay calculation
         if dep_wi.get("status") == "completed":
             return (delay, is_scenario)  # No delay from completed items
         
@@ -586,16 +587,18 @@ def _calculate_dependency_delays(
             memo[wi_id] = 0.0
             return 0.0
 
-        if wi.get("status") == "completed":
-            memo[wi_id] = 0.0
-            return 0.0
-
         # Calculate this item's own delay (from its status/progress)
         own_delay = 0.0
         
-        # IMPORTANT: Check for scenario delays first (what-if scenarios)
+        # IMPORTANT: Check for scenario delays FIRST (before completion check)
+        # Scenario delays represent "what if" hypotheticals that override current status
         if wi_id in scenario_delays:
             own_delay = max(own_delay, float(scenario_delays[wi_id]))
+        
+        # If no scenario delay and item is completed, return 0
+        if wi.get("status") == "completed" and wi_id not in scenario_delays:
+            memo[wi_id] = 0.0
+            return 0.0
         
         # Check for remaining work
         remaining_days = wi.get("remaining_days")
