@@ -1,10 +1,10 @@
 import json
 import os
 from pathlib import Path
-from typing import Dict, Any, Tuple
+from typing import Dict, Any
 
 
-def load_mock_world(return_diagnostics: bool = False):
+def load_mock_world() -> Dict[str, Any]:
     """Load mock_world.json data file"""
     # Try multiple possible locations for the data file
     possible_paths = [
@@ -33,16 +33,12 @@ def load_mock_world(return_diagnostics: bool = False):
             errors.append(f"Path {i+1} error: {str(e)}")
             continue
     
-    diagnostics = {
-        "paths_tried": errors,
-        "path_used": str(data_file) if data_file else None,
-    }
-    
     if not data_file:
         # Log which paths were tried before falling back to empty structure
         error_msg = "Could not find mock_world.json. Tried: " + "; ".join(errors)
         print(f"WARNING: {error_msg}")
-        empty_world = {
+        # Return empty structure if file doesn't exist
+        return {
             "work_items": [],
             "milestones": [],
             "dependencies": [],
@@ -53,12 +49,10 @@ def load_mock_world(return_diagnostics: bool = False):
             "decisions": [],
             "risks": []
         }
-        return (empty_world, diagnostics) if return_diagnostics else empty_world
     
     try:
         with open(data_file, 'r') as f:
-            data = json.load(f)
-            return (data, diagnostics) if return_diagnostics else data
+            return json.load(f)
     except Exception as e:
         print(f"ERROR loading {data_file}: {str(e)}")
         raise
