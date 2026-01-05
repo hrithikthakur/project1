@@ -296,20 +296,14 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       {/* 1. ATTENTION NOW - Top strip */}
       <section style={{ marginBottom: '3rem' }}>
         <h2 style={{ 
-          fontSize: '1.5rem', 
+          fontSize: '1.3rem', 
           fontWeight: 700, 
           marginBottom: '0.5rem',
           color: 'var(--text-primary)',
         }}>
           Risks Needing Attention Now
         </h2>
-        <p style={{ 
-          fontSize: '0.9rem', 
-          color: 'var(--text-secondary)', 
-          marginBottom: '1.5rem' 
-        }}>
-          These risks require immediate action or decision
-        </p>
+
         
         {attentionItems.length === 0 ? (
           <div style={{
@@ -412,21 +406,14 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       {/* 2. ACTIVE MONITORING - Middle (muted, calm) */}
       <section style={{ marginBottom: '3rem' }}>
         <h2 style={{ 
-          fontSize: '1.25rem', 
+          fontSize: '1.3rem', 
           fontWeight: 600, 
           marginBottom: '0.5rem',
           color: 'var(--text-secondary)',
         }}>
           Risks Under Active Monitoring
         </h2>
-        <p style={{ 
-          fontSize: '0.85rem', 
-          color: 'var(--text-secondary)', 
-          marginBottom: '1.5rem',
-          fontStyle: 'italic',
-        }}>
-          Accepted risks being tracked within boundaries
-        </p>
+       
         
         {monitoringRisks.length === 0 ? (
           <div style={{
@@ -503,12 +490,12 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       {/* 3. DELIVERY HEALTH - Bottom (orientation, not action) */}
       <section>
         <h2 style={{ 
-          fontSize: '1.25rem', 
+          fontSize: '1.3rem', 
           fontWeight: 600, 
           marginBottom: '1rem',
           color: 'var(--text-secondary)',
         }}>
-          Delivery Health
+          Milestone Delivery Health
         </h2>
         
         <div style={{ 
