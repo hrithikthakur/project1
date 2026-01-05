@@ -114,6 +114,13 @@ export interface WorkItem {
   end_date?: string;
   milestone_id?: string;
   tags?: string[];
+  // Progress tracking fields (for improved forecasting)
+  remaining_days?: number | null;
+  completion_percentage?: number | null;
+  // External dependency tracking
+  external_team_id?: string | null;
+  expected_completion_date?: string | null;
+  confidence_level?: number;
 }
 
 export interface Actor {

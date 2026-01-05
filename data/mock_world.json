@@ -5,7 +5,7 @@
       "title": "Design Authentication System",
       "description": "Design OAuth2 authentication flow",
       "status": "blocked",
-      "estimated_days": 3.0,
+      "estimated_days": 50.0,
       "actual_days": null,
       "assigned_to": [
         "actor_002"
@@ -14,13 +14,18 @@
       "start_date": null,
       "end_date": null,
       "milestone_id": "milestone_001",
-      "tags": null
+      "tags": null,
+      "completion_percentage": null,
+      "remaining_days": null,
+      "external_team_id": null,
+      "expected_completion_date": null,
+      "confidence_level": 0.7
     },
     {
       "id": "work_item_002",
       "title": "Implement Authentication Backend",
       "description": "Implement OAuth2 server endpoints",
-      "status": "completed",
+      "status": "blocked",
       "estimated_days": 5.0,
       "actual_days": null,
       "assigned_to": [
@@ -33,7 +38,12 @@
       "start_date": null,
       "end_date": null,
       "milestone_id": "milestone_001",
-      "tags": []
+      "tags": [],
+      "completion_percentage": null,
+      "remaining_days": null,
+      "external_team_id": null,
+      "expected_completion_date": null,
+      "confidence_level": 0.7
     },
     {
       "id": "work_item_003",
@@ -1664,8 +1674,8 @@
       "affected_items": [
         "work_item_002"
       ],
-      "detected_at": "2026-01-05T06:02:36.678512",
-      "mitigated_at": "2026-01-05T05:50:35.097839",
+      "detected_at": "2026-01-05T06:29:19.489618",
+      "mitigated_at": "2026-01-05T06:06:45.329648",
       "accepted_at": null,
       "accepted_by": null,
       "acceptance_boundary": null,
@@ -1711,9 +1721,9 @@
     {
       "id": "risk_from_blocked_work_item_002",
       "title": "Blocked Dependency: Implement Authentication Backend",
-      "description": "'Implement Authentication Backend' is BLOCKED. 1 dependent item(s) affected: Implement Authentication Frontend [AUTO-RESOLVED: work_item_002 is no longer blocked]",
+      "description": "'Implement Authentication Backend' is BLOCKED. 1 dependent item(s) affected: Implement Authentication Frontend",
       "severity": "medium",
-      "status": "closed",
+      "status": "materialised",
       "probability": 1.0,
       "impact": {
         "delay_days": 3,
@@ -1727,7 +1737,7 @@
       "affected_items": [
         "work_item_003"
       ],
-      "detected_at": "2026-01-04T17:41:08.762037",
+      "detected_at": "2026-01-05T06:34:40.295573",
       "mitigated_at": "2026-01-04T21:38:02.015001",
       "accepted_at": null,
       "accepted_by": null,

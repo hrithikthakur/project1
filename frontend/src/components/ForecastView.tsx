@@ -271,8 +271,12 @@ export default function ForecastView() {
             <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
               <button
                 onClick={() => {
-                  setShowScenario(!showScenario);
+                  const nextValue = !showScenario;
+                  setShowScenario(nextValue);
                   setShowMitigation(false);
+                  if (nextValue) {
+                    loadWorkItems();
+                  }
                 }}
                 className={showScenario ? 'btn-primary' : 'btn-secondary'}
               >
@@ -280,8 +284,13 @@ export default function ForecastView() {
               </button>
               <button
                 onClick={() => {
-                  setShowMitigation(!showMitigation);
+                  const nextValue = !showMitigation;
+                  setShowMitigation(nextValue);
                   setShowScenario(false);
+                  if (nextValue) {
+                    loadRisks();
+                    loadWorkItems();
+                  }
                 }}
                 className={showMitigation ? 'btn-primary' : 'btn-secondary'}
               >

@@ -496,6 +496,131 @@ export default function WorkItemView({ workItemId, onClose }: WorkItemViewProps)
               </div>
             )}
 
+            {/* Progress Tracking Fields - NEW! */}
+            {(workItem.remaining_days !== null || isEditing) && (
+              <div className="detail-row">
+                <div className="detail-label">
+                  Remaining Days
+                  {isEditing && <span style={{ fontSize: '0.75rem', color: '#6c757d', marginLeft: '4px' }}>(for forecasting)</span>}
+                </div>
+                <div className="detail-value">
+                  {isEditing ? (
+                    <input
+                      type="number"
+                      value={formData.remaining_days ?? ''}
+                      onChange={(e) => setFormData({ ...formData, remaining_days: e.target.value ? parseFloat(e.target.value) : null })}
+                      className="detail-input"
+                      min="0"
+                      step="0.5"
+                      placeholder="Days remaining"
+                    />
+                  ) : (
+                    <>
+                      {workItem.remaining_days} days
+                      {workItem.estimated_days && workItem.remaining_days !== null && (
+                        <span style={{ color: '#6c757d', marginLeft: '8px', fontSize: '0.9rem' }}>
+                          ({((1 - workItem.remaining_days / workItem.estimated_days) * 100).toFixed(0)}% complete)
+                        </span>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {(workItem.completion_percentage !== null || isEditing) && (
+              <div className="detail-row">
+                <div className="detail-label">
+                  Completion %
+                  {isEditing && <span style={{ fontSize: '0.75rem', color: '#6c757d', marginLeft: '4px' }}>(0-100)</span>}
+                </div>
+                <div className="detail-value">
+                  {isEditing ? (
+                    <input
+                      type="number"
+                      value={formData.completion_percentage !== null && formData.completion_percentage !== undefined ? formData.completion_percentage * 100 : ''}
+                      onChange={(e) => setFormData({ ...formData, completion_percentage: e.target.value ? parseFloat(e.target.value) / 100 : null })}
+                      className="detail-input"
+                      min="0"
+                      max="100"
+                      step="5"
+                      placeholder="0-100"
+                    />
+                  ) : (
+                    <>
+                      {(workItem.completion_percentage * 100).toFixed(0)}%
+                      <div style={{ 
+                        width: '100%', 
+                        height: '8px', 
+                        backgroundColor: '#e0e0e0', 
+                        borderRadius: '4px', 
+                        marginTop: '6px',
+                        overflow: 'hidden'
+                      }}>
+                        <div style={{ 
+                          width: `${workItem.completion_percentage * 100}%`, 
+                          height: '100%', 
+                          backgroundColor: '#28a745',
+                          transition: 'width 0.3s ease'
+                        }}></div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {(workItem.external_team_id || isEditing) && (
+              <div className="detail-row">
+                <div className="detail-label">
+                  External Team
+                  {isEditing && <span style={{ fontSize: '0.75rem', color: '#6c757d', marginLeft: '4px' }}>(for tracking)</span>}
+                </div>
+                <div className="detail-value">
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={formData.external_team_id || ''}
+                      onChange={(e) => setFormData({ ...formData, external_team_id: e.target.value || null })}
+                      className="detail-input"
+                      placeholder="e.g., team_platform, team_vendor"
+                    />
+                  ) : (
+                    <span style={{ 
+                      padding: '4px 8px', 
+                      backgroundColor: '#ff9800', 
+                      color: 'white', 
+                      borderRadius: '4px',
+                      fontSize: '0.9rem'
+                    }}>
+                      {workItem.external_team_id}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {(workItem.expected_completion_date || isEditing) && (
+              <div className="detail-row">
+                <div className="detail-label">
+                  Expected Completion
+                  {isEditing && <span style={{ fontSize: '0.75rem', color: '#6c757d', marginLeft: '4px' }}>(for forecasting)</span>}
+                </div>
+                <div className="detail-value">
+                  {isEditing ? (
+                    <input
+                      type="date"
+                      value={formatDateForInput(formData.expected_completion_date)}
+                      onChange={(e) => setFormData({ ...formData, expected_completion_date: e.target.value || null })}
+                      className="detail-input"
+                    />
+                  ) : (
+                    formatDate(workItem.expected_completion_date)
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="detail-row">
               <div className="detail-label">Start Date</div>
               <div className="detail-value">

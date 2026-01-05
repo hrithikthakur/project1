@@ -43,12 +43,12 @@ class ContributionTracker:
     
     def add(self, cause: str, days: float):
         """Add a contribution (only if meaningful)"""
-        if days > 0:
+        if abs(days) >= 0.1:  # Allow positive delays and negative improvements
             self.contributions.append(Contribution(cause=cause, days=days))
     
     def get_sorted(self) -> List[Dict[str, Any]]:
-        """Return contributions sorted by impact (descending)"""
-        sorted_contribs = sorted(self.contributions, key=lambda c: c.days, reverse=True)
+        """Return contributions sorted by magnitude of impact (descending)"""
+        sorted_contribs = sorted(self.contributions, key=lambda c: abs(c.days), reverse=True)
         return [{"cause": c.cause, "days": round(c.days, 1)} for c in sorted_contribs]
     
     def total_delay(self) -> float:
@@ -71,10 +71,20 @@ class HypotheticalMitigation:
 
 
 @dataclass
+class ExternalTeamHistory:
+    """Historical slip rate for external teams"""
+    team_id: str
+    avg_slip_days: float = 0.0  # Average historical slip in days
+    slip_probability: float = 0.3  # Probability of slipping (0-1)
+    reliability_score: float = 0.7  # Overall reliability (0-1, higher is better)
+
+
+@dataclass
 class ForecastOptions:
     """Options for forecast computation"""
     scenario: Optional[Scenario] = None
     hypothetical_mitigation: Optional[HypotheticalMitigation] = None
+    external_team_history: Optional[Dict[str, ExternalTeamHistory]] = None  # team_id -> history
 
 
 @dataclass
@@ -133,7 +143,7 @@ def forecastMilestone(
     
     # Calculate dependency delays (critical-path-ish) and external dependency count
     dep_delay_days, external_dep_count = _calculate_dependency_delays(
-        milestone, state_snapshot, tracker
+        milestone, state_snapshot, tracker, options.external_team_history
     )
     
     # Calculate risk delays
@@ -207,9 +217,24 @@ def _get_work_items_for_milestone(milestone_id: str, state: Dict[str, Any]) -> L
 
 
 def _get_risks_for_milestone(milestone_id: str, state: Dict[str, Any]) -> List[Dict]:
-    """Get all risks affecting a milestone"""
+    """Get all risks affecting a milestone (directly or via work items)"""
     risks = state.get("risks", [])
-    return [r for r in risks if r.get("milestone_id") == milestone_id]
+    work_items = _get_work_items_for_milestone(milestone_id, state)
+    work_item_ids = {wi["id"] for wi in work_items}
+    
+    affected_risks = []
+    for r in risks:
+        # Direct association
+        if r.get("milestone_id") == milestone_id:
+            affected_risks.append(r)
+            continue
+            
+        # Indirect association via affected items
+        affected_items = r.get("affected_items", [])
+        if any(item_id in work_item_ids for item_id in affected_items):
+            affected_risks.append(r)
+            
+    return affected_risks
 
 
 def _get_dependencies(state: Dict[str, Any]) -> List[Dict]:
@@ -378,17 +403,13 @@ def _apply_hypothetical_mitigation(
                     mitigation.expected_impact_reduction_days
                 )
                 
-                tracker.add(
-                    f"Hypothetical mitigation: {risk.get('title', 'Risk')}",
-                    -mitigation.expected_impact_reduction_days  # Negative = improvement
-                )
+                # Note: We don't add to tracker here. 
+                # The improvement will be reflected when _calculate_risk_delays 
+                # processes this modified risk.
             else:
                 # Default: assume mitigation moves OPEN -> MITIGATING
                 # This reduces the buffer
-                original_status = risk.get("status")
                 risk["status"] = "mitigating"
-                
-                # Don't add to tracker here - will be reflected in risk delay calculation
     
     return state
 
@@ -400,13 +421,19 @@ def _apply_hypothetical_mitigation(
 def _calculate_dependency_delays(
     milestone: Dict,
     state: Dict[str, Any],
-    tracker: ContributionTracker
+    tracker: ContributionTracker,
+    external_team_history: Optional[Dict[str, ExternalTeamHistory]] = None
 ) -> Tuple[float, int]:
     """
-    Calculate delays from dependencies using a simple critical-path accumulation.
+    Calculate delays from dependencies using realistic estimation:
     
-    We walk dependency chains and accumulate delay along the longest upstream path,
-    so multiple upstream slips add up instead of taking just a single max ripple.
+    1. Progress-based delays: Use completion % and remaining effort
+    2. Date-based delays: Calculate based on expected vs needed dates
+    3. External team slip rates: Apply historical slip rates
+    4. Probabilistic delays: Weight delays by probability
+    5. Criticality: Factor in dependency criticality and slack
+    
+    Returns: (total_delay_days, external_dep_count)
     """
     total_delay = 0.0
     external_dep_count = 0
@@ -414,6 +441,8 @@ def _calculate_dependency_delays(
     work_items = _get_work_items_for_milestone(milestone_id, state)
     all_work_items = state.get("work_items", [])
     scenario_delays = state.get("scenario_delays", {})
+    external_team_history = external_team_history or {}
+    current_date = datetime.now()
 
     # Build incoming dependency map from work item dependency lists (authoritative)
     incoming_map: Dict[str, List[str]] = {}
@@ -422,8 +451,130 @@ def _calculate_dependency_delays(
             if dep_id:
                 incoming_map.setdefault(wi["id"], []).append(dep_id)
 
+    # Also get explicit Dependency objects for advanced properties
+    dependencies = state.get("dependencies", [])
+    dep_props: Dict[Tuple[str, str], Dict] = {}
+    for dep in dependencies:
+        key = (dep.get("from_id"), dep.get("to_id"))
+        dep_props[key] = dep
+
     wi_lookup = {wi["id"]: wi for wi in all_work_items}
     memo: Dict[str, float] = {}
+
+    def _calculate_realistic_delay(wi: Dict, dep_wi: Dict, dep_properties: Optional[Dict] = None) -> Tuple[float, bool]:
+        """Calculate realistic delay for a single dependency edge.
+        
+        Returns: (delay_days, is_scenario_delay)
+        """
+        delay = 0.0
+        is_scenario = False
+        
+        # 1. Scenario delays (explicit what-if scenarios)
+        if dep_wi["id"] in scenario_delays:
+            delay = max(delay, float(scenario_delays[dep_wi["id"]]))
+            is_scenario = True
+        
+        # 2. Progress-based delay calculation
+        if dep_wi.get("status") == "completed":
+            return (delay, is_scenario)  # No delay from completed items
+        
+        # Check if we have progress tracking
+        completion_pct = dep_wi.get("completion_percentage")
+        remaining_days = dep_wi.get("remaining_days")
+        
+        if remaining_days is not None and remaining_days > 0:
+            # We have explicit remaining effort - use it
+            # Apply criticality factor
+            criticality_multiplier = 1.0
+            if dep_properties:
+                crit = dep_properties.get("criticality", "medium")
+                criticality_multiplier = {"low": 0.5, "medium": 1.0, "high": 1.5, "critical": 2.0}.get(crit, 1.0)
+            
+            potential_delay = remaining_days * criticality_multiplier
+            
+            # Apply slack - if there's slack, reduce the delay
+            slack = dep_properties.get("slack_days", 0.0) if dep_properties else 0.0
+            potential_delay = max(0, potential_delay - slack)
+            
+            if potential_delay > delay:
+                delay = potential_delay
+                is_scenario = False  # Real delay, not scenario
+        
+        elif completion_pct is not None:
+            # Use completion percentage to estimate remaining work
+            estimated_days = dep_wi.get("estimated_days", 5.0)
+            remaining = estimated_days * (1.0 - completion_pct)
+            potential_delay = remaining * 0.7  # Conservative multiplier
+            if potential_delay > delay:
+                delay = potential_delay
+                is_scenario = False  # Real delay, not scenario
+        
+        # 3. Date-based delay calculation
+        expected_completion = dep_wi.get("expected_completion_date")
+        if expected_completion:
+            if isinstance(expected_completion, str):
+                expected_completion = datetime.fromisoformat(expected_completion.replace("Z", "+00:00"))
+            
+            # When do we need this dependency? (Conservative: assume we need it now)
+            needed_date = current_date
+            if wi.get("start_date"):
+                needed_date = wi["start_date"]
+                if isinstance(needed_date, str):
+                    needed_date = datetime.fromisoformat(needed_date.replace("Z", "+00:00"))
+            
+            date_based_delay = (expected_completion - needed_date).days
+            if date_based_delay > 0 and date_based_delay > delay:
+                delay = date_based_delay
+                is_scenario = False  # Real delay, not scenario
+        
+        # 4. External team historical slip rate
+        external_team_id = dep_wi.get("external_team_id")
+        if external_team_id and external_team_id in external_team_history:
+            team_history = external_team_history[external_team_id]
+            
+            # Apply historical slip rate
+            base_estimate = dep_wi.get("estimated_days", 5.0)
+            expected_slip = base_estimate * (1 - team_history.reliability_score)
+            
+            # Weight by probability of slip
+            probabilistic_slip = expected_slip * team_history.slip_probability
+            
+            if probabilistic_slip > delay:
+                delay = probabilistic_slip
+                is_scenario = False  # Real delay, not scenario
+        
+        # 5. Status-based delays (fallback for items without detailed tracking)
+        if delay == 0.0 or not is_scenario:  # Only apply if we haven't calculated a better estimate
+            if dep_wi.get("milestone_id") and dep_wi.get("milestone_id") != milestone_id:
+                if dep_wi.get("status") != "completed":
+                    # External milestone dependency - use confidence level if available
+                    confidence = dep_wi.get("confidence_level", 0.7)
+                    base_delay = dep_wi.get("estimated_days", 5.0) * (1.0 - confidence)
+                    if base_delay > delay:
+                        delay = base_delay
+                        is_scenario = False
+            
+            if dep_wi.get("status") == "blocked" and 5.0 > delay:
+                # Blocked items - estimate time to unblock
+                delay = 5.0  # More realistic than flat 3 days
+                is_scenario = False
+            
+            if dep_wi.get("status") == "in_progress" and delay == 0.0:
+                # In-progress items without other tracking - use estimated remaining
+                estimated_days = dep_wi.get("estimated_days", 0)
+                if estimated_days > 0:
+                    # Assume 50% complete if no other info
+                    potential_delay = estimated_days * 0.5
+                    if potential_delay > delay:
+                        delay = potential_delay
+                        is_scenario = False
+        
+        # 6. Probabilistic weighting
+        if dep_properties and dep_properties.get("probability_delay") is not None:
+            prob = dep_properties.get("probability_delay", 0.3)
+            delay = delay * prob
+        
+        return (delay, is_scenario)
 
     def _delay_for_work_item(wi_id: str) -> float:
         """Recursive critical-path delay accumulation for a work item."""
@@ -435,55 +586,96 @@ def _calculate_dependency_delays(
             memo[wi_id] = 0.0
             return 0.0
 
-        # Base delay from this node (status/scenario)
-        base_delay = 0.0
-        if wi_id in scenario_delays:
-            base_delay = max(base_delay, float(scenario_delays[wi_id]))
+        if wi.get("status") == "completed":
+            memo[wi_id] = 0.0
+            return 0.0
 
-        if wi.get("milestone_id") and wi.get("milestone_id") != milestone_id:
-            if wi.get("status") != "completed":
-                base_delay = max(base_delay, 2.0)
-        if wi.get("status") == "blocked":
-            base_delay = max(base_delay, 3.0)
+        # Calculate this item's own delay (from its status/progress)
+        own_delay = 0.0
+        
+        # Check for remaining work
+        remaining_days = wi.get("remaining_days")
+        if remaining_days is not None and remaining_days > 0:
+            own_delay = remaining_days
+        elif wi.get("completion_percentage") is not None:
+            estimated_days = wi.get("estimated_days", 0)
+            completion_pct = wi.get("completion_percentage")
+            own_delay = estimated_days * (1.0 - completion_pct)
+        elif wi.get("status") == "blocked":
+            own_delay = 5.0  # Blocked items
+        elif wi.get("status") == "in_progress":
+            estimated_days = wi.get("estimated_days", 0)
+            if estimated_days > 0:
+                own_delay = estimated_days * 0.5  # Assume 50% remaining
 
-        # Walk upstream dependencies
-        chain_delay = 0.0
+        # Calculate delay from direct dependencies
+        max_upstream_delay = 0.0
         for upstream_id in incoming_map.get(wi_id, []):
-            upstream_delay = _delay_for_work_item(upstream_id)
-            edge_delay = 0.0
             upstream_wi = wi_lookup.get(upstream_id)
+            if not upstream_wi:
+                continue
+            
+            # Get dependency properties if available
+            dep_key = (wi_id, upstream_id)
+            dep_properties = dep_props.get(dep_key)
+            
+            # Calculate realistic delay for this edge
+            edge_delay, _ = _calculate_realistic_delay(wi, upstream_wi, dep_properties)
+            
+            # Recursively get upstream delays
+            upstream_delay = _delay_for_work_item(upstream_id)
+            
+            # Accumulate along critical path
+            total_path_delay = upstream_delay + edge_delay
+            max_upstream_delay = max(max_upstream_delay, total_path_delay)
 
-            if upstream_wi:
-                if upstream_wi.get("milestone_id") and upstream_wi.get("milestone_id") != milestone_id:
-                    if upstream_wi.get("status") != "completed":
-                        edge_delay = max(edge_delay, 2.0)
-                if upstream_wi.get("status") == "blocked":
-                    edge_delay = max(edge_delay, 3.0)
-            if upstream_id in scenario_delays:
-                edge_delay = max(edge_delay, float(scenario_delays[upstream_id]))
-
-            chain_delay = max(chain_delay, upstream_delay + edge_delay)
-
-        total = max(base_delay, chain_delay)
-        memo[wi_id] = total
-        return total
+        # Total delay is the max of own delay and upstream delays
+        total_delay = max(own_delay, max_upstream_delay)
+        memo[wi_id] = total_delay
+        return total_delay
 
     # Evaluate delays for milestone work items
     for wi in work_items:
         if wi.get("status") == "completed":
             continue
+        
         wi_id = wi["id"]
-        delay = 0.0
+        wi_max_delay = 0.0
+        
         for upstream_id in incoming_map.get(wi_id, []):
-            upstream_delay = _delay_for_work_item(upstream_id)
-            if upstream_delay > 0:
-                upstream_name = wi_lookup.get(upstream_id, {}).get("title", upstream_id)
-                tracker.add(f"Dependency chain via {upstream_name}", upstream_delay)
-            delay = max(delay, upstream_delay)
             upstream_wi = wi_lookup.get(upstream_id)
-            if upstream_wi and upstream_wi.get("milestone_id") and upstream_wi.get("milestone_id") != milestone_id:
+            if not upstream_wi:
+                continue
+            
+            upstream_delay = _delay_for_work_item(upstream_id)
+            
+            if upstream_delay > 0.5:  # Only track meaningful delays
+                upstream_name = upstream_wi.get("title", upstream_id)
+                
+                # Check if this is a scenario delay
+                if upstream_id in scenario_delays:
+                    # This is an explicit what-if scenario
+                    tracker.add(f"Scenario: {upstream_name} delayed by {scenario_delays[upstream_id]:.0f}d", upstream_delay)
+                else:
+                    # Add context about why there's a delay
+                    reason_parts = []
+                    if upstream_wi.get("remaining_days"):
+                        reason_parts.append(f"{upstream_wi['remaining_days']:.1f}d remaining")
+                    if upstream_wi.get("external_team_id"):
+                        reason_parts.append("external team")
+                    if upstream_wi.get("status") == "blocked":
+                        reason_parts.append("blocked")
+                    
+                    reason = f" ({', '.join(reason_parts)})" if reason_parts else ""
+                    tracker.add(f"Dependency: {upstream_name}{reason}", upstream_delay)
+            
+            wi_max_delay = max(wi_max_delay, upstream_delay)
+            
+            # Count external dependencies
+            if upstream_wi.get("milestone_id") and upstream_wi.get("milestone_id") != milestone_id:
                 external_dep_count += 1
-        total_delay = max(total_delay, delay)
+        
+        total_delay = max(total_delay, wi_max_delay)
 
     return total_delay, external_dep_count
 

@@ -801,27 +801,128 @@ export default function RisksView() {
               gap: '0.75rem', 
               justifyContent: 'space-between', 
               alignItems: 'center',
-              paddingTop: '1.25rem' 
+              paddingTop: '1.25rem', 
+              borderTop: '1px solid #e2e8f0' 
             }}>
               <div>
-                <button onClick={(e) => { e.stopPropagation(); handleDelete(selectedRisk.id); closeRiskModal(); }} style={{ 
-                  background: 'none', border: 'none', color: '#94a3b8', fontSize: '0.8rem', cursor: 'pointer', textDecoration: 'underline'
-                }}>Delete Risk Entry</button>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); handleDelete(selectedRisk.id); closeRiskModal(); }} 
+                  style={{ 
+                    background: 'none', 
+                    border: 'none', 
+                    color: '#94a3b8', 
+                    fontSize: '0.8rem', 
+                    cursor: 'pointer', 
+                    textDecoration: 'underline',
+                    transition: 'color 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#dc2626'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
+                >
+                  Delete Risk Entry
+                </button>
               </div>
               <div style={{ display: 'flex', gap: '0.75rem' }}>
-                <button className="btn-secondary" onClick={(e) => { e.stopPropagation(); closeRiskModal(); handleEdit(selectedRisk); }} style={{ borderRadius: '8px', padding: '0.5rem 1rem' }}>
+                <button 
+                  className="btn-secondary" 
+                  onClick={(e) => { e.stopPropagation(); closeRiskModal(); handleEdit(selectedRisk); }} 
+                  style={{ 
+                    borderRadius: '8px', 
+                    padding: '0.5rem 1rem',
+                    border: '1px solid #e2e8f0',
+                    backgroundColor: '#ffffff',
+                    color: '#475569',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f8fafc';
+                    e.currentTarget.style.borderColor = '#cbd5e1';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#ffffff';
+                    e.currentTarget.style.borderColor = '#e2e8f0';
+                  }}
+                >
                   Change Decision
                 </button>
                 {selectedRisk.status === 'open' || selectedRisk.status === 'accepted' ? (
-                  <button className="btn-primary" style={{ backgroundColor: '#2563eb', border: 'none', borderRadius: '8px', padding: '0.5rem 1.25rem' }} onClick={() => { closeRiskModal(); handleEdit(selectedRisk); }}>
+                  <button 
+                    className="btn-primary" 
+                    style={{ 
+                      backgroundColor: '#2563eb', 
+                      border: 'none', 
+                      borderRadius: '8px', 
+                      padding: '0.5rem 1.25rem',
+                      color: '#ffffff',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+                    }} 
+                    onClick={() => { closeRiskModal(); handleEdit(selectedRisk); }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#1d4ed8';
+                      e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(37, 99, 235, 0.3)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#2563eb';
+                      e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)';
+                    }}
+                  >
                     Mitigate
                   </button>
                 ) : selectedRisk.status === 'mitigating' ? (
-                  <button className="btn-primary" style={{ backgroundColor: '#059669', border: 'none', borderRadius: '8px', padding: '0.5rem 1.25rem' }} onClick={() => { closeRiskModal(); handleEdit(selectedRisk); }}>
+                  <button 
+                    className="btn-primary" 
+                    style={{ 
+                      backgroundColor: '#059669', 
+                      border: 'none', 
+                      borderRadius: '8px', 
+                      padding: '0.5rem 1.25rem',
+                      color: '#ffffff',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+                    }} 
+                    onClick={() => { closeRiskModal(); handleEdit(selectedRisk); }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#047857';
+                      e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(5, 150, 105, 0.3)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#059669';
+                      e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)';
+                    }}
+                  >
                     Complete
                   </button>
                 ) : (
-                  <button className="btn-primary" style={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', padding: '0.5rem 1.25rem' }} onClick={closeRiskModal}>
+                  <button 
+                    className="btn-primary" 
+                    style={{ 
+                      backgroundColor: '#1e293b', 
+                      border: 'none', 
+                      borderRadius: '8px', 
+                      padding: '0.5rem 1.25rem',
+                      color: '#ffffff',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+                    }} 
+                    onClick={closeRiskModal}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#0f172a';
+                      e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.2)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#1e293b';
+                      e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)';
+                    }}
+                  >
                     Review & Close
                   </button>
                 )}
