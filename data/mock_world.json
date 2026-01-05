@@ -4,7 +4,7 @@
       "id": "work_item_001",
       "title": "Design Authentication System",
       "description": "Design OAuth2 authentication flow",
-      "status": "blocked",
+      "status": "completed",
       "estimated_days": 3.0,
       "actual_days": null,
       "assigned_to": [
@@ -588,7 +588,7 @@
       "object_id": "risk_from_blocked_work_item_007",
       "owner_actor_id": "actor_005",
       "assigned_at": "2026-01-04T17:38:40.058000Z",
-      "ended_at": null,
+      "ended_at": "2026-01-05T05:52:21.341000+00:00",
       "assigned_by_actor_id": null,
       "reason": ""
     },
@@ -661,6 +661,36 @@
       "ended_at": null,
       "assigned_by_actor_id": null,
       "reason": null
+    },
+    {
+      "id": "ownership_1767592333754",
+      "object_type": "milestone",
+      "object_id": "milestone_002",
+      "owner_actor_id": "actor_004",
+      "assigned_at": "2026-01-05T05:52:13.754000Z",
+      "ended_at": null,
+      "assigned_by_actor_id": null,
+      "reason": ""
+    },
+    {
+      "id": "ownership_1767592341341",
+      "object_type": "risk",
+      "object_id": "risk_from_blocked_work_item_007",
+      "owner_actor_id": "actor_004",
+      "assigned_at": "2026-01-05T05:52:21.341000Z",
+      "ended_at": null,
+      "assigned_by_actor_id": null,
+      "reason": ""
+    },
+    {
+      "id": "ownership_1767592348362",
+      "object_type": "work_item",
+      "object_id": "work_item_007",
+      "owner_actor_id": "actor_005",
+      "assigned_at": "2026-01-05T05:52:28.362000Z",
+      "ended_at": null,
+      "assigned_by_actor_id": null,
+      "reason": ""
     }
   ],
   "roles": [
@@ -1608,9 +1638,9 @@
     {
       "id": "risk_from_blocked_work_item_001",
       "title": "Blocked Dependency: Design Authentication System",
-      "description": "'Design Authentication System' is BLOCKED. 1 dependent item(s) affected: Implement Authentication Backend",
+      "description": "'Design Authentication System' is BLOCKED. 1 dependent item(s) affected: Implement Authentication Backend [AUTO-RESOLVED: work_item_001 is no longer blocked]",
       "severity": "medium",
-      "status": "materialised",
+      "status": "closed",
       "probability": 1.0,
       "impact": {
         "delay_days": 3,
@@ -1625,7 +1655,7 @@
         "work_item_002"
       ],
       "detected_at": "2026-01-05T05:47:39.077867",
-      "mitigated_at": "2026-01-05T05:35:16.508802",
+      "mitigated_at": "2026-01-05T05:50:35.097839",
       "accepted_at": null,
       "accepted_by": null,
       "acceptance_boundary": null,

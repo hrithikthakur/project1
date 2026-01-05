@@ -127,17 +127,28 @@ export default function OwnershipView() {
       case 'decision':
         const decision = decisions.find((d) => d.id === objectId);
         if (!decision) return objectId;
-        
-        // Format subtype nicely
-        const formattedSubtype = decision.subtype
-          .split('_')
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-          .join(' ');
-          
-        return `${formattedSubtype} (${decision.milestone_name})`;
+        return formatDecisionName(decision);
       default:
         return objectId;
     }
+  }
+
+  function formatDecisionName(decision: Decision) {
+    if (!decision) return 'Unknown Decision';
+    
+    // Use subtype if available, otherwise decision_type
+    const typeToFormat = decision.subtype || decision.decision_type;
+    const formattedType = typeToFormat
+      ? typeToFormat
+          .split('_')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+          .join(' ')
+      : 'Decision';
+      
+    const milestoneInfo = decision.milestone_name ? ` (${decision.milestone_name})` : '';
+    const statusInfo = decision.status ? ` [${decision.status.charAt(0).toUpperCase() + decision.status.slice(1)}]` : '';
+    
+    return `${formattedType}${milestoneInfo}${statusInfo}`;
   }
 
   function formatObjectType(objectType: string) {
@@ -227,13 +238,21 @@ export default function OwnershipView() {
   function getAvailableObjects() {
     switch (formData.object_type) {
       case 'milestone':
-        return milestones.map(m => ({ id: m.id, name: m.name }));
+        return [...milestones]
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map(m => ({ id: m.id, name: m.name }));
       case 'work_item':
-        return workItems.map(w => ({ id: w.id, name: w.title }));
+        return [...workItems]
+          .sort((a, b) => a.title.localeCompare(b.title))
+          .map(w => ({ id: w.id, name: w.title }));
       case 'risk':
-        return risks.map(r => ({ id: r.id, name: r.title }));
+        return [...risks]
+          .sort((a, b) => a.title.localeCompare(b.title))
+          .map(r => ({ id: r.id, name: r.title }));
       case 'decision':
-        return decisions.map(d => ({ id: d.id, name: `${d.decision_type} - ${d.milestone_name} (${d.status})` }));
+        return [...decisions]
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+          .map(d => ({ id: d.id, name: formatDecisionName(d) }));
       default:
         return [];
     }

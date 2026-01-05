@@ -600,8 +600,11 @@ export default function RisksView() {
             maxWidth: '720px', 
             borderRadius: '12px', 
             boxShadow: '0 16px 24px -8px rgba(0, 0, 0, 0.1), 0 6px 12px -6px rgba(0, 0, 0, 0.05)',
-            padding: '1.5rem'
+            padding: '1.5rem',
+            maxHeight: '90vh',
+            overflowY: 'auto'
           }}>
+            {/* Header */}
             <div style={{ 
               display: 'flex', 
               justifyContent: 'space-between', 
@@ -619,49 +622,25 @@ export default function RisksView() {
                   </h3>
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem' }}>
-                  <span
-                    className="status-badge"
-                    style={{ 
-                      backgroundColor: getSeverityColor(selectedRisk.severity),
-                      padding: '3px 10px',
-                      borderRadius: '9999px',
-                      fontSize: '0.72rem',
-                      fontWeight: 600,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.02em'
-                    }}
-                  >
+                  <span className="status-badge" style={{ 
+                    backgroundColor: getSeverityColor(selectedRisk.severity),
+                    padding: '3px 10px', borderRadius: '9999px', fontSize: '0.72rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.02em'
+                  }}>
                     {selectedRisk.severity}
                   </span>
-                  <span
-                    className="status-badge"
-                    style={{ 
-                      backgroundColor: getStatusColor(selectedRisk.status),
-                      padding: '3px 10px',
-                      borderRadius: '9999px',
-                      fontSize: '0.72rem',
-                      fontWeight: 600,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.02em'
-                    }}
-                  >
+                  <span className="status-badge" style={{ 
+                    backgroundColor: getStatusColor(selectedRisk.status),
+                    padding: '3px 10px', borderRadius: '9999px', fontSize: '0.72rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.02em'
+                  }}>
                     {selectedRisk.status}
                   </span>
                 </div>
               </div>
               <button 
-                onClick={closeRiskModal}
+                onClick={closeRiskModal} 
                 style={{
-                  background: '#f1f5f9',
-                  border: 'none',
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  color: '#64748b',
+                  background: '#f1f5f9', border: 'none', width: '32px', height: '32px', borderRadius: '50%',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b',
                   transition: 'all 0.2s'
                 }}
                 onMouseEnter={(e) => {
@@ -672,367 +651,183 @@ export default function RisksView() {
                   e.currentTarget.style.backgroundColor = '#f1f5f9';
                   e.currentTarget.style.color = '#64748b';
                 }}
-              >
-                ✕
-              </button>
-            </div>
-            
-            <div style={{ marginBottom: '1.25rem' }}>
-              <h4 style={{ 
-                marginBottom: '0.5rem', 
-                fontSize: '0.875rem', 
-                fontWeight: 600, 
-                color: '#64748b', 
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em'
-              }}>Description</h4>
-              <p style={{ 
-                lineHeight: '1.5', 
-                color: '#1f2937', 
-                fontSize: '0.95rem',
-                margin: 0
-              }}>{selectedRisk.description}</p>
+              >✕</button>
             </div>
 
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-              gap: '0.75rem',
-              marginBottom: '1.25rem',
-            }}>
-              <div style={{ 
-                padding: '0.9rem', 
-                backgroundColor: '#f8fafc', 
-                borderRadius: '10px',
-                border: '1px solid #e2e8f0'
-              }}>
-                <div style={{ fontSize: '0.85rem', color: '#1e40af', marginBottom: '0.35rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span>📈</span> Probability
-                </div>
-                <div style={{ fontSize: '1.35rem', fontWeight: 700, color: '#1e3a8a' }}>
-                  {(selectedRisk.probability * 100).toFixed(0)}%
-                </div>
-              </div>
-              <div style={{ 
-                padding: '0.9rem', 
-                backgroundColor: '#fffbeb', 
-                borderRadius: '10px',
-                border: '1px solid #fef3c7'
-              }}>
-                <div style={{ fontSize: '0.85rem', color: '#9a3412', marginBottom: '0.35rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span>📦</span> Affected Items
-                </div>
-                <div style={{ fontSize: '1.35rem', fontWeight: 700, color: '#7c2d12' }}>
-                  {selectedRisk.affected_items.length}
-                </div>
-              </div>
-              <div style={{ 
-                padding: '0.9rem', 
-                backgroundColor: '#ffffff', 
-                borderRadius: '10px',
-                border: '1px solid #e2e8f0'
-              }}>
-                <div style={{ fontSize: '0.85rem', color: '#475569', marginBottom: '0.35rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span>📅</span> Detected
-                </div>
-                <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#1e293b' }}>
-                  {formatDate(selectedRisk.detected_at)}
-                </div>
-              </div>
-            </div>
-
-            {/* Acceptance Information */}
-            {selectedRisk.status === 'accepted' && (selectedRisk as any).accepted_at && (
-              <div style={{
-                marginBottom: '1.25rem',
-                padding: '1rem',
-                backgroundColor: '#f8fafc',
-                borderLeft: '3px solid #94a3b8',
-                borderRadius: '10px',
-              }}>
-                <div style={{ 
-                  fontSize: '0.95rem', 
-                  fontWeight: 700, 
-                  color: '#334155',
-                  marginBottom: '0.75rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                }}>
-                  <span style={{ 
-                    backgroundColor: '#94a3b8', 
-                    color: 'white', 
-                    width: '22px', 
-                    height: '22px', 
-                    borderRadius: '50%', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    fontSize: '0.7rem'
-                  }}>✓</span>
-                  <span>Risk Accepted</span>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div style={{ fontSize: '0.85rem', color: '#475569' }}>
-                    <div style={{ marginBottom: '0.5rem' }}>
-                      <strong style={{ color: '#1e293b' }}>Accepted on:</strong> {formatDateTime((selectedRisk as any).accepted_at)}
+            {/* Section 1: ACTIVE MODE / DECISION CONTEXT */}
+            <div style={{ marginBottom: '1.5rem' }}>
+              {selectedRisk.status === 'accepted' ? (
+                <div style={{ padding: '1rem', backgroundColor: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                    <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ backgroundColor: '#94a3b8', color: 'white', width: '20px', height: '20px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem' }}>✓</span>
+                      Monitoring Mode
                     </div>
-                    {(selectedRisk as any).accepted_by && (
-                      <div style={{ marginBottom: '0.5rem' }}>
-                        <strong style={{ color: '#1e293b' }}>Accepted by:</strong> {(selectedRisk as any).accepted_by}
-                      </div>
-                    )}
-                    {(selectedRisk as any).next_date && (
-                      <div style={{ marginBottom: '0.5rem' }}>
-                        <strong style={{ color: '#1e293b' }}>Next review:</strong> {formatDate((selectedRisk as any).next_date)}
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ fontSize: '0.85rem', color: '#475569' }}>
-                    {(selectedRisk as any).acceptance_boundary && (
-                      <div>
-                        <strong style={{ color: '#1e293b' }}>Boundary:</strong>{' '}
-                        <div style={{ marginTop: '0.25rem', padding: '0.5rem', backgroundColor: 'white', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                          {(selectedRisk as any).acceptance_boundary.type === 'date' && (
-                            <span>Until {formatDate((selectedRisk as any).acceptance_boundary.date)}</span>
-                          )}
-                          {(selectedRisk as any).acceptance_boundary.type === 'threshold' && (
-                            <span>Threshold: {(selectedRisk as any).acceptance_boundary.threshold}</span>
-                          )}
-                          {(selectedRisk as any).acceptance_boundary.type === 'event' && (
-                            <span>Event: {(selectedRisk as any).acceptance_boundary.trigger}</span>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div style={{
-                  marginTop: '0.85rem',
-                  padding: '0.65rem 0.9rem',
-                  backgroundColor: '#e0f2fe',
-                  borderRadius: '8px',
-                  fontSize: '0.8rem',
-                  color: '#0369a1',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.6rem',
-                  border: '1px solid #bae6fd'
-                }}>
-                  <span style={{ fontSize: '1.125rem' }}>🔕</span>
-                  <span><strong>Quiet Monitoring:</strong> Escalations suppressed. Monitoring for boundary breach or next review date.</span>
-                </div>
-              </div>
-            )}
-            
-            {/* Mitigation Information */}
-            {selectedRisk.status === 'mitigating' && (selectedRisk as any).mitigation_started_at && (
-              <div style={{
-                marginBottom: '1.25rem',
-                padding: '1rem',
-                backgroundColor: '#f0f9ff',
-                borderLeft: '3px solid #0ea5e9',
-                borderRadius: '10px',
-              }}>
-                <div style={{ 
-                  fontSize: '0.95rem', 
-                  fontWeight: 700, 
-                  color: '#0369a1',
-                  marginBottom: '0.75rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                }}>
-                  <span style={{ fontSize: '1.25rem' }}>🛠️</span>
-                  <span>Mitigation In Progress</span>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div style={{ fontSize: '0.85rem', color: '#0c4a6e' }}>
-                    {(selectedRisk as any).mitigation_action && (
-                      <div style={{ marginBottom: '0.65rem' }}>
-                        <strong style={{ color: '#0369a1' }}>Planned Action:</strong> 
-                        <div style={{ marginTop: '0.25rem', padding: '0.65rem', backgroundColor: 'white', borderRadius: '8px', border: '1px solid #bae6fd' }}>
-                          {(selectedRisk as any).mitigation_action}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ fontSize: '0.85rem', color: '#0c4a6e' }}>
-                    <div style={{ marginBottom: '0.5rem' }}>
-                      <strong style={{ color: '#0369a1' }}>Started:</strong> {formatDate((selectedRisk as any).mitigation_started_at)}
-                    </div>
-                    {(selectedRisk as any).mitigation_due_date && (
-                      <div>
-                        <strong style={{ color: '#0369a1' }}>Due Date:</strong> {formatDate((selectedRisk as any).mitigation_due_date)}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Affected Milestones */}
-            {(() => {
-              const affectedMilestones = getAffectedMilestones(selectedRisk);
-              if (affectedMilestones.length > 0) {
-                return (
-                  <div style={{ marginBottom: '2rem' }}>
-                    <h4 style={{ 
-                      marginBottom: '1rem', 
-                      fontSize: '0.875rem', 
-                      fontWeight: 600, 
-                      color: '#64748b', 
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em'
-                    }}>
-                      Affected Milestones ({affectedMilestones.length})
-                    </h4>
-                    <div style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-                      gap: '0.75rem',
-                    }}>
-                      {affectedMilestones.map(milestone => (
-                        <div
-                          key={milestone.id}
-                          style={{
-                            padding: '1rem',
-                            backgroundColor: '#fff',
-                            border: '1px solid #e2e8f0',
-                            borderRadius: '10px',
-                            display: 'flex',
-                            alignItems: 'flex-start',
-                            gap: '0.75rem',
-                            transition: 'all 0.2s'
-                          }}
-                        >
-                          <span style={{ fontSize: '1.25rem', marginTop: '-2px' }}>📍</span>
-                          <div>
-                            <div style={{ fontWeight: 600, color: '#1e293b', fontSize: '0.875rem', marginBottom: '0.25rem' }}>
-                              {milestone.name}
-                            </div>
-                            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                              Target: {formatDate(milestone.target_date)}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              }
-              return null;
-            })()}
-
-            {/* Affected Work Items */}
-            {selectedRisk.affected_items.length > 0 && (
-              <div style={{ marginBottom: '2rem' }}>
-                <h4 style={{ 
-                  marginBottom: '1rem', 
-                  fontSize: '0.875rem', 
-                  fontWeight: 600, 
-                  color: '#64748b', 
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em'
-                }}>
-                  Affected Work Items ({selectedRisk.affected_items.length})
-                </h4>
-                <div style={{
-                  maxHeight: '180px',
-                  overflowY: 'auto',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '12px',
-                  backgroundColor: '#f8fafc',
-                }}>
-                  {selectedRisk.affected_items.map((itemId, idx) => {
-                    const workItem = workItems.find(wi => wi.id === itemId);
-                    return (
-                      <div key={itemId} style={{
-                        padding: '0.875rem 1rem',
-                        borderBottom: idx === selectedRisk.affected_items.length - 1 ? 'none' : '1px solid #e2e8f0',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.75rem'
+                    { (selectedRisk as any).next_date && (
+                      <div style={{ 
+                        fontSize: '0.75rem', padding: '2px 8px', backgroundColor: '#e0f2fe', color: '#0369a1', borderRadius: '4px', fontWeight: 600
                       }}>
-                        <span style={{ color: '#94a3b8', fontSize: '0.875rem', fontWeight: 500 }}>{idx + 1}.</span>
-                        <div style={{ fontWeight: 500, color: '#334155', fontSize: '0.875rem' }}>
-                          {workItem ? workItem.title : itemId}
-                        </div>
-                        {workItem?.status && (
-                          <span style={{ 
-                            marginLeft: 'auto', 
-                            fontSize: '0.7rem', 
-                            padding: '2px 8px', 
-                            backgroundColor: '#e2e8f0', 
-                            borderRadius: '4px', 
-                            color: '#475569',
-                            fontWeight: 600
-                          }}>
-                            {workItem.status}
-                          </span>
-                        )}
+                        Review due in {Math.ceil((new Date((selectedRisk as any).next_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days
                       </div>
-                    );
-                  })}
+                    )}
+                  </div>
+                  <div style={{ fontSize: '0.85rem', color: '#475569', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div>
+                      <strong style={{ color: '#1e293b' }}>Monitoring Boundary:</strong>
+                      <div style={{ marginTop: '0.25rem', fontSize: '0.8rem', padding: '0.4rem', backgroundColor: 'white', borderRadius: '6px', border: '1px solid #f1f5f9' }}>
+                        {(selectedRisk as any).acceptance_boundary?.type === 'date' && `Until ${formatDate((selectedRisk as any).acceptance_boundary.date)}`}
+                        {(selectedRisk as any).acceptance_boundary?.type === 'threshold' && `Threshold: ${(selectedRisk as any).acceptance_boundary.threshold}`}
+                        {(selectedRisk as any).acceptance_boundary?.type === 'event' && `Event: ${(selectedRisk as any).acceptance_boundary.trigger}`}
+                        {!(selectedRisk as any).acceptance_boundary && "None defined"}
+                      </div>
+                    </div>
+                    <div>
+                      <strong style={{ color: '#1e293b' }}>Strategy:</strong>
+                      <div style={{ marginTop: '0.25rem', fontSize: '0.8rem', color: '#0369a1' }}>
+                        Escalations suppressed while within boundary.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : selectedRisk.status === 'mitigating' ? (
+                <div style={{ padding: '1rem', backgroundColor: '#f0f9ff', borderRadius: '10px', border: '1px solid #bae6fd' }}>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0369a1', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span>🛠️</span> Active Mitigation Plan
+                  </div>
+                  <div style={{ fontSize: '0.85rem', color: '#0c4a6e' }}>
+                    <div style={{ marginBottom: '0.5rem' }}>
+                      <strong>Planned Action:</strong> 
+                      <div style={{ marginTop: '0.25rem', padding: '0.65rem', backgroundColor: 'white', borderRadius: '8px', border: '1px solid #bae6fd' }}>
+                        {(selectedRisk as any).mitigation_action || "No action recorded"}
+                      </div>
+                    </div>
+                    { (selectedRisk as any).mitigation_due_date && (
+                      <div style={{ fontSize: '0.8rem' }}>
+                        <strong>Target Completion:</strong> {formatDate((selectedRisk as any).mitigation_due_date)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : selectedRisk.status === 'materialised' ? (
+                <div style={{ padding: '1rem', backgroundColor: '#fff1f2', borderRadius: '10px', border: '1px solid #fecaca' }}>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#991b1b', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span>🚨</span> Critical Blocking State
+                  </div>
+                  <div style={{ fontSize: '0.85rem', color: '#991b1b' }}>
+                    This risk has materialized and is now impacting delivery. Immediate resolution or decision change required.
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            {/* Section 2: CURRENT CONTEXT */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 200px', gap: '1.5rem', marginBottom: '1.5rem' }}>
+              <div>
+                <h4 style={{ marginBottom: '0.5rem', fontSize: '0.8rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Description</h4>
+                <p style={{ lineHeight: '1.5', color: '#1f2937', fontSize: '0.95rem', margin: 0 }}>{selectedRisk.description}</p>
+              </div>
+              <div style={{ padding: '0.75rem', backgroundColor: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                <div style={{ marginBottom: '0.75rem' }}>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>Likelihood</div>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 700, color: selectedRisk.status === 'materialised' ? '#991b1b' : '#1e3a8a' }}>
+                    {selectedRisk.status === 'materialised' ? '100% (Blocking)' : `${(selectedRisk.probability * 100).toFixed(0)}%`}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>Severity</div>
+                  <div style={{ fontSize: '1rem', fontWeight: 600, color: getSeverityColor(selectedRisk.severity) }}>
+                    {selectedRisk.severity.toUpperCase()}
+                  </div>
                 </div>
               </div>
-            )}
+            </div>
 
+            {/* Section 3: IMPACT ANALYSIS */}
+            <div style={{ marginBottom: '1.5rem' }}>
+              <h4 style={{ marginBottom: '0.75rem', fontSize: '0.8rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Impact Analysis</h4>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                {/* Impacted Items */}
+                <div style={{ border: '1px solid #e2e8f0', borderRadius: '10px', padding: '0.75rem' }}>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#475569', marginBottom: '0.5rem' }}>Impacted Work Items ({selectedRisk.affected_items.length})</div>
+                  <div style={{ maxHeight: '100px', overflowY: 'auto', fontSize: '0.8rem' }}>
+                    {selectedRisk.affected_items.map((itemId, idx) => {
+                      const wi = workItems.find(w => w.id === itemId);
+                      return <div key={itemId} style={{ padding: '0.25rem 0', color: '#334155' }}>• {wi ? wi.title : itemId}</div>;
+                    })}
+                  </div>
+                </div>
+                {/* Impacted Milestones */}
+                <div style={{ border: '1px solid #e2e8f0', borderRadius: '10px', padding: '0.75rem' }}>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#475569', marginBottom: '0.5rem' }}>Affected Milestones</div>
+                  <div style={{ maxHeight: '100px', overflowY: 'auto' }}>
+                    {(() => {
+                      const ms = getAffectedMilestones(selectedRisk);
+                      return ms.length > 0 ? ms.map(m => (
+                        <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0', fontSize: '0.8rem' }}>
+                          <span>📍</span> {m.name}
+                        </div>
+                      )) : <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>No direct milestone impact detected</div>;
+                    })()}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Section 4: TIMELINE & EVENTS */}
+            <div style={{ marginBottom: '1.5rem', padding: '0.75rem', backgroundColor: '#f1f5f9', borderRadius: '8px' }}>
+              <h4 style={{ marginBottom: '0.75rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase' }}>Timeline & Audit</h4>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', fontSize: '0.75rem' }}>
+                <div>
+                  <div style={{ color: '#64748b' }}>First Detected</div>
+                  <div style={{ fontWeight: 600, color: '#1e293b' }}>{formatDate(selectedRisk.detected_at)}</div>
+                </div>
+                {selectedRisk.status === 'accepted' && (selectedRisk as any).accepted_at && (
+                  <div>
+                    <div style={{ color: '#64748b' }}>Accepted On</div>
+                    <div style={{ fontWeight: 600, color: '#1e293b' }}>{formatDate((selectedRisk as any).accepted_at)}</div>
+                  </div>
+                )}
+                {selectedRisk.status === 'mitigating' && (selectedRisk as any).mitigation_started_at && (
+                  <div>
+                    <div style={{ color: '#64748b' }}>Mitigation Started</div>
+                    <div style={{ fontWeight: 600, color: '#1e293b' }}>{formatDate((selectedRisk as any).mitigation_started_at)}</div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Actions Footer */}
             <div style={{ 
               display: 'flex', 
-              gap: '1rem', 
-              justifyContent: 'flex-end', 
-              paddingTop: '1.5rem', 
+              gap: '0.75rem', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              paddingTop: '1.25rem', 
               borderTop: '1px solid #e2e8f0' 
             }}>
-              <button 
-                className="btn-secondary" 
-                onClick={(e) => { 
-                  e.stopPropagation(); 
-                  closeRiskModal(); 
-                  handleEdit(selectedRisk); 
-                }}
-                style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '0.5rem',
-                  padding: '0.625rem 1.25rem',
-                  borderRadius: '8px'
-                }}
-              >
-                <span>✏️</span> Edit Risk
-              </button>
-              <button 
-                className="btn-secondary" 
-                onClick={(e) => { 
-                  e.stopPropagation(); 
-                  handleDelete(selectedRisk.id);
-                  closeRiskModal();
-                }}
-                style={{ 
-                  color: '#dc2626', 
-                  borderColor: '#fee2e2',
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '0.5rem',
-                  padding: '0.625rem 1.25rem',
-                  borderRadius: '8px'
-                }}
-              >
-                <span>🗑️</span> Delete
-              </button>
-              <button 
-                className="btn-primary" 
-                onClick={closeRiskModal}
-                style={{ 
-                  padding: '0.625rem 1.5rem',
-                  borderRadius: '8px',
-                  backgroundColor: '#1e293b',
-                  border: 'none'
-                }}
-              >
-                Close
-              </button>
+              <div>
+                <button onClick={(e) => { e.stopPropagation(); handleDelete(selectedRisk.id); closeRiskModal(); }} style={{ 
+                  background: 'none', border: 'none', color: '#94a3b8', fontSize: '0.8rem', cursor: 'pointer', textDecoration: 'underline'
+                }}>Delete Risk Entry</button>
+              </div>
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <button className="btn-secondary" onClick={(e) => { e.stopPropagation(); closeRiskModal(); handleEdit(selectedRisk); }} style={{ borderRadius: '8px', padding: '0.5rem 1rem' }}>
+                  Change Decision
+                </button>
+                {selectedRisk.status === 'open' || selectedRisk.status === 'accepted' ? (
+                  <button className="btn-primary" style={{ backgroundColor: '#2563eb', border: 'none', borderRadius: '8px', padding: '0.5rem 1.25rem' }} onClick={() => { closeRiskModal(); handleEdit(selectedRisk); }}>
+                    Mitigate
+                  </button>
+                ) : selectedRisk.status === 'mitigating' ? (
+                  <button className="btn-primary" style={{ backgroundColor: '#059669', border: 'none', borderRadius: '8px', padding: '0.5rem 1.25rem' }} onClick={() => { closeRiskModal(); handleEdit(selectedRisk); }}>
+                    Complete
+                  </button>
+                ) : (
+                  <button className="btn-primary" style={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', padding: '0.5rem 1.25rem' }} onClick={closeRiskModal}>
+                    Review & Close
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -1096,12 +891,14 @@ export default function RisksView() {
               <div className="card-body">
                 <div className="card-meta" style={{ marginTop: '0.5rem' }}>
                   <div className="meta-item">
-                    <span className="meta-label">Probability:</span>
-                    <span className="meta-value">{(risk.probability * 100).toFixed(0)}%</span>
+                    <span className="meta-label">Likelihood:</span>
+                    <span className="meta-value">
+                      {risk.status === 'materialised' ? '100% (Materialised)' : `${(risk.probability * 100).toFixed(0)}%`}
+                    </span>
                   </div>
                   <div className="meta-item">
-                    <span className="meta-label">Affected Items:</span>
-                    <span className="meta-value">{risk.affected_items.length}</span>
+                    <span className="meta-label">Impacted:</span>
+                    <span className="meta-value">{risk.affected_items.length} item{risk.affected_items.length !== 1 ? 's' : ''}</span>
                   </div>
                 </div>
                 
