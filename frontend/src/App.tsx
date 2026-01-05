@@ -42,7 +42,7 @@ export default function App() {
       <Toaster position="top-right" />
       <header className="app-header">
         <div className="header-content">
-        <h1>Decision Risk Engine</h1>
+        <h1>Welcome Mo!</h1>
           <nav className="main-nav">
             {navItems.map((item) => (
           <button
