@@ -801,8 +801,7 @@ export default function RisksView() {
               gap: '0.75rem', 
               justifyContent: 'space-between', 
               alignItems: 'center',
-              paddingTop: '1.25rem', 
-              borderTop: '1px solid #e2e8f0' 
+              paddingTop: '1.25rem' 
             }}>
               <div>
                 <button onClick={(e) => { e.stopPropagation(); handleDelete(selectedRisk.id); closeRiskModal(); }} style={{ 
