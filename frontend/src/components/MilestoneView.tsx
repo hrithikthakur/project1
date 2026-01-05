@@ -100,23 +100,9 @@ export default function MilestoneView({ milestoneId, onClose }: MilestoneViewPro
     // When checked, always set to completed. When unchecked, set to in_progress
     const newStatus = workItem.status === 'completed' ? 'in_progress' : 'completed';
     
-    // Optimistically update the UI immediately
-    setWorkItems(prevItems =>
-      prevItems.map(wi =>
-        wi.id === workItem.id ? { ...wi, status: newStatus } : wi
-      )
-    );
-    
     try {
       const updated = await updateWorkItem(workItem.id, { ...workItem, status: newStatus });
-      
-      // Update with the actual server response
-      setWorkItems(prevItems =>
-        prevItems.map(wi =>
-          wi.id === workItem.id ? updated : wi
-        )
-      );
-      
+      await loadMilestoneDetails();
       toast.success(`Work item marked as ${newStatus.replace('_', ' ')}`);
       
       // Check if a risk was created
@@ -138,8 +124,6 @@ export default function MilestoneView({ milestoneId, onClose }: MilestoneViewPro
       }
     } catch (err: any) {
       console.error('Error toggling work item status:', err);
-      // Revert the optimistic update on error
-      await loadMilestoneDetails();
       toast.error('Error updating work item: ' + (err.message || 'Unknown error'));
     }
   }

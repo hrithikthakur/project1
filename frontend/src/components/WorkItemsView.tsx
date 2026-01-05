@@ -73,50 +73,32 @@ export default function WorkItemsView() {
     e.preventDefault();
     try {
       if (editingItem) {
-        const oldStatus = editingItem.status;
-        const newStatus = formData.status || editingItem.status;
-        
-        // Optimistically update the list
-        setWorkItems(prevItems =>
-          prevItems.map(item =>
-            item.id === editingItem.id ? { ...item, ...formData } as WorkItem : item
-          )
-        );
-        setShowForm(false);
-        
         const updated = await updateWorkItem(editingItem.id, formData as WorkItem);
         console.log('Work item updated via form:', updated);
         console.log('Metadata from form update:', updated._metadata);
         
-        // Update with actual server response
-        setWorkItems(prevItems =>
-          prevItems.map(item =>
-            item.id === editingItem.id ? updated : item
-          )
-        );
-        
-        // Show appropriate success message
-        if (oldStatus !== newStatus) {
-          toast.success(`Work item updated - Status changed to ${newStatus.replace('_', ' ')}`);
-        } else {
-          toast.success('Work item updated');
-        }
+        setShowForm(false);
+        loadData();
+        toast.success('Work item updated');
         
         // Check if a risk was created
         if (updated._metadata?.risk_created) {
           const riskInfo = updated._metadata.risk_created;
           console.log('Risk info from form:', riskInfo);
-          if ((riskInfo.created || riskInfo.updated) && riskInfo.blocked_item_name) {
-            const action = riskInfo.created ? 'created' : 'updated';
-            const milestoneText = riskInfo.milestone_name ? ` in ${riskInfo.milestone_name}` : '';
-            toast(
-              `Risk ${action}: "${riskInfo.blocked_item_name}" is blocked and affects ${riskInfo.dependent_count} dependent item(s)${milestoneText}`,
-              { 
-                icon: '⚠️',
-                duration: 5000
-              }
-            );
-          }
+        if (riskInfo.created || riskInfo.updated) {
+          const action = riskInfo.created ? 'created' : 'updated';
+          console.log('Showing risk notification from form:', action);
+          const milestoneText = riskInfo.milestone_name ? ` in ${riskInfo.milestone_name}` : '';
+          toast(
+            `Risk ${action}: "${riskInfo.blocked_item_name}" is blocked and affects ${riskInfo.dependent_count} dependent item(s)${milestoneText}`,
+            { 
+              icon: '⚠️',
+              duration: 5000
+            }
+          );
+        }
+        } else {
+          console.log('No risk metadata from form update');
         }
       } else {
         const newItem: WorkItem = {
@@ -134,8 +116,6 @@ export default function WorkItemsView() {
       }
     } catch (error) {
       console.error('Error saving work item:', error);
-      // Reload data on error to revert optimistic update
-      loadData();
       toast.error('Error saving work item');
     }
   }
@@ -158,26 +138,11 @@ export default function WorkItemsView() {
     const newStatus = item.status === 'completed' ? 'in_progress' : 'completed';
     
     console.log(`Toggling work item ${item.id} from ${item.status} to ${newStatus}`);
-    
-    // Optimistically update the UI immediately
-    setWorkItems(prevItems => 
-      prevItems.map(wi => 
-        wi.id === item.id ? { ...wi, status: newStatus } : wi
-      )
-    );
-    
     try {
       const updated = await updateWorkItem(item.id, { ...item, status: newStatus });
       console.log('Work item updated successfully:', updated);
       console.log('Metadata:', updated._metadata);
-      
-      // Update with the actual server response
-      setWorkItems(prevItems => 
-        prevItems.map(wi => 
-          wi.id === item.id ? updated : wi
-        )
-      );
-      
+      await loadData();
       toast.success(`Work item ${newStatus.replace('_', ' ')}`);
       
       // Check if a risk was created
@@ -201,8 +166,6 @@ export default function WorkItemsView() {
       }
     } catch (error) {
       console.error('Error toggling work item status:', error);
-      // Revert the optimistic update on error
-      await loadData();
       toast.error(`Error updating work item: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }

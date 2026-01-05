@@ -203,17 +203,9 @@ export default function WorkItemView({ workItemId, onClose }: WorkItemViewProps)
     setSaving(true);
     try {
       const updatedItem = { ...workItem, status: newStatus };
-      
-      // Optimistically update the UI immediately
-      setWorkItem({ ...workItem, status: newStatus });
-      
       const result = await updateWorkItem(workItem.id, updatedItem);
       console.log('Work item updated successfully:', result);
-      
-      // Set the actual result from the server
-      setWorkItem(result);
-      setFormData(result);
-      
+      await loadWorkItemDetails();
       toast.success(`Status updated to ${newStatus.replace('_', ' ')}`);
       
       // Check if a risk was created
@@ -235,8 +227,6 @@ export default function WorkItemView({ workItemId, onClose }: WorkItemViewProps)
       }
     } catch (err: any) {
       console.error('Error toggling work item status:', err);
-      // Revert the optimistic update on error
-      await loadWorkItemDetails();
       toast.error('Error updating work item: ' + (err.message || 'Unknown error'));
     } finally {
       setSaving(false);
@@ -258,22 +248,11 @@ export default function WorkItemView({ workItemId, onClose }: WorkItemViewProps)
   async function handleSave() {
     if (!workItem) return;
     setSaving(true);
-    
-    // Store the old status to check if it changed
-    const oldStatus = workItem.status;
-    const newStatus = formData.status || workItem.status;
-    
     try {
-      // Optimistically update the UI
-      setWorkItem({ ...workItem, ...formData } as WorkItem);
-      setIsEditing(false);
-      
       const updated = await updateWorkItem(workItem.id, formData as WorkItem);
-      console.log('Work item updated via form:', updated);
-      
-      // Update with actual server response
       setWorkItem(updated);
       setFormData(updated);
+      setIsEditing(false);
       
       // Refresh milestone if changed
       if (updated.milestone_id) {
@@ -282,20 +261,15 @@ export default function WorkItemView({ workItemId, onClose }: WorkItemViewProps)
       } else {
         setMilestone(null);
       }
-      
-      // Show appropriate success message
-      if (oldStatus !== newStatus) {
-        toast.success(`Work item updated - Status changed to ${newStatus.replace('_', ' ')}`);
-      } else {
-        toast.success('Work item updated');
-      }
+      toast.success('Work item updated');
       
       // Check if a risk was created
       if (updated._metadata?.risk_created) {
         const riskInfo = updated._metadata.risk_created;
-        console.log('Risk metadata from save:', riskInfo);
-        if ((riskInfo.created || riskInfo.updated) && riskInfo.blocked_item_name) {
+        console.log('Risk info in save:', riskInfo);
+        if (riskInfo.created || riskInfo.updated) {
           const action = riskInfo.created ? 'created' : 'updated';
+          console.log('Showing risk notification:', action);
           const milestoneText = riskInfo.milestone_name ? ` in ${riskInfo.milestone_name}` : '';
           toast(
             `Risk ${action}: "${riskInfo.blocked_item_name}" is blocked and affects ${riskInfo.dependent_count} dependent item(s)${milestoneText}`,
@@ -308,10 +282,6 @@ export default function WorkItemView({ workItemId, onClose }: WorkItemViewProps)
       }
     } catch (err: any) {
       console.error('Error updating work item:', err);
-      // Revert optimistic update on error
-      setWorkItem(workItem);
-      setFormData(workItem);
-      setIsEditing(true);
       toast.error('Failed to update work item: ' + (err.message || 'Unknown error'));
     } finally {
       setSaving(false);
