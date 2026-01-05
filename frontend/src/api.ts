@@ -1,5 +1,5 @@
 // Use Vite proxy in development, or direct URL if VITE_API_URL is set
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? '/api' : 'http://localhost:8000/api');
 
 export interface ForecastRequest {
   decisions?: any[];
