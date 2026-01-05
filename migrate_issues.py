@@ -73,4 +73,3 @@ with open(data_file, "w") as f:
 
 print("Migration completed successfully")
 
-
