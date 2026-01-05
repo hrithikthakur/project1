@@ -4,7 +4,7 @@
       "id": "work_item_001",
       "title": "Design Authentication System",
       "description": "Design OAuth2 authentication flow",
-      "status": "in_progress",
+      "status": "completed",
       "estimated_days": 3.0,
       "actual_days": null,
       "assigned_to": [
