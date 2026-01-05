@@ -59,7 +59,7 @@ async def debug_data_check():
         import os
         from pathlib import Path
         
-        world = load_mock_world()
+        world, diagnostics = load_mock_world(return_diagnostics=True)
         
         return {
             "status": "ok",
@@ -68,7 +68,9 @@ async def debug_data_check():
             "work_item_count": len(world.get("work_items", [])),
             "cwd": str(Path.cwd()),
             "file_location": str(Path(__file__)),
-            "env_project_root": os.environ.get("PROJECT_ROOT", "not set")
+            "env_project_root": os.environ.get("PROJECT_ROOT", "not set"),
+            "data_path": diagnostics.get("path_used"),
+            "paths_tried": diagnostics.get("paths_tried", [])
         }
     except Exception as e:
         return {
