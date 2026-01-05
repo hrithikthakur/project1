@@ -50,31 +50,3 @@ async def health():
     """Health check endpoint"""
     return {"status": "healthy"}
 
-
-@app.get("/debug/data-check")
-async def debug_data_check():
-    """Debug endpoint to check if data is loading"""
-    try:
-        from .data.loader import load_mock_world
-        import os
-        from pathlib import Path
-        
-        world = load_mock_world()
-        
-        return {
-            "status": "ok",
-            "data_loaded": bool(world.get("milestones")),
-            "milestone_count": len(world.get("milestones", [])),
-            "work_item_count": len(world.get("work_items", [])),
-            "cwd": str(Path.cwd()),
-            "file_location": str(Path(__file__)),
-            "env_project_root": os.environ.get("PROJECT_ROOT", "not set")
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "error": str(e),
-            "error_type": type(e).__name__
-        }
-
-
