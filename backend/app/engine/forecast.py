@@ -593,20 +593,24 @@ def _calculate_dependency_delays(
         # Calculate this item's own delay (from its status/progress)
         own_delay = 0.0
         
+        # IMPORTANT: Check for scenario delays first (what-if scenarios)
+        if wi_id in scenario_delays:
+            own_delay = max(own_delay, float(scenario_delays[wi_id]))
+        
         # Check for remaining work
         remaining_days = wi.get("remaining_days")
         if remaining_days is not None and remaining_days > 0:
-            own_delay = remaining_days
+            own_delay = max(own_delay, remaining_days)
         elif wi.get("completion_percentage") is not None:
             estimated_days = wi.get("estimated_days", 0)
             completion_pct = wi.get("completion_percentage")
-            own_delay = estimated_days * (1.0 - completion_pct)
+            own_delay = max(own_delay, estimated_days * (1.0 - completion_pct))
         elif wi.get("status") == "blocked":
-            own_delay = 5.0  # Blocked items
+            own_delay = max(own_delay, 5.0)  # Blocked items
         elif wi.get("status") == "in_progress":
             estimated_days = wi.get("estimated_days", 0)
             if estimated_days > 0:
-                own_delay = estimated_days * 0.5  # Assume 50% remaining
+                own_delay = max(own_delay, estimated_days * 0.5)  # Assume 50% remaining
 
         # Calculate delay from direct dependencies
         max_upstream_delay = 0.0

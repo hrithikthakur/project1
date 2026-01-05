@@ -517,7 +517,7 @@ export default function WorkItemView({ workItemId, onClose }: WorkItemViewProps)
                   ) : (
                     <>
                       {workItem.remaining_days} days
-                      {workItem.estimated_days && workItem.remaining_days !== null && (
+                      {workItem.estimated_days && workItem.remaining_days !== null && workItem.remaining_days !== undefined && (
                         <span style={{ color: '#6c757d', marginLeft: '8px', fontSize: '0.9rem' }}>
                           ({((1 - workItem.remaining_days / workItem.estimated_days) * 100).toFixed(0)}% complete)
                         </span>
@@ -548,7 +548,7 @@ export default function WorkItemView({ workItemId, onClose }: WorkItemViewProps)
                     />
                   ) : (
                     <>
-                      {(workItem.completion_percentage * 100).toFixed(0)}%
+                      {workItem.completion_percentage !== null && workItem.completion_percentage !== undefined && (workItem.completion_percentage * 100).toFixed(0)}%
                       <div style={{ 
                         width: '100%', 
                         height: '8px', 
@@ -558,7 +558,7 @@ export default function WorkItemView({ workItemId, onClose }: WorkItemViewProps)
                         overflow: 'hidden'
                       }}>
                         <div style={{ 
-                          width: `${workItem.completion_percentage * 100}%`, 
+                          width: `${workItem.completion_percentage !== null && workItem.completion_percentage !== undefined ? workItem.completion_percentage * 100 : 0}%`, 
                           height: '100%', 
                           backgroundColor: '#28a745',
                           transition: 'width 0.3s ease'

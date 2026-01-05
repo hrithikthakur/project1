@@ -11,7 +11,7 @@ Run this file to see all features in action.
 """
 
 from datetime import datetime, timedelta
-from forecast import (
+from app.engine.forecast import (
     forecastMilestone,
     forecast_with_scenario,
     forecast_mitigation_impact,
@@ -50,7 +50,7 @@ def create_mock_state():
                 "status": "in_progress",
                 "estimated_days": 5.0,
                 "milestone_id": "milestone_001",
-                "dependencies": []
+                "dependencies": ["wi_external"]  # OAuth depends on API Gateway
             },
             {
                 "id": "wi_002",
@@ -68,7 +68,7 @@ def create_mock_state():
                 "status": "not_started",
                 "estimated_days": 4.0,
                 "milestone_id": "milestone_001",
-                "dependencies": ["wi_001"]
+                "dependencies": ["wi_001"]  # Frontend depends on OAuth
             },
             # External dependency (different milestone)
             {
@@ -77,6 +77,7 @@ def create_mock_state():
                 "description": "Infrastructure work",
                 "status": "in_progress",
                 "estimated_days": 7.0,
+                "remaining_days": 3.0,  # 3 days of work remaining
                 "milestone_id": "milestone_000",  # Different milestone
                 "dependencies": []
             }

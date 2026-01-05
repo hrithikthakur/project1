@@ -4,7 +4,7 @@
       "id": "work_item_001",
       "title": "Design Authentication System",
       "description": "Design OAuth2 authentication flow",
-      "status": "blocked",
+      "status": "completed",
       "estimated_days": 50.0,
       "actual_days": null,
       "assigned_to": [
@@ -101,7 +101,7 @@
       "id": "work_item_006",
       "title": "Implement Dashboard UI",
       "description": "Build main dashboard interface",
-      "status": "in_progress",
+      "status": "blocked",
       "estimated_days": 8.0,
       "actual_days": null,
       "assigned_to": [
@@ -113,13 +113,18 @@
       "start_date": null,
       "end_date": null,
       "milestone_id": "milestone_002",
-      "tags": null
+      "tags": null,
+      "completion_percentage": null,
+      "remaining_days": null,
+      "external_team_id": null,
+      "expected_completion_date": null,
+      "confidence_level": 0.7
     },
     {
       "id": "work_item_007",
       "title": "Design Payment System",
       "description": "Design payment processing architecture",
-      "status": "in_progress",
+      "status": "blocked",
       "estimated_days": 5.0,
       "actual_days": null,
       "assigned_to": [
@@ -129,7 +134,12 @@
       "start_date": null,
       "end_date": null,
       "milestone_id": "milestone_003",
-      "tags": null
+      "tags": null,
+      "completion_percentage": null,
+      "remaining_days": null,
+      "external_team_id": null,
+      "expected_completion_date": null,
+      "confidence_level": 0.7
     },
     {
       "id": "work_item_008",
@@ -1658,9 +1668,9 @@
     {
       "id": "risk_from_blocked_work_item_001",
       "title": "Blocked Dependency: Design Authentication System",
-      "description": "'Design Authentication System' is BLOCKED. 1 dependent item(s) affected: Implement Authentication Backend",
+      "description": "'Design Authentication System' is BLOCKED. 1 dependent item(s) affected: Implement Authentication Backend [AUTO-RESOLVED: Dependency work_item_001 completed]",
       "severity": "medium",
-      "status": "materialised",
+      "status": "closed",
       "probability": 1.0,
       "impact": {
         "delay_days": 3,
@@ -1671,11 +1681,9 @@
         "cascading_delays": true
       },
       "milestone_id": "milestone_001",
-      "affected_items": [
-        "work_item_002"
-      ],
+      "affected_items": [],
       "detected_at": "2026-01-05T06:29:19.489618",
-      "mitigated_at": "2026-01-05T06:06:45.329648",
+      "mitigated_at": "2026-01-05T06:35:41.203993",
       "accepted_at": null,
       "accepted_by": null,
       "acceptance_boundary": null,
@@ -1751,9 +1759,9 @@
     {
       "id": "risk_from_blocked_work_item_007",
       "title": "Blocked Dependency: Design Payment System",
-      "description": "'Design Payment System' is BLOCKED. 1 dependent item(s) affected: Implement Payment API [AUTO-RESOLVED: work_item_007 is no longer blocked]",
+      "description": "'Design Payment System' is BLOCKED. 1 dependent item(s) affected: Implement Payment API",
       "severity": "medium",
-      "status": "closed",
+      "status": "materialised",
       "probability": 1.0,
       "impact": {
         "delay_days": 3,
@@ -1767,7 +1775,7 @@
       "affected_items": [
         "work_item_008"
       ],
-      "detected_at": "2026-01-04T17:34:47.008890",
+      "detected_at": "2026-01-05T06:38:29.006097",
       "mitigated_at": "2026-01-04T21:38:06.176914",
       "accepted_at": null,
       "accepted_by": null,
@@ -1781,9 +1789,9 @@
     {
       "id": "risk_1767563395435",
       "title": "ABc",
-      "description": "desc [UPDATED: 1 item(s) still affected]",
+      "description": "desc [UPDATED: 1 item(s) still affected] [AUTO-RESOLVED: Dependency work_item_001 completed]",
       "severity": "medium",
-      "status": "accepted",
+      "status": "closed",
       "probability": 0.5,
       "impact": {
         "blocked_items": [
@@ -1792,11 +1800,9 @@
         "delay_days": 2
       },
       "milestone_id": null,
-      "affected_items": [
-        "work_item_002"
-      ],
+      "affected_items": [],
       "detected_at": "2026-01-04T21:49:55.435000Z",
-      "mitigated_at": null,
+      "mitigated_at": "2026-01-05T06:35:41.204028",
       "accepted_at": "2026-01-04T21:57:53.838587",
       "accepted_by": "default_owner",
       "acceptance_boundary": {
