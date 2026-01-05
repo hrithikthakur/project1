@@ -657,7 +657,7 @@ export default function RisksView() {
             {/* Section 1: ACTIVE MODE / DECISION CONTEXT */}
             <div style={{ marginBottom: '1.5rem' }}>
               {selectedRisk.status === 'accepted' ? (
-                <div style={{ padding: '1rem', backgroundColor: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                <div style={{ padding: '1rem', backgroundColor: 'transparent', borderRadius: '10px', border: 'none' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
                     <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <span style={{ backgroundColor: '#94a3b8', color: 'white', width: '20px', height: '20px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem' }}>✓</span>
@@ -674,7 +674,7 @@ export default function RisksView() {
                   <div style={{ fontSize: '0.85rem', color: '#475569', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                     <div>
                       <strong style={{ color: '#1e293b' }}>Monitoring Boundary:</strong>
-                      <div style={{ marginTop: '0.25rem', fontSize: '0.8rem', padding: '0.4rem', backgroundColor: 'white', borderRadius: '6px', border: '1px solid #f1f5f9' }}>
+                      <div style={{ marginTop: '0.25rem', fontSize: '0.8rem', padding: '0.4rem', backgroundColor: 'transparent', borderRadius: '6px', border: 'none' }}>
                         {(selectedRisk as any).acceptance_boundary?.type === 'date' && `Until ${formatDate((selectedRisk as any).acceptance_boundary.date)}`}
                         {(selectedRisk as any).acceptance_boundary?.type === 'threshold' && `Threshold: ${(selectedRisk as any).acceptance_boundary.threshold}`}
                         {(selectedRisk as any).acceptance_boundary?.type === 'event' && `Event: ${(selectedRisk as any).acceptance_boundary.trigger}`}
@@ -690,14 +690,14 @@ export default function RisksView() {
                   </div>
                 </div>
               ) : selectedRisk.status === 'mitigating' ? (
-                <div style={{ padding: '1rem', backgroundColor: '#f0f9ff', borderRadius: '10px', border: '1px solid #bae6fd' }}>
+                <div style={{ padding: '1rem', backgroundColor: 'transparent', borderRadius: '10px', border: 'none' }}>
                   <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0369a1', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <span>🛠️</span> Active Mitigation Plan
                   </div>
                   <div style={{ fontSize: '0.85rem', color: '#0c4a6e' }}>
                     <div style={{ marginBottom: '0.5rem' }}>
                       <strong>Planned Action:</strong> 
-                      <div style={{ marginTop: '0.25rem', padding: '0.65rem', backgroundColor: 'white', borderRadius: '8px', border: '1px solid #bae6fd' }}>
+                      <div style={{ marginTop: '0.25rem', padding: '0.65rem', backgroundColor: 'transparent', borderRadius: '8px', border: 'none' }}>
                         {(selectedRisk as any).mitigation_action || "No action recorded"}
                       </div>
                     </div>
@@ -726,7 +726,7 @@ export default function RisksView() {
                 <h4 style={{ marginBottom: '0.5rem', fontSize: '0.8rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Description</h4>
                 <p style={{ lineHeight: '1.5', color: '#1f2937', fontSize: '0.95rem', margin: 0 }}>{selectedRisk.description}</p>
               </div>
-              <div style={{ padding: '0.75rem', backgroundColor: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+              <div style={{ padding: '0.75rem', backgroundColor: 'transparent', borderRadius: '10px', border: 'none' }}>
                 <div style={{ marginBottom: '0.75rem' }}>
                   <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>Likelihood</div>
                   <div style={{ fontSize: '1.25rem', fontWeight: 700, color: selectedRisk.status === 'materialised' ? '#991b1b' : '#1e3a8a' }}>
@@ -747,7 +747,7 @@ export default function RisksView() {
               <h4 style={{ marginBottom: '0.75rem', fontSize: '0.8rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Impact Analysis</h4>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 {/* Impacted Items */}
-                <div style={{ border: '1px solid #e2e8f0', borderRadius: '10px', padding: '0.75rem' }}>
+                <div style={{ border: 'none', borderRadius: '10px', padding: '0.75rem', backgroundColor: 'transparent' }}>
                   <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#475569', marginBottom: '0.5rem' }}>Impacted Work Items ({selectedRisk.affected_items.length})</div>
                   <div style={{ maxHeight: '100px', overflowY: 'auto', fontSize: '0.8rem' }}>
                     {selectedRisk.affected_items.map((itemId, idx) => {
@@ -757,7 +757,7 @@ export default function RisksView() {
                   </div>
                 </div>
                 {/* Impacted Milestones */}
-                <div style={{ border: '1px solid #e2e8f0', borderRadius: '10px', padding: '0.75rem' }}>
+                <div style={{ border: 'none', borderRadius: '10px', padding: '0.75rem', backgroundColor: 'transparent' }}>
                   <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#475569', marginBottom: '0.5rem' }}>Affected Milestones</div>
                   <div style={{ maxHeight: '100px', overflowY: 'auto' }}>
                     {(() => {
@@ -774,7 +774,7 @@ export default function RisksView() {
             </div>
 
             {/* Section 4: TIMELINE & EVENTS */}
-            <div style={{ marginBottom: '1.5rem', padding: '0.75rem', backgroundColor: '#f1f5f9', borderRadius: '8px' }}>
+            <div style={{ marginBottom: '1.5rem', padding: '0.75rem', backgroundColor: 'transparent', borderRadius: '8px', border: 'none' }}>
               <h4 style={{ marginBottom: '0.75rem', fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase' }}>Timeline & Audit</h4>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', fontSize: '0.75rem' }}>
                 <div>

@@ -618,7 +618,7 @@
       "object_id": "dec_1767564095917",
       "owner_actor_id": "actor_002",
       "assigned_at": "2026-01-04T22:01:35.964000Z",
-      "ended_at": null,
+      "ended_at": "2026-01-05T05:56:52.288000+00:00",
       "assigned_by_actor_id": null,
       "reason": null
     },
@@ -688,6 +688,16 @@
       "object_id": "work_item_007",
       "owner_actor_id": "actor_005",
       "assigned_at": "2026-01-05T05:52:28.362000Z",
+      "ended_at": null,
+      "assigned_by_actor_id": null,
+      "reason": ""
+    },
+    {
+      "id": "ownership_1767592612288",
+      "object_type": "decision",
+      "object_id": "dec_1767564095917",
+      "owner_actor_id": "actor_003",
+      "assigned_at": "2026-01-05T05:56:52.288000Z",
       "ended_at": null,
       "assigned_by_actor_id": null,
       "reason": ""

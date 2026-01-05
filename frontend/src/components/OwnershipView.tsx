@@ -239,19 +239,24 @@ export default function OwnershipView() {
     switch (formData.object_type) {
       case 'milestone':
         return [...milestones]
-          .sort((a, b) => a.name.localeCompare(b.name))
+          .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
           .map(m => ({ id: m.id, name: m.name }));
       case 'work_item':
         return [...workItems]
-          .sort((a, b) => a.title.localeCompare(b.title))
+          .sort((a, b) => (a.title || '').localeCompare(b.title || ''))
           .map(w => ({ id: w.id, name: w.title }));
       case 'risk':
         return [...risks]
-          .sort((a, b) => a.title.localeCompare(b.title))
+          .sort((a, b) => (a.title || '').localeCompare(b.title || ''))
           .map(r => ({ id: r.id, name: r.title }));
       case 'decision':
         return [...decisions]
-          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+          .filter(d => d.status !== 'superseded')
+          .sort((a, b) => {
+            const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+            const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+            return dateB - dateA;
+          })
           .map(d => ({ id: d.id, name: formatDecisionName(d) }));
       default:
         return [];
