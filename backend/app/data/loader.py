@@ -5,14 +5,9 @@ from typing import Dict, Any
 
 def load_mock_world() -> Dict[str, Any]:
     """Load mock_world.json data file"""
-    # Try environment variable first (set by Vercel entry point), then fallback to relative path
-    root_dir = os.environ.get("PROJECT_ROOT")
-    if root_dir:
-        data_file = Path(root_dir) / "data" / "mock_world.json"
-    else:
-        # Local development fallback
-        data_dir = Path(__file__).parent.parent.parent.parent / "data"
-        data_file = data_dir / "mock_world.json"
+    # Get the path relative to this file
+    data_dir = Path(__file__).parent.parent.parent.parent / "data"
+    data_file = data_dir / "mock_world.json"
     
     if not data_file.exists():
         # Return empty structure if file doesn't exist
