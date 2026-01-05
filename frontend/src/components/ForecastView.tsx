@@ -26,6 +26,7 @@ export default function ForecastView() {
   const [scenarioComparison, setScenarioComparison] = useState<ScenarioComparison | null>(null);
   const [scenarioType, setScenarioType] = useState<'dependency_delay' | 'scope_change' | 'capacity_change'>('dependency_delay');
   const [scenarioParams, setScenarioParams] = useState<Record<string, any>>({});
+  const [showScenarioReasoning, setShowScenarioReasoning] = useState(false);
   
   // Mitigation preview state
   const [showMitigation, setShowMitigation] = useState(false);
@@ -473,6 +474,70 @@ export default function ForecastView() {
                     color: '#fff'
                   }}>
                     {scenarioComparison.impact_description}
+                  </div>
+
+                  {/* Collapsible Reasoning Section */}
+                  <div style={{ marginTop: '1rem', borderTop: '1px solid var(--cream-dark)', paddingTop: '1rem' }}>
+                    <button
+                      onClick={() => setShowScenarioReasoning(!showScenarioReasoning)}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        background: 'var(--cream)',
+                        border: '1px solid var(--cream-dark)',
+                        borderRadius: 'var(--radius-sm)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        fontSize: '0.9rem',
+                        fontWeight: 600,
+                        color: 'var(--text-primary)',
+                        transition: 'all 0.2s',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'var(--cream-dark)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'var(--cream)';
+                      }}
+                    >
+                      <span>💡 {showScenarioReasoning ? 'Hide' : 'Show'} Detailed Reasoning</span>
+                      <span style={{ fontSize: '1.2rem' }}>{showScenarioReasoning ? '▼' : '▶'}</span>
+                    </button>
+
+                    {showScenarioReasoning && (
+                      <div style={{ 
+                        marginTop: '1rem', 
+                        padding: '1rem', 
+                        background: '#f8f9fa',
+                        border: '1px solid var(--cream-dark)',
+                        borderRadius: 'var(--radius-sm)',
+                        fontSize: '0.85rem',
+                        fontFamily: 'monospace',
+                        whiteSpace: 'pre-wrap',
+                        lineHeight: '1.6',
+                        color: 'var(--text-primary)',
+                        maxHeight: '400px',
+                        overflowY: 'auto'
+                      }}>
+                        <div style={{ marginBottom: '1rem' }}>
+                          <strong style={{ color: 'var(--primary-color)', fontSize: '0.9rem' }}>
+                            📊 Scenario Forecast Explanation:
+                          </strong>
+                        </div>
+                        {scenarioComparison.scenario.explanation}
+                        
+                        <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px dashed var(--cream-dark)' }}>
+                          <strong style={{ color: 'var(--secondary-color)', fontSize: '0.9rem' }}>
+                            📈 Baseline Forecast (for comparison):
+                          </strong>
+                        </div>
+                        <div style={{ marginTop: '0.5rem' }}>
+                          {scenarioComparison.baseline.explanation}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

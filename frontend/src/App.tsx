@@ -29,12 +29,12 @@ export default function App() {
     { id: 'dashboard' as View, label: 'Dashboard', icon: '📊' },
     { id: 'milestones' as View, label: 'Milestones', icon: '🎯' },
     { id: 'work_items' as View, label: 'Work Items', icon: '📋' },
-    { id: 'decisions' as View, label: 'Decisions', icon: '⚡' },
+    { id: 'forecast' as View, label: 'Forecast', icon: '⚡' },
     { id: 'risks' as View, label: 'Risks', icon: '⚠️' },
     { id: 'actors' as View, label: 'Actors', icon: '👥' },
     { id: 'ownership' as View, label: 'Ownership', icon: '🔗' },
     { id: 'roles' as View, label: 'Roles', icon: '🔐' },
-    { id: 'forecast' as View, label: 'Forecast', icon: '📈' },
+    { id: 'decisions' as View, label: 'Decisions', icon: '📈' },
   ];
 
   return (

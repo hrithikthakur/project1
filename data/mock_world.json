@@ -4,7 +4,7 @@
       "id": "work_item_001",
       "title": "Design Authentication System",
       "description": "Design OAuth2 authentication flow",
-      "status": "blocked",
+      "status": "completed",
       "estimated_days": 3.0,
       "actual_days": null,
       "assigned_to": [
@@ -67,7 +67,7 @@
       "id": "work_item_004",
       "title": "Database Schema Design",
       "description": "Design database schema for user data",
-      "status": "blocked",
+      "status": "completed",
       "estimated_days": 2.0,
       "actual_days": null,
       "assigned_to": [
@@ -1759,9 +1759,9 @@
     {
       "id": "risk_from_blocked_work_item_001",
       "title": "Blocked Dependency: Design Authentication System",
-      "description": "'Design Authentication System' is BLOCKED. 1 dependent item(s) affected: Implement Authentication Backend",
+      "description": "'Design Authentication System' is BLOCKED. 1 dependent item(s) affected: Implement Authentication Backend [AUTO-RESOLVED: work_item_001 is no longer blocked]",
       "severity": "medium",
-      "status": "materialised",
+      "status": "closed",
       "probability": 1.0,
       "impact": {
         "delay_days": 3,
@@ -1776,7 +1776,7 @@
         "work_item_002"
       ],
       "detected_at": "2026-01-05T06:48:30.610515",
-      "mitigated_at": "2026-01-05T06:35:41.203993",
+      "mitigated_at": "2026-01-05T06:58:42.380756",
       "accepted_at": null,
       "accepted_by": null,
       "acceptance_boundary": null,
@@ -1789,9 +1789,9 @@
     {
       "id": "risk_from_blocked_work_item_004",
       "title": "Blocked Dependency: Database Schema Design",
-      "description": "'Database Schema Design' is BLOCKED. 1 dependent item(s) affected: Implement User API",
+      "description": "'Database Schema Design' is BLOCKED. 1 dependent item(s) affected: Implement User API [AUTO-RESOLVED: work_item_004 is no longer blocked]",
       "severity": "medium",
-      "status": "materialised",
+      "status": "closed",
       "probability": 1.0,
       "impact": {
         "delay_days": 3,
@@ -1806,7 +1806,7 @@
         "work_item_005"
       ],
       "detected_at": "2026-01-05T06:48:38.840849",
-      "mitigated_at": "2026-01-04T17:35:14.593127",
+      "mitigated_at": "2026-01-05T06:58:47.427952",
       "accepted_at": "2026-01-04T22:01:35.859485",
       "accepted_by": "default_owner",
       "acceptance_boundary": {

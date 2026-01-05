@@ -389,13 +389,13 @@ def _apply_hypothetical_mitigation(
         return state
     
     # Create modified copy with mitigation applied
-    state = dict(state)
-    state["risks"] = [dict(r) for r in state.get("risks", [])]
+    import copy
+    state = copy.deepcopy(state)
     
-    for risk in state["risks"]:
-        if risk["id"] == mitigation.risk_id:
+    for risk in state.get("risks", []):
+        if risk.get("id") == mitigation.risk_id:
             # Simulate mitigation effect
-            if mitigation.expected_impact_reduction_days:
+            if mitigation.expected_impact_reduction_days is not None:
                 # Reduce impact by specified days
                 if "hypothetical_mitigation" not in risk:
                     risk["hypothetical_mitigation"] = {}
@@ -410,6 +410,7 @@ def _apply_hypothetical_mitigation(
                 # Default: assume mitigation moves OPEN -> MITIGATING
                 # This reduces the buffer
                 risk["status"] = "mitigating"
+            break  # Found the risk, no need to continue
     
     return state
 
@@ -466,14 +467,16 @@ def _calculate_dependency_delays(
         
         Returns: (delay_days, is_scenario_delay)
         
-        Note: Scenario delays are NOT calculated here - they're applied as own_delay
-        in _delay_for_work_item and propagate naturally through the dependency graph.
+        Note: Scenario delays are handled in _delay_for_work_item and returned via
+        upstream_delay. This function should NOT duplicate that delay calculation.
         """
         delay = 0.0
         is_scenario = False
         
-        # Skip scenario delay calculation here to avoid double-counting
-        # Scenario delays are applied in _delay_for_work_item as own_delay
+        # If the dependency has a scenario delay, return 0 - the delay is already
+        # captured in upstream_delay from _delay_for_work_item
+        if dep_wi["id"] in scenario_delays:
+            return (0.0, True)
         
         # 1. Progress-based delay calculation
         if dep_wi.get("status") == "completed":
@@ -594,11 +597,12 @@ def _calculate_dependency_delays(
         # Scenario delays represent "what if" hypotheticals that override current status
         if wi_id in scenario_delays:
             own_delay = max(own_delay, float(scenario_delays[wi_id]))
-        
-        # If no scenario delay and item is completed, return 0
-        if wi.get("status") == "completed" and wi_id not in scenario_delays:
-            memo[wi_id] = 0.0
-            return 0.0
+            # If this item has a scenario delay, process dependencies to propagate it
+            # (don't return early even if completed)
+        elif wi.get("status") == "completed":
+            # Completed items with no scenario delay - still need to check dependencies
+            # in case upstream dependencies have scenario delays
+            pass  # Continue to dependency checking below
         
         # Check for remaining work
         remaining_days = wi.get("remaining_days")
@@ -643,11 +647,11 @@ def _calculate_dependency_delays(
 
     # Evaluate delays for milestone work items
     for wi in work_items:
-        if wi.get("status") == "completed":
-            continue
-        
         wi_id = wi["id"]
         wi_max_delay = 0.0
+        
+        # Note: We check ALL work items (including completed ones) because their
+        # dependencies might have scenario delays that need to be considered
         
         for upstream_id in incoming_map.get(wi_id, []):
             upstream_wi = wi_lookup.get(upstream_id)
