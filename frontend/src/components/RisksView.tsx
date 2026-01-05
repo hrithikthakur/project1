@@ -610,7 +610,6 @@ export default function RisksView() {
               justifyContent: 'space-between', 
               alignItems: 'flex-start',
               marginBottom: '1.25rem',
-              borderBottom: '1px solid #e2e8f0',
               paddingBottom: '1rem'
             }}>
               <div style={{ flex: 1 }}>
