@@ -35,6 +35,7 @@ export default function ForecastView() {
   const [mitigationPreview, setMitigationPreview] = useState<MitigationPreview | null>(null);
   const [impactReduction, setImpactReduction] = useState<number>(4);
   const [workItems, setWorkItems] = useState<WorkItem[]>([]);
+  const [showTooltip, setShowTooltip] = useState(false);
 
   useEffect(() => {
     loadMilestones();
@@ -171,7 +172,67 @@ export default function ForecastView() {
   return (
     <div className="view-container">
       <div className="view-header">
-        <h2>📈 Forecast Engine v1</h2>
+        <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          📈 Forecast Engine
+          <span 
+            style={{ 
+              cursor: 'help',
+              fontSize: '0.875rem',
+              color: '#64748b',
+              position: 'relative',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '20px',
+              height: '20px',
+              borderRadius: '50%',
+              border: '1.5px solid #94a3b8',
+              fontWeight: 'bold',
+            }}
+            onMouseEnter={() => setShowTooltip(true)}
+            onMouseLeave={() => setShowTooltip(false)}
+          >
+            ?
+            {showTooltip && (
+              <div style={{
+                position: 'absolute',
+                top: '30px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                backgroundColor: '#1e293b',
+                color: 'white',
+                padding: '12px 16px',
+                borderRadius: '8px',
+                fontSize: '0.875rem',
+                width: '320px',
+                zIndex: 1000,
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                lineHeight: '1.5',
+                textAlign: 'left',
+                fontWeight: 'normal',
+              }}>
+                <div style={{ marginBottom: '8px' }}>
+                  <strong style={{ color: '#f1f5f9' }}>Forecast Engine:</strong> Predicts milestone delivery dates using P50/P80 confidence levels and identifies delay contributors.
+                </div>
+                <div style={{ color: '#cbd5e1', fontSize: '0.8125rem' }}>
+                  ✓ Run what-if scenarios and preview mitigation impacts before committing.
+                </div>
+                {/* Tooltip arrow */}
+                <div style={{
+                  position: 'absolute',
+                  top: '-6px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '0',
+                  height: '0',
+                  borderLeft: '6px solid transparent',
+                  borderRight: '6px solid transparent',
+                  borderBottom: '6px solid #1e293b',
+                }}></div>
+              </div>
+            )}
+          </span>
+        </h2>
       </div>
 
       {/* Milestone Selection */}
@@ -556,23 +617,38 @@ export default function ForecastView() {
                   <label>Risk to Mitigate</label>
                   <select
                     value={selectedRisk}
-                    onChange={(e) => setSelectedRisk(e.target.value)}
+                    onChange={(e) => {
+                      console.log('Risk selected:', e.target.value);
+                      setSelectedRisk(e.target.value);
+                    }}
                     className="detail-select"
                   >
                     <option value="">Select a risk...</option>
-                    {risks
-                      .filter((r) => {
+                    {(() => {
+                      const filteredRisks = risks.filter((r) => {
                         const belongsToMilestone = r.milestone_id === selectedMilestone || 
                           r.affected_items.some(itemId => milestoneWorkItems.some(wi => wi.id === itemId));
                         const isRelevantStatus = ['open', 'materialised', 'mitigating', 'accepted'].includes(r.status);
                         return belongsToMilestone && isRelevantStatus;
-                      })
-                      .map((risk) => (
+                      });
+                      console.log('Filtered risks for mitigation:', filteredRisks.length, filteredRisks.map(r => ({ id: r.id, title: r.title, status: r.status })));
+                      return filteredRisks.map((risk) => (
                         <option key={risk.id} value={risk.id}>
                           {risk.title} ({risk.status})
                         </option>
-                      ))}
+                      ));
+                    })()}
                   </select>
+                  {risks.filter((r) => {
+                    const belongsToMilestone = r.milestone_id === selectedMilestone || 
+                      r.affected_items.some(itemId => milestoneWorkItems.some(wi => wi.id === itemId));
+                    const isRelevantStatus = ['open', 'materialised', 'mitigating', 'accepted'].includes(r.status);
+                    return belongsToMilestone && isRelevantStatus;
+                  }).length === 0 && (
+                    <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                      No risks available for this milestone. Risks must have status: open, materialised, mitigating, or accepted.
+                    </div>
+                  )}
                 </div>
 
                 <div className="form-group">
