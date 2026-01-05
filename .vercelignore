@@ -1,0 +1,12 @@
+# Don't ignore backend directory (it's needed for the API)
+!backend/
+# Don't ignore data directory
+!data/
+# Ignore development files
+backend/venv/
+backend/__pycache__/
+**/__pycache__/
+**/*.pyc
+.env
+.DS_Store
+
