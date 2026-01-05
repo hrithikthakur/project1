@@ -1,0 +1,20 @@
+# Ignore patterns for Quartz
+
+# System files
+.DS_Store
+.git
+.obsidian
+
+# Build files
+node_modules/
+.quartz-cache/
+public/
+
+# Temporary files
+*.tmp
+*.log
+~*
+
+# Deployment scripts
+deploy-to-quartz.sh
+
