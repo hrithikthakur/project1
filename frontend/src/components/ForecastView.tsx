@@ -41,6 +41,15 @@ export default function ForecastView() {
     loadWorkItems();
   }, []);
 
+  // Reset dependent states when milestone changes
+  useEffect(() => {
+    setForecast(null);
+    setScenarioComparison(null);
+    setMitigationPreview(null);
+    setSelectedRisk('');
+    setScenarioParams({});
+  }, [selectedMilestone]);
+
   const loadMilestones = async () => {
     try {
       const data = await listMilestones();
@@ -351,7 +360,7 @@ export default function ForecastView() {
                         <option value="">Select a work item...</option>
                         {milestoneWorkItems.map((wi) => (
                           <option key={wi.id} value={wi.id}>
-                            {wi.title} • {wi.id}
+                            {wi.title}
                           </option>
                         ))}
                       </select>
@@ -462,10 +471,15 @@ export default function ForecastView() {
                   >
                     <option value="">Select a risk...</option>
                     {risks
-                      .filter((r) => r.milestone_id === selectedMilestone && ['open', 'materialised'].includes(r.status))
+                      .filter((r) => {
+                        const belongsToMilestone = r.milestone_id === selectedMilestone || 
+                          r.affected_items.some(itemId => milestoneWorkItems.some(wi => wi.id === itemId));
+                        const isRelevantStatus = ['open', 'materialised', 'mitigating', 'accepted'].includes(r.status);
+                        return belongsToMilestone && isRelevantStatus;
+                      })
                       .map((risk) => (
                         <option key={risk.id} value={risk.id}>
-                          {risk.title} • {risk.status}
+                          {risk.title} ({risk.status})
                         </option>
                       ))}
                   </select>
