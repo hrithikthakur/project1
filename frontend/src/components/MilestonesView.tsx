@@ -249,13 +249,37 @@ export default function MilestonesView() {
                   <option value="missed">Missed</option>
                 </select>
               </div>
-              <div className="form-actions">
-                <button type="submit" className="btn-primary">
-                  {editingMilestone ? 'Update' : 'Create'}
-                </button>
-                <button type="button" className="btn-secondary" onClick={() => setShowForm(false)}>
-                  Cancel
-                </button>
+              <div className="form-actions" style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <button type="submit" className="btn-primary">
+                    {editingMilestone ? 'Update' : 'Create'}
+                  </button>
+                  <button type="button" className="btn-secondary" onClick={() => setShowForm(false)}>
+                    Cancel
+                  </button>
+                </div>
+                {editingMilestone && (
+                  <button 
+                    type="button" 
+                    className="btn-danger" 
+                    onClick={() => {
+                      setShowForm(false);
+                      handleDelete(editingMilestone.id);
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                    }}
+                  >
+                    <span>🗑️</span>
+                    <span>Delete Milestone</span>
+                  </button>
+                )}
               </div>
             </form>
           </div>
@@ -290,47 +314,47 @@ export default function MilestonesView() {
                   <span className="meta-value">{milestone.work_items.length}</span>
                 </div>
               </div>
-              {milestone.work_items.length > 0 && (
-                <div style={{ marginTop: '12px' }}>
-                  <button
-                    onClick={() => handleSeeWorkItems(milestone.id)}
-                    style={{
-                      padding: '8px 16px',
-                      backgroundColor: '#8b7355',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      fontSize: '0.9em',
-                      fontWeight: '500',
-                      transition: 'all 0.2s',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#6d5b45';
-                      e.currentTarget.style.transform = 'translateY(-1px)';
-                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#8b7355';
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = 'none';
-                    }}
-                  >
-                    <span>📋</span>
-                    See Work Items ({milestone.work_items.length})
-                  </button>
-                </div>
-              )}
             </div>
-            <div className="card-actions">
-              <button className="btn-icon" onClick={() => handleEdit(milestone)}>
-                ✏️ Edit
-              </button>
-              <button className="btn-icon btn-danger" onClick={() => handleDelete(milestone.id)}>
-                🗑️ Delete
+            <div className="card-actions" style={{ 
+              display: 'flex', 
+              gap: '0.75rem',
+              padding: '1rem 1.25rem'
+            }}>
+              {milestone.work_items.length > 0 && (
+                <button 
+                  onClick={() => handleSeeWorkItems(milestone.id)}
+                  className="btn-icon"
+                  style={{
+                    flex: 1,
+                    padding: '0.75rem 1rem',
+                    fontSize: '0.9rem',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                  }}
+                >
+                  <span style={{ fontSize: '1rem' }}>📋</span>
+                  <span>View Items ({milestone.work_items.length})</span>
+                </button>
+              )}
+              <button 
+                className="btn-icon" 
+                onClick={() => handleEdit(milestone)}
+                style={{
+                  flex: 1,
+                  padding: '0.75rem 1rem',
+                  fontSize: '0.9rem',
+                  fontWeight: '600',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                }}
+              >
+                <span style={{ fontSize: '1rem' }}>✏️</span>
+                <span>Edit</span>
               </button>
             </div>
           </div>

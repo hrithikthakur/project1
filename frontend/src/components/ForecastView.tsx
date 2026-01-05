@@ -30,6 +30,7 @@ export default function ForecastView() {
   
   // Mitigation preview state
   const [showMitigation, setShowMitigation] = useState(false);
+  const [showMitigationReasoning, setShowMitigationReasoning] = useState(false);
   const [risks, setRisks] = useState<Risk[]>([]);
   const [selectedRisk, setSelectedRisk] = useState<string>('');
   const [mitigationPreview, setMitigationPreview] = useState<MitigationPreview | null>(null);
@@ -71,6 +72,7 @@ export default function ForecastView() {
       setRisks(data);
     } catch (error) {
       console.error('Error loading risks:', error);
+      toast.error('Failed to load risks');
     }
   };
 
@@ -80,6 +82,7 @@ export default function ForecastView() {
       setWorkItems(data);
     } catch (error) {
       console.error('Error loading work items:', error);
+      toast.error('Failed to load work items');
     }
   };
 
@@ -617,36 +620,33 @@ export default function ForecastView() {
                   <label>Risk to Mitigate</label>
                   <select
                     value={selectedRisk}
-                    onChange={(e) => {
-                      console.log('Risk selected:', e.target.value);
-                      setSelectedRisk(e.target.value);
-                    }}
+                    onChange={(e) => setSelectedRisk(e.target.value)}
                     className="detail-select"
                   >
                     <option value="">Select a risk...</option>
-                    {(() => {
-                      const filteredRisks = risks.filter((r) => {
+                    {risks
+                      .filter((r) => {
                         const belongsToMilestone = r.milestone_id === selectedMilestone || 
                           r.affected_items.some(itemId => milestoneWorkItems.some(wi => wi.id === itemId));
-                        const isRelevantStatus = ['open', 'materialised', 'mitigating', 'accepted'].includes(r.status);
-                        return belongsToMilestone && isRelevantStatus;
-                      });
-                      console.log('Filtered risks for mitigation:', filteredRisks.length, filteredRisks.map(r => ({ id: r.id, title: r.title, status: r.status })));
-                      return filteredRisks.map((risk) => (
+                        // Only show risks that actually contribute delay: open, materialised, or mitigating
+                        // (accepted and closed risks don't contribute delay, so mitigating them shows no improvement)
+                        const hasActiveImpact = ['open', 'materialised', 'mitigating'].includes(r.status);
+                        return belongsToMilestone && hasActiveImpact;
+                      })
+                      .map((risk) => (
                         <option key={risk.id} value={risk.id}>
                           {risk.title} ({risk.status})
                         </option>
-                      ));
-                    })()}
+                      ))}
                   </select>
                   {risks.filter((r) => {
                     const belongsToMilestone = r.milestone_id === selectedMilestone || 
                       r.affected_items.some(itemId => milestoneWorkItems.some(wi => wi.id === itemId));
-                    const isRelevantStatus = ['open', 'materialised', 'mitigating', 'accepted'].includes(r.status);
-                    return belongsToMilestone && isRelevantStatus;
+                    const hasActiveImpact = ['open', 'materialised', 'mitigating'].includes(r.status);
+                    return belongsToMilestone && hasActiveImpact;
                   }).length === 0 && (
-                    <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                      No risks available for this milestone. Risks must have status: open, materialised, mitigating, or accepted.
+                    <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--warning-color)', padding: '0.5rem', background: 'rgba(232, 211, 168, 0.2)', borderRadius: 'var(--radius-sm)' }}>
+                      ℹ️ No risks with active impact found for this milestone. Only risks with status <strong>open</strong>, <strong>materialised</strong>, or <strong>mitigating</strong> can be previewed (accepted/closed risks don't contribute delay).
                     </div>
                   )}
                 </div>
@@ -658,6 +658,7 @@ export default function ForecastView() {
                     value={impactReduction}
                     onChange={(e) => setImpactReduction(parseInt(e.target.value))}
                     className="detail-input"
+                    min="0"
                   />
                 </div>
               </div>
@@ -666,10 +667,20 @@ export default function ForecastView() {
                 onClick={handleRunMitigationPreview}
                 disabled={loading || !selectedRisk}
                 className="btn-primary"
-                style={{ width: '100%' }}
+                style={{ 
+                  width: '100%',
+                  opacity: (!selectedRisk && !loading) ? 0.5 : 1,
+                  cursor: (!selectedRisk && !loading) ? 'not-allowed' : 'pointer'
+                }}
+                title={!selectedRisk ? 'Please select a risk first' : 'Run mitigation preview'}
               >
                 {loading ? '⏳ Computing Preview...' : '▶ Preview Impact'}
               </button>
+              {!selectedRisk && (
+                <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--warning-color)', fontStyle: 'italic' }}>
+                  ⚠️ Please select a risk to preview its mitigation impact
+                </div>
+              )}
 
               {/* Mitigation Results */}
               {mitigationPreview && (
@@ -709,8 +720,109 @@ export default function ForecastView() {
                     <p style={{ fontWeight: 600, marginBottom: '0.25rem' }}>
                       Recommendation: <span style={{ textTransform: 'uppercase' }}>{mitigationPreview.recommendation}</span>
                     </p>
-                    <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{mitigationPreview.reasoning}</p>
                   </div>
+
+                  <button
+                    onClick={() => setShowMitigationReasoning(!showMitigationReasoning)}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      marginTop: '1rem',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      background: 'var(--cream)',
+                      border: '1px solid var(--cream-dark)',
+                      borderRadius: 'var(--radius-sm)',
+                      cursor: 'pointer',
+                      fontWeight: 500,
+                      color: 'var(--text-primary)',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'var(--cream-dark)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'var(--cream)';
+                    }}
+                  >
+                    <span>💡 {showMitigationReasoning ? 'Hide' : 'Show'} Detailed Reasoning</span>
+                    <span style={{ fontSize: '1.2rem' }}>{showMitigationReasoning ? '▼' : '▶'}</span>
+                  </button>
+
+                  {showMitigationReasoning && (
+                    <div style={{ 
+                      marginTop: '1rem', 
+                      padding: '1.25rem', 
+                      background: 'var(--cream)', 
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--cream-dark)'
+                    }}>
+                      {/* Summary Reasoning */}
+                      <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'rgba(168, 197, 160, 0.15)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--success-color)' }}>
+                        <div style={{ fontWeight: 'bold', marginBottom: '0.5rem', color: 'var(--success-color)' }}>
+                          📊 Summary
+                        </div>
+                        <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
+                          {mitigationPreview.reasoning}
+                        </p>
+                      </div>
+
+                      {/* With Mitigation Forecast Details */}
+                      <div style={{ marginBottom: '1rem' }}>
+                        <strong style={{ color: 'var(--success-color)', fontSize: '0.9rem' }}>
+                          ✅ With Mitigation Forecast:
+                        </strong>
+                      </div>
+                      {mitigationPreview.with_mitigation.explanation ? (
+                        <div style={{ 
+                          marginBottom: '1.5rem', 
+                          padding: '1rem', 
+                          background: 'rgba(255, 255, 255, 0.5)', 
+                          borderRadius: 'var(--radius-sm)',
+                          fontSize: '0.85rem',
+                          lineHeight: 1.6,
+                          whiteSpace: 'pre-wrap',
+                          fontFamily: 'monospace',
+                          color: 'var(--text-primary)'
+                        }}>
+                          {mitigationPreview.with_mitigation.explanation}
+                        </div>
+                      ) : (
+                        <div style={{ marginBottom: '1.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                          P50: {formatDate(mitigationPreview.with_mitigation.p50_date)} ({mitigationPreview.with_mitigation.delta_p50_days > 0 ? '+' : ''}{mitigationPreview.with_mitigation.delta_p50_days} days)<br/>
+                          P80: {formatDate(mitigationPreview.with_mitigation.p80_date)} ({mitigationPreview.with_mitigation.delta_p80_days > 0 ? '+' : ''}{mitigationPreview.with_mitigation.delta_p80_days} days)
+                        </div>
+                      )}
+                      
+                      {/* Current (Baseline) Forecast Details */}
+                      <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px dashed var(--cream-dark)' }}>
+                        <strong style={{ color: 'var(--secondary-color)', fontSize: '0.9rem' }}>
+                          📈 Current Forecast (for comparison):
+                        </strong>
+                      </div>
+                      {mitigationPreview.current.explanation ? (
+                        <div style={{ 
+                          marginTop: '0.5rem',
+                          padding: '1rem', 
+                          background: 'rgba(255, 255, 255, 0.5)', 
+                          borderRadius: 'var(--radius-sm)',
+                          fontSize: '0.85rem',
+                          lineHeight: 1.6,
+                          whiteSpace: 'pre-wrap',
+                          fontFamily: 'monospace',
+                          color: 'var(--text-primary)'
+                        }}>
+                          {mitigationPreview.current.explanation}
+                        </div>
+                      ) : (
+                        <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                          P50: {formatDate(mitigationPreview.current.p50_date)} ({mitigationPreview.current.delta_p50_days > 0 ? '+' : ''}{mitigationPreview.current.delta_p50_days} days)<br/>
+                          P80: {formatDate(mitigationPreview.current.p80_date)} ({mitigationPreview.current.delta_p80_days > 0 ? '+' : ''}{mitigationPreview.current.delta_p80_days} days)
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -746,10 +858,6 @@ export default function ForecastView() {
               <span><strong>Fast Feedback:</strong> Millisecond response time for instant decision support</span>
             </li>
           </ul>
-          <div className="detail-note" style={{ marginTop: '1rem' }}>
-            <strong>Note:</strong> Confidence level is LOW by design. Use forecasts for direction, not precision. 
-            Expect variance as you collect historical data.
-          </div>
         </div>
       )}
     </div>
