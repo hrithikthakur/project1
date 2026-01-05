@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from typing import List
-from ..models.decision import Decision, DecisionType
+from ..models.decision import Decision, DecisionType, DecisionStatus, ChangeScheduleSubtype, ChangeScopeSubtype
 from ..engine.graph import DependencyGraph
 from ..engine.ripple import RippleEffectEngine
 from ..data.loader import get_decisions, load_mock_world, get_risks, get_milestones
@@ -56,6 +56,9 @@ async def create_decision(decision: Decision):
     world["decisions"] = decisions
     _save_mock_world(world)
     
+    # Apply effects to milestones if decision is approved or just created
+    _apply_decision_effects(decision, world)
+    
     return decision
 
 
@@ -98,6 +101,9 @@ async def update_decision(decision_id: str, decision: Decision):
     world["decisions"] = decisions
     _save_mock_world(world)
     
+    # Apply effects to milestones if decision is approved or updated
+    _apply_decision_effects(decision, world)
+    
     return decision
 
 
@@ -117,6 +123,67 @@ async def delete_decision(decision_id: str):
     _save_mock_world(world)
     
     return {"message": f"Decision {decision_id} deleted successfully"}
+
+
+def _apply_decision_effects(decision: Decision, world: dict):
+    """
+    Apply decision effects to the world (e.g., update milestone target dates).
+    Only applies effects if the decision is APPROVED or if it's a new decision 
+    (assuming creation implies immediate effect for now, matching user expectations).
+    """
+    if decision.status == DecisionStatus.SUPERSEDED:
+        return
+
+    milestones = world.get("milestones", [])
+    updated = False
+
+    # 1. Handle MOVE_TARGET_DATE
+    if decision.decision_type == DecisionType.CHANGE_SCHEDULE and \
+       decision.subtype == ChangeScheduleSubtype.MOVE_TARGET_DATE.value and \
+       decision.new_target_date:
+        
+        # Find the milestone by name
+        target_milestone = None
+        for m in milestones:
+            if m.get("name") == decision.milestone_name:
+                target_milestone = m
+                break
+        
+        if target_milestone:
+            print(f"[DECISION-EFFECT] Updating milestone {target_milestone['id']} target_date to {decision.new_target_date}")
+            # Convert date to isoformat string for JSON storage
+            target_milestone["target_date"] = decision.new_target_date.isoformat()
+            updated = True
+
+    # 2. Handle CHANGE_SCOPE (ADD/REMOVE)
+    elif decision.decision_type == DecisionType.CHANGE_SCOPE:
+        target_milestone = None
+        for m in milestones:
+            if m.get("name") == decision.milestone_name:
+                target_milestone = m
+                break
+        
+        if target_milestone:
+            milestone_work_items = set(target_milestone.get("work_items", []))
+            
+            if decision.subtype == ChangeScopeSubtype.ADD.value and decision.add_item_ids:
+                for item_id in decision.add_item_ids:
+                    milestone_work_items.add(item_id)
+                updated = True
+            
+            elif decision.subtype == ChangeScopeSubtype.REMOVE.value and decision.remove_item_ids:
+                for item_id in decision.remove_item_ids:
+                    if item_id in milestone_work_items:
+                        milestone_work_items.remove(item_id)
+                updated = True
+            
+            if updated:
+                target_milestone["work_items"] = list(milestone_work_items)
+                print(f"[DECISION-EFFECT] Updated milestone {target_milestone['id']} work_items count to {len(target_milestone['work_items'])}")
+
+    if updated:
+        world["milestones"] = milestones
+        _save_mock_world(world)
 
 
 def _convert_decision_to_legacy_format(decision: Decision) -> dict:

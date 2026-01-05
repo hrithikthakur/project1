@@ -20,6 +20,7 @@ from app.engine.forecast import (
     HypotheticalMitigation,
 )
 from app.data.loader import load_mock_world
+from math import isnan
 
 
 router = APIRouter(prefix="/forecast", tags=["forecast"])
@@ -93,6 +94,55 @@ def _get_state_snapshot() -> Dict[str, Any]:
     return load_mock_world()
 
 
+def _coerce_number(value, default=None):
+    """Best-effort numeric coercion with fallback."""
+    try:
+        num = float(value)
+        if isnan(num):
+            return default
+        return num
+    except Exception:
+        return default
+
+
+def _default_scenario_params(
+    milestone_id: str,
+    state: Dict[str, Any],
+    scenario_type: ScenarioType,
+    params: Dict[str, Any]
+) -> Dict[str, Any]:
+    """Fill in sensible defaults so scenarios always do something."""
+    params = dict(params or {})
+    work_items = [wi for wi in state.get("work_items", []) if wi.get("milestone_id") == milestone_id]
+    work_item_ids = {wi.get("id") for wi in work_items}
+    dependencies = state.get("dependencies", [])
+
+    if scenario_type == ScenarioType.DEPENDENCY_DELAY:
+        # Find the first dependency coming into this milestone
+        candidate_dep = next(
+            (
+                dep for dep in dependencies
+                if dep.get("to_id") in work_item_ids
+            ),
+            None
+        )
+        params.setdefault("work_item_id", candidate_dep.get("from_id") if candidate_dep else None)
+        params["delay_days"] = _coerce_number(params.get("delay_days"), 3)
+
+    elif scenario_type == ScenarioType.SCOPE_CHANGE:
+        remaining_effort = sum(
+            wi.get("estimated_days", 0) for wi in work_items
+            if wi.get("status") != "completed"
+        )
+        default_delta = max(1, round(0.1 * remaining_effort)) if remaining_effort else 3
+        params["effort_delta_days"] = _coerce_number(params.get("effort_delta_days"), default_delta)
+
+    elif scenario_type == ScenarioType.CAPACITY_CHANGE:
+        params["capacity_multiplier"] = _coerce_number(params.get("capacity_multiplier"), 0.85)
+
+    return params
+
+
 # ============================================================================
 # Endpoints
 # ============================================================================
@@ -138,12 +188,20 @@ def get_scenario_forecast(milestone_id: str, scenario_request: ScenarioRequest):
                 detail=f"Invalid scenario_type. Must be one of: {[t.value for t in ScenarioType]}"
             )
         
+        # Coerce and fill defaults to ensure the scenario actually perturbs state
+        params = _default_scenario_params(
+            milestone_id,
+            state,
+            scenario_type,
+            scenario_request.params,
+        )
+
         # Run scenario forecast
         baseline, scenario = forecast_with_scenario(
             milestone_id,
             state,
             scenario_type,
-            scenario_request.params
+            params
         )
         
         # Calculate impact

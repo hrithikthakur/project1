@@ -281,7 +281,7 @@ export default function MilestonesView() {
                   backgroundColor: getStatusColor(milestone.status),
                 }}
               >
-                {milestone.status}
+                {milestone.status.replace('_', ' ')}
               </span>
             </div>
             <div className="card-body">

@@ -149,6 +149,50 @@ def _check_and_resolve_dependency_risks(completed_work_item_id: str, world: dict
         _save_mock_world(world)
 
 
+def _check_and_update_milestone_status(milestone_id: str, world: dict):
+    """
+    Check if all work items for a milestone are completed.
+    If so, update the milestone status to 'achieved'.
+    """
+    if not milestone_id:
+        return
+        
+    milestones = world.get("milestones", [])
+    work_items = world.get("work_items", [])
+    
+    milestone = next((m for m in milestones if m.get("id") == milestone_id), None)
+    if not milestone:
+        return
+        
+    # Get IDs of items belonging to this milestone
+    # We check both the milestone's own list and work items that point to it
+    item_ids = set(milestone.get("work_items", []))
+    for wi in work_items:
+        if wi.get("milestone_id") == milestone_id:
+            item_ids.add(wi.get("id"))
+            
+    if not item_ids:
+        return
+        
+    # Find these items and check their status
+    relevant_items = [wi for wi in work_items if wi.get("id") in item_ids]
+    
+    if not relevant_items:
+        return
+        
+    all_completed = all(wi.get("status") == "completed" for wi in relevant_items)
+    
+    if all_completed and milestone.get("status") != "achieved":
+        print(f"[AUTO-MILESTONE] Milestone {milestone_id} all tasks completed. Updating status to 'achieved'")
+        milestone["status"] = "achieved"
+        _save_mock_world(world)
+    elif not all_completed and milestone.get("status") == "achieved":
+        # If it was achieved but now someone reopened a task or added a new one
+        print(f"[AUTO-MILESTONE] Milestone {milestone_id} has incomplete tasks. Reverting status from 'achieved' to 'pending'")
+        milestone["status"] = "pending"
+        _save_mock_world(world)
+
+
 def _create_materialized_risk_for_blocked_item(blocked_work_item_id: str, world: dict) -> dict:
     """
     When a work item is blocked, check if other items depend on it.
@@ -287,6 +331,10 @@ async def create_work_item(work_item: WorkItem):
     world["work_items"] = work_items
     _save_mock_world(world)
     
+    # Check if this affects milestone completion (e.g. adding a task to an achieved milestone)
+    if work_item.milestone_id:
+        _check_and_update_milestone_status(work_item.milestone_id, world)
+    
     return work_item
 
 
@@ -301,9 +349,11 @@ async def update_work_item(work_item_id: str, work_item: WorkItem):
     
     found = False
     old_status = None
+    old_milestone_id = None
     for i, item in enumerate(work_items):
         if item.get("id") == work_item_id:
             old_status = item.get("status")
+            old_milestone_id = item.get("milestone_id")
             # Convert to dict with mode='json' to properly serialize dates
             work_items[i] = work_item.model_dump(mode='json')
             found = True
@@ -334,6 +384,14 @@ async def update_work_item(work_item_id: str, work_item: WorkItem):
     if work_item.status == "completed":
         _check_and_resolve_dependency_risks(work_item_id, world)
     
+    # Check if this update affects milestone completion
+    if work_item.milestone_id:
+        _check_and_update_milestone_status(work_item.milestone_id, world)
+    
+    # If the milestone changed, also check the old milestone
+    if old_milestone_id and old_milestone_id != work_item.milestone_id:
+        _check_and_update_milestone_status(old_milestone_id, world)
+    
     # Return work item with metadata
     return {
         **work_item.model_dump(mode='json'),
@@ -348,6 +406,14 @@ async def delete_work_item(work_item_id: str):
     work_items = world.get("work_items", [])
     
     original_count = len(work_items)
+    
+    # Get milestone_id before deleting if we need to check status later
+    deleted_item_milestone_id = None
+    for item in work_items:
+        if item.get("id") == work_item_id:
+            deleted_item_milestone_id = item.get("milestone_id")
+            break
+            
     work_items = [item for item in work_items if item.get("id") != work_item_id]
     
     if len(work_items) == original_count:
@@ -355,6 +421,10 @@ async def delete_work_item(work_item_id: str):
     
     world["work_items"] = work_items
     _save_mock_world(world)
+    
+    # Check if deleting this item makes the milestone completed
+    if deleted_item_milestone_id:
+        _check_and_update_milestone_status(deleted_item_milestone_id, world)
     
     return {"message": f"Work item {work_item_id} deleted successfully"}
 

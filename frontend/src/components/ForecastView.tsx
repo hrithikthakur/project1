@@ -6,8 +6,10 @@ import {
   getMitigationPreview,
   listMilestones,
   listRisks,
+  listWorkItems,
   type Milestone,
   type Risk,
+  type WorkItem,
   type MilestoneForecast,
   type ScenarioComparison,
   type MitigationPreview,
@@ -31,10 +33,12 @@ export default function ForecastView() {
   const [selectedRisk, setSelectedRisk] = useState<string>('');
   const [mitigationPreview, setMitigationPreview] = useState<MitigationPreview | null>(null);
   const [impactReduction, setImpactReduction] = useState<number>(4);
+  const [workItems, setWorkItems] = useState<WorkItem[]>([]);
 
   useEffect(() => {
     loadMilestones();
     loadRisks();
+    loadWorkItems();
   }, []);
 
   const loadMilestones = async () => {
@@ -56,6 +60,15 @@ export default function ForecastView() {
       setRisks(data);
     } catch (error) {
       console.error('Error loading risks:', error);
+    }
+  };
+
+  const loadWorkItems = async () => {
+    try {
+      const data = await listWorkItems();
+      setWorkItems(data);
+    } catch (error) {
+      console.error('Error loading work items:', error);
     }
   };
 
@@ -131,6 +144,10 @@ export default function ForecastView() {
       day: 'numeric',
     });
   };
+
+  const milestoneWorkItems = workItems.filter(
+    (wi) => wi.milestone_id === selectedMilestone
+  );
 
   return (
     <div className="view-container">
@@ -325,14 +342,19 @@ export default function ForecastView() {
                 <div className="form-group">
                   {scenarioType === 'dependency_delay' && (
                     <>
-                      <label>Work Item ID</label>
-                      <input
-                        type="text"
-                        placeholder="e.g., work_item_001"
+                      <label>Upstream Work Item (auto-filtered by milestone)</label>
+                      <select
                         value={scenarioParams.work_item_id || ''}
                         onChange={(e) => setScenarioParams({ ...scenarioParams, work_item_id: e.target.value })}
-                        className="detail-input"
-                      />
+                        className="detail-select"
+                      >
+                        <option value="">Select a work item...</option>
+                        {milestoneWorkItems.map((wi) => (
+                          <option key={wi.id} value={wi.id}>
+                            {wi.title} • {wi.id}
+                          </option>
+                        ))}
+                      </select>
                       <div style={{ marginTop: '0.75rem' }}>
                         <label>Delay (days)</label>
                         <input

@@ -596,31 +596,54 @@ export default function RisksView() {
       {/* Risk Details Modal */}
       {selectedRisk && (
         <div className="modal-overlay" onClick={closeRiskModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '700px' }}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ 
+            maxWidth: '720px', 
+            borderRadius: '12px', 
+            boxShadow: '0 16px 24px -8px rgba(0, 0, 0, 0.1), 0 6px 12px -6px rgba(0, 0, 0, 0.05)',
+            padding: '1.5rem'
+          }}>
             <div style={{ 
               display: 'flex', 
               justifyContent: 'space-between', 
               alignItems: 'flex-start',
-              marginBottom: '1.5rem',
-              borderBottom: '2px solid #f0f0f0',
+              marginBottom: '1.25rem',
+              borderBottom: '1px solid #e2e8f0',
               paddingBottom: '1rem'
             }}>
-              <div>
-                <h3 style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  {selectedRisk.status === 'materialised' && <span>🚨</span>}
-                  {selectedRisk.status === 'closed' && <span>✅</span>}
-                  {selectedRisk.title}
-                </h3>
-                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                  {selectedRisk.status === 'materialised' && <span style={{ fontSize: '1.5rem' }}>🚨</span>}
+                  {selectedRisk.status === 'closed' && <span style={{ fontSize: '1.5rem' }}>✅</span>}
+                  <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: '#1e293b' }}>
+                    {selectedRisk.title}
+                  </h3>
+                </div>
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
                   <span
                     className="status-badge"
-                    style={{ backgroundColor: getSeverityColor(selectedRisk.severity) }}
+                    style={{ 
+                      backgroundColor: getSeverityColor(selectedRisk.severity),
+                      padding: '3px 10px',
+                      borderRadius: '9999px',
+                      fontSize: '0.72rem',
+                      fontWeight: 600,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.02em'
+                    }}
                   >
                     {selectedRisk.severity}
                   </span>
                   <span
                     className="status-badge"
-                    style={{ backgroundColor: getStatusColor(selectedRisk.status) }}
+                    style={{ 
+                      backgroundColor: getStatusColor(selectedRisk.status),
+                      padding: '3px 10px',
+                      borderRadius: '9999px',
+                      fontSize: '0.72rem',
+                      fontWeight: 600,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.02em'
+                    }}
                   >
                     {selectedRisk.status}
                   </span>
@@ -629,48 +652,90 @@ export default function RisksView() {
               <button 
                 onClick={closeRiskModal}
                 style={{
-                  background: 'none',
+                  background: '#f1f5f9',
                   border: 'none',
-                  fontSize: '1.5rem',
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   cursor: 'pointer',
-                  padding: '0',
-                  color: '#666',
-                  lineHeight: '1'
+                  color: '#64748b',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#e2e8f0';
+                  e.currentTarget.style.color = '#1e293b';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#f1f5f9';
+                  e.currentTarget.style.color = '#64748b';
                 }}
               >
                 ✕
               </button>
             </div>
             
-            <div style={{ marginBottom: '1.5rem' }}>
-              <h4 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: '#666', textTransform: 'uppercase' }}>Description</h4>
-              <p style={{ lineHeight: '1.6', color: '#333' }}>{selectedRisk.description}</p>
+            <div style={{ marginBottom: '1.25rem' }}>
+              <h4 style={{ 
+                marginBottom: '0.5rem', 
+                fontSize: '0.875rem', 
+                fontWeight: 600, 
+                color: '#64748b', 
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em'
+              }}>Description</h4>
+              <p style={{ 
+                lineHeight: '1.5', 
+                color: '#1f2937', 
+                fontSize: '0.95rem',
+                margin: 0
+              }}>{selectedRisk.description}</p>
             </div>
 
             <div style={{ 
               display: 'grid', 
-              gridTemplateColumns: 'repeat(3, 1fr)', 
-              gap: '1rem',
-              marginBottom: '1.5rem',
-              padding: '1rem',
-              backgroundColor: '#f8f9fa',
-              borderRadius: '8px'
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+              gap: '0.75rem',
+              marginBottom: '1.25rem',
             }}>
-              <div>
-                <div style={{ fontSize: '0.75rem', color: '#666', marginBottom: '0.25rem' }}>Probability</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#333' }}>
+              <div style={{ 
+                padding: '0.9rem', 
+                backgroundColor: '#f8fafc', 
+                borderRadius: '10px',
+                border: '1px solid #e2e8f0'
+              }}>
+                <div style={{ fontSize: '0.85rem', color: '#1e40af', marginBottom: '0.35rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span>📈</span> Probability
+                </div>
+                <div style={{ fontSize: '1.35rem', fontWeight: 700, color: '#1e3a8a' }}>
                   {(selectedRisk.probability * 100).toFixed(0)}%
                 </div>
               </div>
-              <div>
-                <div style={{ fontSize: '0.75rem', color: '#666', marginBottom: '0.25rem' }}>Affected Items</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#333' }}>
+              <div style={{ 
+                padding: '0.9rem', 
+                backgroundColor: '#fffbeb', 
+                borderRadius: '10px',
+                border: '1px solid #fef3c7'
+              }}>
+                <div style={{ fontSize: '0.85rem', color: '#9a3412', marginBottom: '0.35rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span>📦</span> Affected Items
+                </div>
+                <div style={{ fontSize: '1.35rem', fontWeight: 700, color: '#7c2d12' }}>
                   {selectedRisk.affected_items.length}
                 </div>
               </div>
-              <div>
-                <div style={{ fontSize: '0.75rem', color: '#666', marginBottom: '0.25rem' }}>Detected</div>
-                <div style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#333' }}>
+              <div style={{ 
+                padding: '0.9rem', 
+                backgroundColor: '#ffffff', 
+                borderRadius: '10px',
+                border: '1px solid #e2e8f0'
+              }}>
+                <div style={{ fontSize: '0.85rem', color: '#475569', marginBottom: '0.35rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span>📅</span> Detected
+                </div>
+                <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#1e293b' }}>
                   {formatDate(selectedRisk.detected_at)}
                 </div>
               </div>
@@ -679,62 +744,83 @@ export default function RisksView() {
             {/* Acceptance Information */}
             {selectedRisk.status === 'accepted' && (selectedRisk as any).accepted_at && (
               <div style={{
-                marginBottom: '1.5rem',
+                marginBottom: '1.25rem',
                 padding: '1rem',
-                backgroundColor: '#f8f9fa',
-                borderLeft: '4px solid #95a5a6',
-                borderRadius: '4px',
+                backgroundColor: '#f8fafc',
+                borderLeft: '3px solid #94a3b8',
+                borderRadius: '10px',
               }}>
                 <div style={{ 
-                  fontSize: '0.875rem', 
-                  fontWeight: 'bold', 
-                  color: '#5a6c7d',
-                  marginBottom: '0.5rem',
+                  fontSize: '0.95rem', 
+                  fontWeight: 700, 
+                  color: '#334155',
+                  marginBottom: '0.75rem',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.5rem',
+                  gap: '0.75rem',
                 }}>
-                  <span>✓</span>
+                  <span style={{ 
+                    backgroundColor: '#94a3b8', 
+                    color: 'white', 
+                    width: '22px', 
+                    height: '22px', 
+                    borderRadius: '50%', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    fontSize: '0.7rem'
+                  }}>✓</span>
                   <span>Risk Accepted</span>
                 </div>
-                <div style={{ fontSize: '0.8125rem', color: '#6c757d' }}>
-                  <div style={{ marginBottom: '0.25rem' }}>
-                    <strong>Accepted on:</strong> {formatDateTime((selectedRisk as any).accepted_at)}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div style={{ fontSize: '0.85rem', color: '#475569' }}>
+                    <div style={{ marginBottom: '0.5rem' }}>
+                      <strong style={{ color: '#1e293b' }}>Accepted on:</strong> {formatDateTime((selectedRisk as any).accepted_at)}
+                    </div>
+                    {(selectedRisk as any).accepted_by && (
+                      <div style={{ marginBottom: '0.5rem' }}>
+                        <strong style={{ color: '#1e293b' }}>Accepted by:</strong> {(selectedRisk as any).accepted_by}
+                      </div>
+                    )}
+                    {(selectedRisk as any).next_date && (
+                      <div style={{ marginBottom: '0.5rem' }}>
+                        <strong style={{ color: '#1e293b' }}>Next review:</strong> {formatDate((selectedRisk as any).next_date)}
+                      </div>
+                    )}
                   </div>
-                  {(selectedRisk as any).accepted_by && (
-                    <div style={{ marginBottom: '0.25rem' }}>
-                      <strong>Accepted by:</strong> {(selectedRisk as any).accepted_by}
-                    </div>
-                  )}
-                  {(selectedRisk as any).next_date && (
-                    <div style={{ marginBottom: '0.25rem' }}>
-                      <strong>Next review:</strong> {formatDate((selectedRisk as any).next_date)}
-                    </div>
-                  )}
-                  {(selectedRisk as any).acceptance_boundary && (
-                    <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid #dee2e6' }}>
-                      <strong>Boundary:</strong>{' '}
-                      {(selectedRisk as any).acceptance_boundary.type === 'date' && (
-                        <span>Until {formatDate((selectedRisk as any).acceptance_boundary.date)}</span>
-                      )}
-                      {(selectedRisk as any).acceptance_boundary.type === 'threshold' && (
-                        <span>Threshold: {(selectedRisk as any).acceptance_boundary.threshold}</span>
-                      )}
-                      {(selectedRisk as any).acceptance_boundary.type === 'event' && (
-                        <span>Event: {(selectedRisk as any).acceptance_boundary.trigger}</span>
-                      )}
-                    </div>
-                  )}
+                  <div style={{ fontSize: '0.85rem', color: '#475569' }}>
+                    {(selectedRisk as any).acceptance_boundary && (
+                      <div>
+                        <strong style={{ color: '#1e293b' }}>Boundary:</strong>{' '}
+                        <div style={{ marginTop: '0.25rem', padding: '0.5rem', backgroundColor: 'white', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                          {(selectedRisk as any).acceptance_boundary.type === 'date' && (
+                            <span>Until {formatDate((selectedRisk as any).acceptance_boundary.date)}</span>
+                          )}
+                          {(selectedRisk as any).acceptance_boundary.type === 'threshold' && (
+                            <span>Threshold: {(selectedRisk as any).acceptance_boundary.threshold}</span>
+                          )}
+                          {(selectedRisk as any).acceptance_boundary.type === 'event' && (
+                            <span>Event: {(selectedRisk as any).acceptance_boundary.trigger}</span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div style={{
-                  marginTop: '0.75rem',
-                  padding: '0.5rem',
-                  backgroundColor: '#e7f3ff',
-                  borderRadius: '4px',
-                  fontSize: '0.75rem',
-                  color: '#004085',
+                  marginTop: '0.85rem',
+                  padding: '0.65rem 0.9rem',
+                  backgroundColor: '#e0f2fe',
+                  borderRadius: '8px',
+                  fontSize: '0.8rem',
+                  color: '#0369a1',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.6rem',
+                  border: '1px solid #bae6fd'
                 }}>
-                  <strong>🔕 Quiet Monitoring:</strong> Escalations suppressed. Monitoring for boundary breach or next review date.
+                  <span style={{ fontSize: '1.125rem' }}>🔕</span>
+                  <span><strong>Quiet Monitoring:</strong> Escalations suppressed. Monitoring for boundary breach or next review date.</span>
                 </div>
               </div>
             )}
@@ -742,38 +828,45 @@ export default function RisksView() {
             {/* Mitigation Information */}
             {selectedRisk.status === 'mitigating' && (selectedRisk as any).mitigation_started_at && (
               <div style={{
-                marginBottom: '1.5rem',
+                marginBottom: '1.25rem',
                 padding: '1rem',
-                backgroundColor: '#e3f2fd',
-                borderLeft: '4px solid #3498db',
-                borderRadius: '4px',
+                backgroundColor: '#f0f9ff',
+                borderLeft: '3px solid #0ea5e9',
+                borderRadius: '10px',
               }}>
                 <div style={{ 
-                  fontSize: '0.875rem', 
-                  fontWeight: 'bold', 
-                  color: '#1565c0',
-                  marginBottom: '0.5rem',
+                  fontSize: '0.95rem', 
+                  fontWeight: 700, 
+                  color: '#0369a1',
+                  marginBottom: '0.75rem',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.5rem',
+                  gap: '0.75rem',
                 }}>
-                  <span>🛠️</span>
+                  <span style={{ fontSize: '1.25rem' }}>🛠️</span>
                   <span>Mitigation In Progress</span>
                 </div>
-                <div style={{ fontSize: '0.8125rem', color: '#1976d2' }}>
-                  {(selectedRisk as any).mitigation_action && (
-                    <div style={{ marginBottom: '0.5rem' }}>
-                      <strong>Action:</strong> {(selectedRisk as any).mitigation_action}
-                    </div>
-                  )}
-                  <div style={{ marginBottom: '0.25rem' }}>
-                    <strong>Started:</strong> {formatDate((selectedRisk as any).mitigation_started_at)}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div style={{ fontSize: '0.85rem', color: '#0c4a6e' }}>
+                    {(selectedRisk as any).mitigation_action && (
+                      <div style={{ marginBottom: '0.65rem' }}>
+                        <strong style={{ color: '#0369a1' }}>Planned Action:</strong> 
+                        <div style={{ marginTop: '0.25rem', padding: '0.65rem', backgroundColor: 'white', borderRadius: '8px', border: '1px solid #bae6fd' }}>
+                          {(selectedRisk as any).mitigation_action}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  {(selectedRisk as any).mitigation_due_date && (
-                    <div>
-                      <strong>Due:</strong> {formatDate((selectedRisk as any).mitigation_due_date)}
+                  <div style={{ fontSize: '0.85rem', color: '#0c4a6e' }}>
+                    <div style={{ marginBottom: '0.5rem' }}>
+                      <strong style={{ color: '#0369a1' }}>Started:</strong> {formatDate((selectedRisk as any).mitigation_started_at)}
                     </div>
-                  )}
+                    {(selectedRisk as any).mitigation_due_date && (
+                      <div>
+                        <strong style={{ color: '#0369a1' }}>Due Date:</strong> {formatDate((selectedRisk as any).mitigation_due_date)}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -783,39 +876,42 @@ export default function RisksView() {
               const affectedMilestones = getAffectedMilestones(selectedRisk);
               if (affectedMilestones.length > 0) {
                 return (
-                  <div style={{ marginBottom: '1.5rem' }}>
-                    <h4 style={{ marginBottom: '0.75rem', fontSize: '0.9rem', color: '#666', textTransform: 'uppercase' }}>
+                  <div style={{ marginBottom: '2rem' }}>
+                    <h4 style={{ 
+                      marginBottom: '1rem', 
+                      fontSize: '0.875rem', 
+                      fontWeight: 600, 
+                      color: '#64748b', 
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em'
+                    }}>
                       Affected Milestones ({affectedMilestones.length})
                     </h4>
                     <div style={{
-                      display: 'flex',
-                      flexWrap: 'wrap',
-                      gap: '0.5rem',
-                      padding: '0.75rem',
-                      backgroundColor: '#f8f9fa',
-                      borderRadius: '8px',
-                      border: '1px solid #e0e0e0'
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+                      gap: '0.75rem',
                     }}>
                       {affectedMilestones.map(milestone => (
                         <div
                           key={milestone.id}
                           style={{
-                            padding: '0.5rem 0.75rem',
+                            padding: '1rem',
                             backgroundColor: '#fff',
-                            border: '2px solid #3498db',
-                            borderRadius: '6px',
-                            fontSize: '0.875rem',
-                            fontWeight: '500',
-                            color: '#333',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '10px',
                             display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem'
+                            alignItems: 'flex-start',
+                            gap: '0.75rem',
+                            transition: 'all 0.2s'
                           }}
                         >
-                          <span>📍</span>
+                          <span style={{ fontSize: '1.25rem', marginTop: '-2px' }}>📍</span>
                           <div>
-                            <div>{milestone.name}</div>
-                            <div style={{ fontSize: '0.75rem', color: '#666', marginTop: '2px' }}>
+                            <div style={{ fontWeight: 600, color: '#1e293b', fontSize: '0.875rem', marginBottom: '0.25rem' }}>
+                              {milestone.name}
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
                               Target: {formatDate(milestone.target_date)}
                             </div>
                           </div>
@@ -830,28 +926,51 @@ export default function RisksView() {
 
             {/* Affected Work Items */}
             {selectedRisk.affected_items.length > 0 && (
-              <div style={{ marginBottom: '1.5rem' }}>
-                <h4 style={{ marginBottom: '0.75rem', fontSize: '0.9rem', color: '#666', textTransform: 'uppercase' }}>
+              <div style={{ marginBottom: '2rem' }}>
+                <h4 style={{ 
+                  marginBottom: '1rem', 
+                  fontSize: '0.875rem', 
+                  fontWeight: 600, 
+                  color: '#64748b', 
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
+                }}>
                   Affected Work Items ({selectedRisk.affected_items.length})
                 </h4>
                 <div style={{
-                  maxHeight: '150px',
+                  maxHeight: '180px',
                   overflowY: 'auto',
-                  border: '1px solid #e0e0e0',
-                  borderRadius: '4px',
-                  padding: '0.5rem'
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '12px',
+                  backgroundColor: '#f8fafc',
                 }}>
-                  {selectedRisk.affected_items.map((itemId) => {
+                  {selectedRisk.affected_items.map((itemId, idx) => {
                     const workItem = workItems.find(wi => wi.id === itemId);
                     return (
                       <div key={itemId} style={{
-                        padding: '0.5rem',
-                        marginBottom: '0.25rem',
-                        backgroundColor: '#f8f9fa',
-                        borderRadius: '4px',
-                        fontSize: '0.85rem'
+                        padding: '0.875rem 1rem',
+                        borderBottom: idx === selectedRisk.affected_items.length - 1 ? 'none' : '1px solid #e2e8f0',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.75rem'
                       }}>
-                        {workItem ? workItem.title : itemId}
+                        <span style={{ color: '#94a3b8', fontSize: '0.875rem', fontWeight: 500 }}>{idx + 1}.</span>
+                        <div style={{ fontWeight: 500, color: '#334155', fontSize: '0.875rem' }}>
+                          {workItem ? workItem.title : itemId}
+                        </div>
+                        {workItem?.status && (
+                          <span style={{ 
+                            marginLeft: 'auto', 
+                            fontSize: '0.7rem', 
+                            padding: '2px 8px', 
+                            backgroundColor: '#e2e8f0', 
+                            borderRadius: '4px', 
+                            color: '#475569',
+                            fontWeight: 600
+                          }}>
+                            {workItem.status}
+                          </span>
+                        )}
                       </div>
                     );
                   })}
@@ -859,7 +978,13 @@ export default function RisksView() {
               </div>
             )}
 
-            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', paddingTop: '1rem', borderTop: '1px solid #e0e0e0' }}>
+            <div style={{ 
+              display: 'flex', 
+              gap: '1rem', 
+              justifyContent: 'flex-end', 
+              paddingTop: '1.5rem', 
+              borderTop: '1px solid #e2e8f0' 
+            }}>
               <button 
                 className="btn-secondary" 
                 onClick={(e) => { 
@@ -867,8 +992,15 @@ export default function RisksView() {
                   closeRiskModal(); 
                   handleEdit(selectedRisk); 
                 }}
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '0.5rem',
+                  padding: '0.625rem 1.25rem',
+                  borderRadius: '8px'
+                }}
               >
-                ✏️ Edit
+                <span>✏️</span> Edit Risk
               </button>
               <button 
                 className="btn-secondary" 
@@ -877,11 +1009,28 @@ export default function RisksView() {
                   handleDelete(selectedRisk.id);
                   closeRiskModal();
                 }}
-                style={{ color: '#e74c3c' }}
+                style={{ 
+                  color: '#dc2626', 
+                  borderColor: '#fee2e2',
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '0.5rem',
+                  padding: '0.625rem 1.25rem',
+                  borderRadius: '8px'
+                }}
               >
-                🗑️ Delete
+                <span>🗑️</span> Delete
               </button>
-              <button className="btn-primary" onClick={closeRiskModal}>
+              <button 
+                className="btn-primary" 
+                onClick={closeRiskModal}
+                style={{ 
+                  padding: '0.625rem 1.5rem',
+                  borderRadius: '8px',
+                  backgroundColor: '#1e293b',
+                  border: 'none'
+                }}
+              >
                 Close
               </button>
             </div>
@@ -945,17 +1094,6 @@ export default function RisksView() {
                 </div>
               </div>
               <div className="card-body">
-                <p className="card-description" style={{
-                  display: '-webkit-box',
-                  WebkitLineClamp: '2',
-                  WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  marginBottom: '0.5rem'
-                }}>
-                  {risk.description}
-                </p>
-                
                 <div className="card-meta" style={{ marginTop: '0.5rem' }}>
                   <div className="meta-item">
                     <span className="meta-label">Probability:</span>
