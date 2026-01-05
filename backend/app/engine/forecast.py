@@ -146,13 +146,8 @@ def forecastMilestone(
         milestone_id, state_snapshot, tracker
     )
     
-    # Calculate capacity change delays (from scenarios)
-    capacity_delay_days = _calculate_capacity_change_delays(
-        milestone_id, state_snapshot, tracker
-    )
-    
     # Total delay
-    total_delay_days = dep_delay_days + risk_delay_days + scope_delay_days + capacity_delay_days
+    total_delay_days = dep_delay_days + risk_delay_days + scope_delay_days
     
     # P50 = baseline + total delay
     p50_date = baseline_date + timedelta(days=total_delay_days)
@@ -540,12 +535,11 @@ def _calculate_scope_change_delays(
     total_delay = 0.0
     decisions = state.get("decisions", [])
     
-    # Check scenario scope changes - add the delay but don't double-track in contributions
-    # (contribution was already added in _perturb_scope_change)
+    # Also check scenario scope changes
     scenario_scope_changes = state.get("scenario_scope_changes", {})
     if milestone_id in scenario_scope_changes:
-        scenario_delay = abs(scenario_scope_changes[milestone_id])
-        total_delay += scenario_delay
+        # Already tracked in perturbation, don't double-count
+        pass
     
     # Look for recent CHANGE_SCOPE decisions
     for decision in decisions:
@@ -566,38 +560,6 @@ def _calculate_scope_change_delays(
             
             reason = decision.get("reason", "scope change")
             tracker.add(f"Recent scope change: {reason}", delay)
-    
-    return total_delay
-
-
-def _calculate_capacity_change_delays(
-    milestone_id: str,
-    state: Dict[str, Any],
-    tracker: ContributionTracker
-) -> float:
-    """
-    Calculate delays from capacity change scenarios.
-    
-    Note: Contribution is already tracked in _perturb_capacity_change,
-    this just returns the delay value for the total calculation.
-    """
-    total_delay = 0.0
-    
-    scenario_capacity_changes = state.get("scenario_capacity_changes", {})
-    if milestone_id in scenario_capacity_changes:
-        capacity_multiplier = scenario_capacity_changes[milestone_id]
-        
-        # For reduced capacity, calculate the extension
-        if capacity_multiplier < 1.0:
-            work_items = _get_work_items_for_milestone(milestone_id, state)
-            total_remaining_days = sum(
-                wi.get("estimated_days", 0) for wi in work_items
-                if wi.get("status") != "completed"
-            )
-            
-            # Calculate extension (same formula as in perturbation)
-            extension = total_remaining_days * (1 / capacity_multiplier - 1)
-            total_delay = extension
     
     return total_delay
 
