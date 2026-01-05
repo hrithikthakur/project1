@@ -11,7 +11,7 @@
     "api/index.py": {
       "memory": 1024,
       "maxDuration": 10,
-      "includeFiles": "backend/**"
+      "includeFiles": "{backend/**,api/mock_world.json,data/mock_world.json}"
     }
   }
 }
