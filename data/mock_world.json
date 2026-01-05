@@ -4,7 +4,7 @@
       "id": "work_item_001",
       "title": "Design Authentication System",
       "description": "Design OAuth2 authentication flow",
-      "status": "blocked",
+      "status": "completed",
       "estimated_days": 3.0,
       "actual_days": null,
       "assigned_to": [
@@ -1508,9 +1508,9 @@
     {
       "id": "risk_from_blocked_work_item_001",
       "title": "Blocked Dependency: Design Authentication System",
-      "description": "'Design Authentication System' is BLOCKED. 1 dependent item(s) affected: Implement Authentication Backend",
+      "description": "'Design Authentication System' is BLOCKED. 1 dependent item(s) affected: Implement Authentication Backend [AUTO-RESOLVED: work_item_001 is no longer blocked]",
       "severity": "medium",
-      "status": "materialised",
+      "status": "mitigating",
       "probability": 1.0,
       "impact": {
         "delay_days": 3,
@@ -1524,7 +1524,7 @@
       "affected_items": [
         "work_item_002"
       ],
-      "detected_at": "2026-01-05T03:33:37.432213",
+      "detected_at": "2026-01-04T21:38:18.502950",
       "mitigated_at": "2026-01-04T21:58:52.804022",
       "accepted_at": null,
       "accepted_by": null,
