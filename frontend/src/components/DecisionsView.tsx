@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import {
   listDecisions,
-  getDecision,
   createDecision,
   updateDecision,
   deleteDecision,
@@ -269,7 +268,7 @@ export default function DecisionsView() {
       if (decisionData.status === 'approved' && (decisionData.decision_type === 'accept_risk' || decisionData.decision_type === 'mitigate_risk')) {
         try {
           console.log(`🎯 Triggering Decision-Risk Engine for decision ${decisionId}`);
-          const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? '/api' : 'http://localhost:8000/api');
+          const API_BASE_URL = (import.meta as any).env.VITE_API_URL || ((import.meta as any).env.DEV ? '/api' : 'http://localhost:8000/api');
           const response = await fetch(`${API_BASE_URL}/decision-risk-engine/events/decision-approved?decision_id=${decisionId}`, {
             method: 'POST',
           });
@@ -359,16 +358,6 @@ export default function DecisionsView() {
   }
 
 
-  function getActorName(actorId: string): string {
-    const actor = actors.find(a => a.id === actorId);
-    return actor ? actor.display_name : actorId;
-  }
-
-  function getWorkItemTitle(itemId: string): string {
-    const item = workItems.find(wi => wi.id === itemId);
-    return item ? item.title : itemId;
-  }
-
   function getMilestoneNameForDecision(decision: Decision): string {
     if (decision.milestone_name) return decision.milestone_name;
     
@@ -386,11 +375,6 @@ export default function DecisionsView() {
     }
     
     return 'N/A';
-  }
-
-  function getRiskTitle(riskId: string): string {
-    const risk = risks.find(r => r.id === riskId);
-    return risk ? risk.title : riskId;
   }
 
   if (loading) {

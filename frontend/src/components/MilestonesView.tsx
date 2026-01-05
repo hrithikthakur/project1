@@ -2,13 +2,11 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import {
   listMilestones,
-  getMilestone,
   createMilestone,
   updateMilestone,
   deleteMilestone,
   listWorkItems,
   Milestone,
-  WorkItem,
 } from '../api';
 import WorkItemView from './WorkItemView';
 import MilestoneView from './MilestoneView';
@@ -16,7 +14,6 @@ import { formatDate } from '../utils';
 
 export default function MilestonesView() {
   const [milestones, setMilestones] = useState<Milestone[]>([]);
-  const [workItems, setWorkItems] = useState<WorkItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingMilestone, setEditingMilestone] = useState<Milestone | null>(null);
@@ -37,12 +34,11 @@ export default function MilestonesView() {
 
   async function loadData() {
     try {
-      const [milestonesData, workItemsData] = await Promise.all([
+      const [milestonesData] = await Promise.all([
         listMilestones(),
         listWorkItems(),
       ]);
       setMilestones(milestonesData);
-      setWorkItems(workItemsData);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -103,10 +99,6 @@ export default function MilestonesView() {
       console.error('Error deleting milestone:', error);
       toast.error('Error deleting milestone');
     }
-  }
-
-  function handleWorkItemClick(workItemId: string) {
-    setSelectedWorkItemId(workItemId);
   }
 
   function handleSeeWorkItems(milestoneId: string) {

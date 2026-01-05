@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { Risk, createRisk, analyzeRisk } from '../api';
+import { Risk, analyzeRisk } from '../api';
 
 export default function RiskView() {
   const [risk, setRisk] = useState<Partial<Risk>>({
@@ -9,6 +9,7 @@ export default function RiskView() {
     probability: 0.3,
     impact: { velocity_multiplier: 0.8 },
     affected_items: [],
+    milestone_id: '',
   });
   const [analysis, setAnalysis] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -26,6 +27,7 @@ export default function RiskView() {
         status: risk.status || 'open',
         probability: risk.probability || 0.3,
         impact: risk.impact || {},
+        milestone_id: risk.milestone_id || 'default',
         affected_items: risk.affected_items || [],
         detected_at: new Date().toISOString(),
       };

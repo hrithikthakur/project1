@@ -118,21 +118,6 @@ export default function RolesView() {
     return [];
   }
 
-  function getRoleColor(roleName: string) {
-    switch (roleName.toUpperCase()) {
-      case 'ADMIN':
-        return '#e74c3c'; // Vibrant Red
-      case 'EDITOR':
-        return '#3498db'; // Vibrant Blue
-      case 'APPROVER':
-        return '#f39c12'; // Vibrant Orange
-      case 'VIEWER':
-        return '#95a5a6'; // Vibrant Slate
-      default:
-        return '#7f8c8d';
-    }
-  }
-
   function getRolePermissions(roleName: string) {
     switch (roleName.toUpperCase()) {
       case 'ADMIN':

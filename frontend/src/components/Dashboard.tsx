@@ -5,15 +5,10 @@ import {
   listMilestones,
   listWorkItems,
   listActors,
-  Decision,
-  Risk,
-  Milestone,
-  WorkItem,
-  Actor,
 } from '../api';
 
 interface DashboardProps {
-  onNavigate: (view: string) => void;
+  onNavigate: (view: any) => void;
 }
 
 export default function Dashboard({ onNavigate }: DashboardProps) {

@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import {
   listWorkItems,
-  getWorkItem,
   createWorkItem,
   updateWorkItem,
   deleteWorkItem,
@@ -73,7 +72,7 @@ export default function WorkItemsView() {
     e.preventDefault();
     try {
       if (editingItem) {
-        const updated = await updateWorkItem(editingItem.id, formData as WorkItem);
+        const updated = await updateWorkItem(editingItem.id, formData as any);
         console.log('Work item updated via form:', updated);
         console.log('Metadata from form update:', updated._metadata);
         
@@ -139,7 +138,7 @@ export default function WorkItemsView() {
     
     console.log(`Toggling work item ${item.id} from ${item.status} to ${newStatus}`);
     try {
-      const updated = await updateWorkItem(item.id, { ...item, status: newStatus });
+      const updated = await updateWorkItem(item.id, { ...item, status: newStatus } as any);
       console.log('Work item updated successfully:', updated);
       console.log('Metadata:', updated._metadata);
       await loadData();

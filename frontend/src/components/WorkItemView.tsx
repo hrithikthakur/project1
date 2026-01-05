@@ -43,7 +43,7 @@ export default function WorkItemView({ workItemId, onClose }: WorkItemViewProps)
     loadWorkItemDetails();
     
     // Track scroll events to prevent refresh during scrolling
-    let scrollTimeout: NodeJS.Timeout;
+    let scrollTimeout: any;
     const handleScroll = () => {
       isScrollingRef.current = true;
       scrollPositionRef.current = window.scrollY || document.documentElement.scrollTop;
@@ -203,7 +203,7 @@ export default function WorkItemView({ workItemId, onClose }: WorkItemViewProps)
     setSaving(true);
     try {
       const updatedItem = { ...workItem, status: newStatus };
-      const result = await updateWorkItem(workItem.id, updatedItem);
+      const result = await updateWorkItem(workItem.id, updatedItem as any);
       console.log('Work item updated successfully:', result);
       await loadWorkItemDetails();
       toast.success(`Status updated to ${newStatus.replace('_', ' ')}`);
@@ -233,7 +233,7 @@ export default function WorkItemView({ workItemId, onClose }: WorkItemViewProps)
     }
   }
 
-  function getStatusChangeIndicator(itemId: string, currentStatus: string): string | null {
+  function getStatusChangeIndicator(_itemId: string, currentStatus: string): string | null {
     // This would ideally compare with previous state, but for now we'll just show the current status
     if (currentStatus === 'blocked') {
       return '🔴';
@@ -249,7 +249,7 @@ export default function WorkItemView({ workItemId, onClose }: WorkItemViewProps)
     if (!workItem) return;
     setSaving(true);
     try {
-      const updated = await updateWorkItem(workItem.id, formData as WorkItem);
+      const updated = await updateWorkItem(workItem.id, formData as any);
       setWorkItem(updated);
       setFormData(updated);
       setIsEditing(false);

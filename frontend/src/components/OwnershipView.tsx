@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import {
   listOwnership,
-  getActiveOwnership,
   createOwnership,
   updateOwnership,
   deleteOwnership,
@@ -516,7 +515,6 @@ export default function OwnershipView() {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         <div><strong>Title:</strong> {workItem.title}</div>
                         <div><strong>Status:</strong> <span className="status-badge" style={{ backgroundColor: getWorkItemStatusColor(workItem.status) }}>{workItem.status}</span></div>
-                        <div><strong>Priority:</strong> <span className="status-badge" style={{ backgroundColor: getPriorityColor(workItem.priority) }}>{workItem.priority}</span></div>
                         <div><strong>Milestone:</strong> {milestones.find(m => m.id === workItem.milestone_id)?.name || 'N/A'}</div>
                         {workItem.description && <div><strong>Description:</strong> {workItem.description}</div>}
                       </div>
@@ -542,8 +540,8 @@ export default function OwnershipView() {
                         <div><strong>Type:</strong> {decision.decision_type}</div>
                         <div><strong>Milestone:</strong> {decision.milestone_name}</div>
                         <div><strong>Status:</strong> <span className="status-badge" style={{ backgroundColor: getDecisionStatusColor(decision.status) }}>{decision.status}</span></div>
-                        {decision.rationale && <div><strong>Rationale:</strong> {decision.rationale}</div>}
-                        {decision.made_at && <div><strong>Made At:</strong> {formatDateTime(decision.made_at)}</div>}
+                        {decision.reason && <div><strong>Reason:</strong> {decision.reason}</div>}
+                        {decision.created_at && <div><strong>Created At:</strong> {formatDateTime(decision.created_at)}</div>}
                       </div>
                     );
                   }

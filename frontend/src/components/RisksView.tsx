@@ -12,7 +12,7 @@ import {
   WorkItem,
   Milestone,
 } from '../api';
-import { formatDate, formatDateTime } from '../utils';
+import { formatDate } from '../utils';
 
 export default function RisksView() {
   const [risks, setRisks] = useState<Risk[]>([]);
@@ -749,7 +749,7 @@ export default function RisksView() {
                 <div style={{ border: 'none', borderRadius: '10px', padding: '0.75rem', backgroundColor: 'transparent' }}>
                   <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#475569', marginBottom: '0.5rem' }}>Impacted Work Items ({selectedRisk.affected_items.length})</div>
                   <div style={{ maxHeight: '100px', overflowY: 'auto', fontSize: '0.8rem' }}>
-                    {selectedRisk.affected_items.map((itemId, idx) => {
+                    {selectedRisk.affected_items.map((itemId) => {
                       const wi = workItems.find(w => w.id === itemId);
                       return <div key={itemId} style={{ padding: '0.25rem 0', color: '#334155' }}>• {wi ? wi.title : itemId}</div>;
                     })}

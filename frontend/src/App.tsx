@@ -1,7 +1,5 @@
 import { useState } from 'react';
 import { Toaster } from 'react-hot-toast';
-import DecisionView from './components/DecisionView';
-import RiskView from './components/RiskView';
 import ForecastView from './components/ForecastView';
 import Dashboard from './components/Dashboard';
 import MilestonesView from './components/MilestonesView';

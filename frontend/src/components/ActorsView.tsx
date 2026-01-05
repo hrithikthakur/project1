@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import {
   listActors,
-  getActor,
   createActor,
   updateActor,
   deleteActor,

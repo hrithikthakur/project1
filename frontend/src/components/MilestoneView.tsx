@@ -21,7 +21,6 @@ interface MilestoneViewProps {
 export default function MilestoneView({ milestoneId, onClose }: MilestoneViewProps) {
   const [milestone, setMilestone] = useState<Milestone | null>(null);
   const [workItems, setWorkItems] = useState<WorkItem[]>([]);
-  const [allWorkItems, setAllWorkItems] = useState<WorkItem[]>([]);
   const [actors, setActors] = useState<Actor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -45,7 +44,6 @@ export default function MilestoneView({ milestoneId, onClose }: MilestoneViewPro
       ]);
 
       setMilestone(milestoneData);
-      setAllWorkItems(workItemsData);
       setActors(actorsData);
 
       // Get work items for this milestone
